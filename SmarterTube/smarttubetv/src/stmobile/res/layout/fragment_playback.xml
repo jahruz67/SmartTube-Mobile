@@ -4,9 +4,9 @@
 
     Adds an upright/portrait mode: the player fragment is constrained to a 16:9 strip at the top
     and a below-video panel (title + channel + up-next list) fills the rest. The constraints are
-    switched at runtime by MobilePlaybackFragment.applyMobileLayout() — this XML's defaults are
-    the full-screen (landscape / Shorts / PiP) state so the player looks unchanged until the
-    portrait state is explicitly applied. The fragment class is the mobile subclass which feeds
+    switched at runtime by MobilePlaybackFragment.applyMobileLayout(), including a two-column
+    tablet landscape layout. This XML defaults to full-screen until a layout is applied.
+    The fragment class is the mobile subclass which feeds
     the panel; the tag must stay @string/playback_tag (PlaybackActivity looks the fragment up by
     tag and checks instanceof PlaybackFragment).
 -->
@@ -17,6 +17,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@android:color/black">
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/mobile_tablet_divider"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.64" />
 
     <fragment
         android:id="@+id/playback_controls_fragment"
@@ -175,6 +182,15 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent">
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
         <!-- Title row; tapping it toggles the description below (chevron flips). -->
         <LinearLayout
@@ -507,6 +523,9 @@
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:background="#22FFFFFF" />
+
+        </LinearLayout>
+        </ScrollView>
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/mobile_up_next_list"

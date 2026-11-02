@@ -171,6 +171,9 @@ public class MobilePlaybackActivity extends PlaybackActivity {
         if (mMobileFragment != null && mMobileFragment.closeModernSheet()) {
             return;
         }
+        if (mMobileFragment != null && mMobileFragment.exitTabletFullscreen()) {
+            return;
+        }
         if (isInPipMode() || (getPlayerData().getBackgroundMode() == PlayerData.BACKGROUND_MODE_PIP
                 && mMobileFragment != null && mMobileFragment.isPlaying())) {
             super.onBackPressed();
@@ -270,6 +273,9 @@ public class MobilePlaybackActivity extends PlaybackActivity {
      * until it's pressed again.
      */
     public void toggleFullscreen() {
+        if (mMobileFragment != null && mMobileFragment.toggleTabletFullscreen()) {
+            return;
+        }
         boolean portrait = getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT;
         mForcedOrientation = portrait
                 ? ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE

@@ -78,7 +78,8 @@ import io.reactivex.disposables.Disposable;
  *
  * In portrait with a regular (non-Shorts) video the player is constrained to a 16:9 strip at the
  * top and a below-video panel (title + description + channel/stats + up-next) fills the rest; in
- * landscape, for Shorts, and in PiP the player stays full-screen exactly like the TV build. While
+ * tablet landscape, related videos sit beside the player and its details. Phone landscape and
+ * PiP keep the full-screen player. While
  * in the strip the control rows are trimmed to the core actions ({@link
  * VideoPlayerGlue#setCompactControls}) — the full set returns in landscape. The up-next list
  * mirrors the same {@link VideoGroup}s the Leanback suggestions rows receive, and a row tap goes
@@ -128,7 +129,7 @@ public class MobilePlaybackFragment extends PlaybackFragment {
     private RecyclerView mUpNextList;
     private UpNextRowAdapter mUpNextAdapter;
     private boolean mStripMode;
-    /** Applied layout: 0 = full-screen, 1 = regular 16:9 strip, 2 = Shorts 9:16 strip. */
+    /** Applied layout: 0 = full-screen, 1 = regular strip, 2 = Shorts, 3 = tablet columns. */
     private int mLayoutState;
     /** Shorts strip sized from the available height and centred (wide portrait screens, #30). */
     private boolean mShortsFit;
@@ -229,6 +230,7 @@ public class MobilePlaybackFragment extends PlaybackFragment {
     private ModernPlayerChrome mModernChrome;
     private View mSettingsBtn;
     private View mFullscreenBtn;
+    private boolean mTabletFullscreen;
     private boolean mResumeAfterSettings;
     // Tap to pause: our own tap detector while the controls are hidden (single tap = play/pause,
     // double tap = seek), replacing upstream's tickle-on-touch-down there.
@@ -845,9 +847,10 @@ public class MobilePlaybackFragment extends PlaybackFragment {
 
     @Override
     public void onDispatchTouchEvent(MotionEvent event) {
-        // Touches below the 16:9 player strip belong to the up-next panel — ignore them.
+        // Touches outside the player belong to its details or related videos.
         View playerView = getView();
-        if (mStripMode && playerView != null && event.getY() > playerView.getBottom()) {
+        if (mStripMode && playerView != null
+                && !viewContainsRaw(playerView, event.getRawX(), event.getRawY())) {
             return;
         }
         // In Shorts mode all touch is managed by interceptPlayerTouch (drag pager + tap-toggle).
@@ -882,6 +885,10 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         // Shorts: all touch is managed here (drag pager + tap-to-toggle).
         if (mLayoutState == 2) {
             return handleShortsTouchEvent(event);
+        }
+
+        if (mLayoutState == 3 && !viewContainsRaw(playerView, event.getRawX(), event.getRawY())) {
+            return false;
         }
 
         if (mSwipeToDismiss != null && !mReplayingTouch
@@ -1286,7 +1293,9 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         // Strip mode now also covers Shorts: the player becomes a top-aligned aspect-ratio strip
         // instead of a vertically-centered full-screen surface. Regular videos get a 16:9 strip with
         // the up-next panel below; a Short gets a 9:16 strip with the Shorts info bar + action rail.
-        boolean strip = portrait && !inPip && video != null;
+        boolean tabletLayout = isTabletLandscape() && !mTabletFullscreen && !isShorts
+                && !inPip && video != null;
+        boolean strip = (portrait || tabletLayout) && !inPip && video != null;
         boolean showPanel = strip && !isShorts;
         String ratio = isShorts ? "H,9:16" : "H,16:9";
 
@@ -1298,14 +1307,13 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         // the layout state but do change whether the modern controls belong on screen.
         applyCutoutPadding();
         if (mModernChrome != null) {
-            mModernChrome.applyOrientation(!portrait);
+            mModernChrome.applyOrientation(!portrait && !tabletLayout);
             mModernChrome.sync();
         }
         updateExitFullscreenButton();
 
-        // Keyed on the 3-value state (not just the boolean) so a regular<->Shorts switch — both of
-        // which are "strip" — still re-applies the new dimension ratio.
-        int layoutState = !strip ? 0 : (isShorts ? 2 : 1);
+        // Separate states ensure switching between strips and tablet columns reapplies constraints.
+        int layoutState = !strip ? 0 : (isShorts ? 2 : (tabletLayout ? 3 : 1));
         // A pinch zoom (#85) belongs to the landscape player only; PIP and the strips show the whole picture.
         if (layoutState != 0 || inPip) {
             resetPinchZoom();
@@ -1358,8 +1366,13 @@ public class MobilePlaybackFragment extends PlaybackFragment {
             }
         }
 
+        placeUpNextList(tabletLayout);
         ConstraintSet set = new ConstraintSet();
         set.clone(mRoot);
+        set.connect(R.id.playback_controls_fragment, ConstraintSet.END,
+                ConstraintSet.PARENT_ID, ConstraintSet.END);
+        set.connect(R.id.mobile_below_video_panel, ConstraintSet.END,
+                ConstraintSet.PARENT_ID, ConstraintSet.END);
         if (shortsFit) {
             // Height runs down to the nav bar, less room for the info bar; width follows from 9:16
             // and the start/end constraints centre it.
@@ -1400,6 +1413,21 @@ public class MobilePlaybackFragment extends PlaybackFragment {
             set.setDimensionRatio(R.id.playback_controls_fragment, null);
             set.setVisibility(R.id.mobile_below_video_panel, View.GONE);
             set.setVisibility(R.id.mobile_shorts_info_bar, View.GONE);
+            set.setVisibility(R.id.mobile_shorts_nav_bar, View.GONE);
+        }
+        if (tabletLayout) {
+            set.connect(R.id.playback_controls_fragment, ConstraintSet.END,
+                    R.id.mobile_tablet_divider, ConstraintSet.START);
+            set.connect(R.id.mobile_below_video_panel, ConstraintSet.END,
+                    R.id.mobile_tablet_divider, ConstraintSet.START);
+            set.connect(R.id.mobile_up_next_list, ConstraintSet.START,
+                    R.id.mobile_tablet_divider, ConstraintSet.END);
+            set.connect(R.id.mobile_up_next_list, ConstraintSet.END,
+                    ConstraintSet.PARENT_ID, ConstraintSet.END);
+            set.connect(R.id.mobile_up_next_list, ConstraintSet.TOP,
+                    ConstraintSet.PARENT_ID, ConstraintSet.TOP);
+            set.connect(R.id.mobile_up_next_list, ConstraintSet.BOTTOM,
+                    ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM);
             set.setVisibility(R.id.mobile_shorts_nav_bar, View.GONE);
         }
         set.applyTo(mRoot);
@@ -1462,7 +1490,40 @@ public class MobilePlaybackFragment extends PlaybackFragment {
 
     /** Modern controls belong on screen only over a regular video (full screen or strip), never in PIP. */
     boolean modernChromeAllowed() {
-        return (mLayoutState == 0 || mLayoutState == 1) && !isInPipMode();
+        return (mLayoutState == 0 || mLayoutState == 1 || mLayoutState == 3) && !isInPipMode();
+    }
+
+    private boolean isTabletLandscape() {
+        Configuration config = getResources().getConfiguration();
+        return config.smallestScreenWidthDp >= 600
+                && config.orientation == Configuration.ORIENTATION_LANDSCAPE;
+    }
+
+    /** Tablets expand the video in place instead of rotating the device. */
+    boolean toggleTabletFullscreen() {
+        Video video = PlaybackPresenter.instance(getContext()).getVideo();
+        if (!isTabletLandscape() || isInPipMode() || video == null || video.isShorts) {
+            return false;
+        }
+        mTabletFullscreen = !mTabletFullscreen;
+        applyMobileLayout();
+        return true;
+    }
+
+    boolean exitTabletFullscreen() {
+        return mTabletFullscreen && toggleTabletFullscreen();
+    }
+
+    private void placeUpNextList(boolean tabletLayout) {
+        ViewGroup parent = (ViewGroup) mUpNextList.getParent();
+        if (tabletLayout && parent != mRoot) {
+            parent.removeView(mUpNextList);
+            mRoot.addView(mUpNextList, new ConstraintLayout.LayoutParams(0, 0));
+        } else if (!tabletLayout && parent == mRoot) {
+            parent.removeView(mUpNextList);
+            ((LinearLayout) mPanel).addView(mUpNextList,
+                    new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1));
+        }
     }
 
     MobilePlayerStylePrefs.Style style() {
