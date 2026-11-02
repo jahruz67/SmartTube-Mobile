@@ -34,6 +34,8 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools'
 
       - name: Install required Android SDK components
         run: sdkmanager --install 'platforms;android-34' 'build-tools;30.0.3' 'ndk;21.0.6113669'
