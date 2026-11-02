@@ -11,6 +11,8 @@
 # generated files
 bin/
 gen/
+# YouTube API model packages are checked-in sources required by clean builds.
+!/MediaServiceCore/youtubeapi/src/main/java/**/gen/
 
 # Local configuration file (sdk path, etc)
 local.properties
