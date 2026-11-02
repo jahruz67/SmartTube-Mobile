@@ -206,6 +206,8 @@ public class MobilePlaybackFragment extends PlaybackFragment {
     private boolean mForceHideControls;
     // Swipe gestures in the landscape player (#48): volume right, brightness left.
     private SwipeGestures mSwipe;
+    private SwipeToDismiss mSwipeToDismiss;
+    private boolean mReplayingDismissTouch;
     private boolean mSwipeEnabled;
     // Pinch to zoom in the landscape player (#85): fit <-> fill via the player's resize mode.
     private PinchZoom mPinch;
@@ -300,12 +302,15 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         mChromeHandler.removeCallbacks(mShortsLoopPoll);
         mChromeHandler.removeCallbacks(mShortsLoopTimeout);
         if (mModernChrome != null) mModernChrome.stop();
+        if (mSwipeToDismiss != null) mSwipeToDismiss.cancel();
         mAwaitingShortsFrame = false;
         mAwaitingShortsLoop = false;
     }
 
     @Override
     public void onDestroyView() {
+        if (mSwipeToDismiss != null) mSwipeToDismiss.cancel();
+        mSwipeToDismiss = null;
         if (mModernChrome != null) mModernChrome.destroy();
         clearLinkCards();
         mAvatarVideoId = null;
@@ -315,6 +320,7 @@ public class MobilePlaybackFragment extends PlaybackFragment {
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
+        if (mSwipeToDismiss != null) mSwipeToDismiss.cancel();
         super.onConfigurationChanged(newConfig);
         applyMobileLayout();
     }
@@ -822,6 +828,11 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         View playerView = getView();
         if (playerView == null) return false;
 
+        if (mSwipeToDismiss != null && !mReplayingDismissTouch && !mReplayingTouch
+                && mSwipeToDismiss.isActive()) {
+            return mSwipeToDismiss.handle(event, this::replayDismissTouch);
+        }
+
         // Modern styles' settings / More videos sheet: the card takes its own touches, a tap outside closes it.
         if (mModernChrome != null && mModernChrome.isSheetOpen()) {
             return mModernChrome.handleSheetTouch(event);
@@ -830,6 +841,15 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         // Shorts: all touch is managed here (drag pager + tap-to-toggle).
         if (mLayoutState == 2) {
             return handleShortsTouchEvent(event);
+        }
+
+        if (mSwipeToDismiss != null && !mReplayingDismissTouch && !mReplayingTouch
+                && event.getActionMasked() == MotionEvent.ACTION_DOWN && !isInPipMode()
+                && viewContainsRaw(playerView, event.getRawX(), event.getRawY())
+                && (mPinch == null || !mPinch.isZoomed())
+                && (!isOverlayShown() || !hitsPlayerControl(requireActivity().getWindow().getDecorView(),
+                        event.getRawX(), event.getRawY(), playerView.getWidth() * playerView.getHeight() / 2))) {
+            return mSwipeToDismiss.start(event);
         }
 
         // Portrait strip (#62): in the phone-style (Modern / Tap to pause) players a swipe up on
@@ -879,6 +899,16 @@ public class MobilePlaybackFragment extends PlaybackFragment {
     private float mStripDownX;
     private float mStripDownY;
     private boolean mStripDownInVideo;
+
+    private boolean replayDismissTouch(MotionEvent event) {
+        mReplayingDismissTouch = true;
+        try {
+            return interceptPlayerTouch(event)
+                    || requireActivity().getWindow().superDispatchTouchEvent(event);
+        } finally {
+            mReplayingDismissTouch = false;
+        }
+    }
 
     /**
      * Watches touches on the 16:9 strip without consuming them (taps keep working); a clear
@@ -2317,6 +2347,7 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         mModernChrome = ModernPlayerChrome.create(this, activity);
         initTapDetector(activity);
         mSwipe = SwipeGestures.create(activity);
+        mSwipeToDismiss = new SwipeToDismiss(activity.findViewById(android.R.id.content), activity::onBackPressed);
         mPinch = PinchZoom.create(activity, mPinchTarget);
         initCutoutGuard(activity);
 
