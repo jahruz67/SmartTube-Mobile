@@ -80,7 +80,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p release-assets
-          cp SmarterTube/smarttubetv/build/outputs/apk/stmobile/release/*.apk release-assets/
+          cp SmarterTube/smarttubetv/build/outputs/apk/stmobile/release/*-universal.apk release-assets/
           for apk in release-assets/*.apk; do
             "$ANDROID_HOME/build-tools/30.0.3/apksigner" verify "$apk"
             badging="$("$ANDROID_HOME/build-tools/30.0.3/aapt" dump badging "$apk")"
@@ -96,7 +96,7 @@ jobs:
         if: always()
         run: rm -f -- "$RUNNER_TEMP/mobile-release.jks"
 
-      - name: Publish APKs as a GitHub Release
+      - name: Publish universal APK as a GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
@@ -109,9 +109,9 @@ jobs:
           fi
 
           cat > release-notes.md <<'EOF'
-          Production release APKs built from this repository's patched sources.
+          Production universal APK built from this repository's patched sources.
 
-          Choose `universal` for all included architectures, or an APK matching your device. SHA-256 checksums are attached.
+          Download the universal APK for all included architectures. Its SHA-256 checksum is attached.
 
           These APKs use this project's permanent release signing key and an increasing Android version code. Future releases signed with the same key can update this app in place, preserving local data.
 
