@@ -93,6 +93,9 @@ public final class Video {
     public String likeCount;
     public String dislikeCount;
     public String subscriberCount;
+    public String authorImageUrl;
+    public String viewCount;
+    public String publishedDate;
     public float volume = 1.0f;
     public boolean deArrowProcessed;
     public boolean isLiveEnd;
@@ -763,6 +766,11 @@ public final class Video {
         }
 
         percentWatched = video.percentWatched;
+        if (Helpers.equals(videoId, video.videoId) && video.isSynced) {
+            authorImageUrl = video.authorImageUrl;
+            viewCount = video.viewCount;
+            publishedDate = video.publishedDate;
+        }
     }
 
     public void sync(MediaItemMetadata metadata) {
@@ -796,6 +804,9 @@ public final class Video {
         likeCount = metadata.getLikeCount();
         dislikeCount = metadata.getDislikeCount();
         subscriberCount = metadata.getSubscriberCount();
+        authorImageUrl = metadata.getAuthorImageUrl();
+        viewCount = metadata.getViewCount();
+        publishedDate = metadata.getPublishedDate();
         notificationStates = metadata.getNotificationStates();
         author = metadata.getAuthor();
         durationMs = metadata.getDurationMs();

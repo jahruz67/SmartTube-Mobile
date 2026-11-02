@@ -16,7 +16,9 @@ import com.liskovsoft.smartyoutubetv2.common.app.models.data.Video;
 import com.liskovsoft.smartyoutubetv2.tv.R;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Flat list of video cards. Used both for grid sections and (horizontally) inside shelves.
@@ -25,6 +27,7 @@ import java.util.List;
  * Public so the phone Search screen ({@code mobile.ui.search}) can reuse the same card.
  */
 public class VideoCardAdapter extends RecyclerView.Adapter<VideoCardAdapter.ViewHolder> {
+    private static final Object WATCHED_PAYLOAD = new Object();
     public interface OnVideoAction {
         void onVideo(Video video);
     }
@@ -110,6 +113,21 @@ public class VideoCardAdapter extends RecyclerView.Adapter<VideoCardAdapter.View
         notifyDataSetChanged();
     }
 
+    /** Append a cumulative continuation without rebinding its unchanged prefix. */
+    public void setVideosIncrementally(List<Video> videos) {
+        if (videos == null || videos.size() <= mVideos.size()) {
+            setVideos(videos);
+            return;
+        }
+        for (int i = 0; i < mVideos.size(); i++) {
+            if (mVideos.get(i) != videos.get(i)) {
+                setVideos(videos);
+                return;
+            }
+        }
+        appendVideos(videos.subList(mVideos.size(), videos.size()));
+    }
+
     /**
      * Append a continuation's new tail with a range-insert instead of a full
      * {@code notifyDataSetChanged}. Used by shelves so a horizontally-scrolled row keeps
@@ -117,12 +135,16 @@ public class VideoCardAdapter extends RecyclerView.Adapter<VideoCardAdapter.View
      * adapter on the row) would snap the shelf back to the start.
      */
     public void appendVideos(List<Video> videos) {
+        insertVideos(mVideos.size(), videos);
+    }
+
+    /** Insert a continuation before later search groups, preserving their order. */
+    public void insertVideos(int position, List<Video> videos) {
         if (videos == null || videos.isEmpty()) {
             return;
         }
-        int start = mVideos.size();
-        mVideos.addAll(videos);
-        notifyItemRangeInserted(start, videos.size());
+        mVideos.addAll(position, videos);
+        notifyItemRangeInserted(position, videos.size());
     }
 
     public void clear() {
@@ -142,16 +164,29 @@ public class VideoCardAdapter extends RecyclerView.Adapter<VideoCardAdapter.View
      * every position is checked since a list (History) can hold the same video more than once.
      */
     public void sync(List<Video> changed) {
-        if (changed == null) {
+        if (changed == null || changed.isEmpty()) {
             return;
         }
+        Map<Video, List<Integer>> positions = new HashMap<>();
         for (Video video : changed) {
-            for (int i = 0; i < mVideos.size(); i++) {
-                Video origin = mVideos.get(i);
-                if (origin.equals(video)) {
-                    origin.sync(video);
-                    notifyItemChanged(i);
-                }
+            if (video != null && !positions.containsKey(video)) {
+                positions.put(video, new ArrayList<>());
+            }
+        }
+        for (int i = 0; i < mVideos.size(); i++) {
+            List<Integer> matches = positions.get(mVideos.get(i));
+            if (matches != null) {
+                matches.add(i);
+            }
+        }
+        for (Video video : changed) {
+            List<Integer> matches = positions.get(video);
+            if (matches == null) {
+                continue;
+            }
+            for (int position : matches) {
+                mVideos.get(position).sync(video);
+                notifyItemChanged(position, WATCHED_PAYLOAD);
             }
         }
     }
@@ -186,6 +221,16 @@ public class VideoCardAdapter extends RecyclerView.Adapter<VideoCardAdapter.View
         ViewHolder holder = new ViewHolder(view, viewType);
         holder.thumbFrame.getLayoutParams().height = thumbHeight(viewType, mCardWidth);
         return holder;
+    }
+
+    @Override
+    public void onBindViewHolder(@NonNull ViewHolder holder, int position,
+                                @NonNull List<Object> payloads) {
+        if (!payloads.isEmpty() && payloads.contains(WATCHED_PAYLOAD)) {
+            bindWatchedBar(holder.progress, holder.duration, mVideos.get(position));
+            return;
+        }
+        onBindViewHolder(holder, position);
     }
 
     @Override

@@ -4,6 +4,8 @@ import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.os.Parcelable;
+import android.os.SystemClock;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -43,8 +45,12 @@ import com.liskovsoft.smartyoutubetv2.common.app.views.BrowseView;
 import com.liskovsoft.smartyoutubetv2.common.misc.MediaServiceManager;
 import com.liskovsoft.smartyoutubetv2.mobile.ui.about.MobileAboutActivity;
 import com.liskovsoft.smartyoutubetv2.tv.R;
+import com.liskovsoft.youtubeapi.service.internal.MediaServiceData;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Native portrait Home screen. Implements {@link BrowseView} and is driven by the
@@ -56,6 +62,11 @@ import java.util.List;
  * opens with an edge-swipe or the toolbar button.
  */
 public class MobileBrowseFragment extends Fragment implements BrowseView, MediaServiceManager.AccountChangeListener {
+    private static final int RETAINED_SECTION_LIMIT = 3;
+    private static final int RETAINED_VIDEO_LIMIT = 300;
+    private static final long RETAINED_SECTION_TTL_MS = 3 * 60 * 1_000L;
+    private final Map<Integer, SectionState> mRetainedSections = new LinkedHashMap<>();
+    private final Map<Integer, VideoGroup> mDisplayedGroups = new LinkedHashMap<>();
     private BrowsePresenter mPresenter;
     private DrawerLayout mDrawer;
     private SwipeRefreshLayout mSwipeRefresh;
@@ -76,6 +87,9 @@ public class MobileBrowseFragment extends Fragment implements BrowseView, MediaS
     private boolean mProgressShowing;
     private boolean mSwipeRefreshing;
     private boolean mSectionSelected;
+    private boolean mSelectingSection;
+    private boolean mCurrentCacheable;
+    private long mContentLoadedAt;
     private int mGridCardWidth;
     private int mGridSpan;
     private int mShelfCardWidth;
@@ -169,6 +183,7 @@ public class MobileBrowseFragment extends Fragment implements BrowseView, MediaS
                 return;
             }
             mSwipeRefreshing = true;
+            mRetainedSections.clear();
             mPresenter.refresh(false);
         });
 
@@ -187,7 +202,7 @@ public class MobileBrowseFragment extends Fragment implements BrowseView, MediaS
             MobileSettingsActivity.start(getContext(), false);
             return;
         }
-        selectSection(mSectionAdapter.indexOf(section), true);
+        selectSection(mSectionAdapter.indexOf(section), true, true);
     }
 
     @Override
@@ -217,7 +232,22 @@ public class MobileBrowseFragment extends Fragment implements BrowseView, MediaS
     }
 
     @Override
+    public void onDestroyView() {
+        mBottomTabs = null;
+        mRetainedSections.clear();
+        mDisplayedGroups.clear();
+        mSectionSelected = false;
+        mCurrentCacheable = false;
+        mContentList = null;
+        mGridAdapter = null;
+        mShelfAdapter = null;
+        mSettingsAdapter = null;
+        super.onDestroyView();
+    }
+
+    @Override
     public void onAccountChanged(Account account) {
+        mRetainedSections.clear();
         updateAccountIcon();
     }
 
@@ -277,6 +307,9 @@ public class MobileBrowseFragment extends Fragment implements BrowseView, MediaS
 
     @Override
     public void removeSection(BrowseSection section) {
+        if (section != null) {
+            mRetainedSections.remove(section.getId());
+        }
         if (mSectionAdapter != null) {
             mSectionAdapter.remove(section);
             updateShortsTabVisibility();
@@ -285,6 +318,9 @@ public class MobileBrowseFragment extends Fragment implements BrowseView, MediaS
 
     @Override
     public void removeAllSections() {
+        mRetainedSections.clear();
+        mDisplayedGroups.clear();
+        mCurrentCacheable = false;
         if (mSectionAdapter != null) {
             mSectionAdapter.clear();
         }
@@ -294,19 +330,117 @@ public class MobileBrowseFragment extends Fragment implements BrowseView, MediaS
 
     @Override
     public void selectSection(int index, boolean focusOnContent) {
+        selectSection(index, focusOnContent, false);
+    }
+
+    private void selectSection(int index, boolean focusOnContent, boolean allowRetained) {
         if (mSectionAdapter == null || index < 0 || index >= mSectionAdapter.getItemCount()) {
             return;
         }
         BrowseSection section = mSectionAdapter.getItem(index);
+        BrowseSection current = mPresenter != null ? mPresenter.getCurrentSection() : null;
+        if (allowRetained && mSectionSelected && current != null && current.getId() == section.getId()) {
+            return;
+        }
+        SectionState retained = mRetainedSections.remove(section.getId());
+        if (allowRetained) {
+            retainCurrentSection();
+        }
         mSectionSelected = true;
         mSectionAdapter.setSelected(section);
         updateBottomSelection(section.getId());
         if (mToolbarTitle != null) {
             mToolbarTitle.setText(section.getTitle());
         }
+        if (allowRetained && retained != null
+                && SystemClock.elapsedRealtime() - retained.loadedAt < RETAINED_SECTION_TTL_MS
+                && restoreSection(section, retained)) {
+            return;
+        }
+        mDisplayedGroups.clear();
         setupContentForType(section.getType());
-        if (mPresenter != null) {
-            mPresenter.onSectionFocused(section.getId());
+        mSelectingSection = true;
+        try {
+            if (mPresenter != null) {
+                mPresenter.onSectionFocused(section.getId());
+            }
+        } finally {
+            mSelectingSection = false;
+        }
+    }
+
+    private void retainCurrentSection() {
+        if (!mSectionSelected || !mCurrentCacheable || mProgressShowing || mPresenter == null
+                || !mPresenter.canRetainCurrentSection() || mDisplayedGroups.isEmpty()
+                || mContentList == null || mContentList.getLayoutManager() == null
+                || SystemClock.elapsedRealtime() - mContentLoadedAt >= RETAINED_SECTION_TTL_MS) {
+            return;
+        }
+        int count = 0;
+        for (VideoGroup group : mDisplayedGroups.values()) {
+            count += group.getVideos().size();
+            if (count > RETAINED_VIDEO_LIMIT) {
+                return;
+            }
+        }
+        if (count == 0) {
+            return;
+        }
+        int sectionId = mPresenter.getCurrentSection().getId();
+        SectionState state = new SectionState(mGridAdapter, mShelfAdapter,
+                new ArrayList<>(mDisplayedGroups.values()), mPresenter.getCurrentVideo(),
+                mContentList.getLayoutManager().onSaveInstanceState(), mContentLoadedAt);
+        mRetainedSections.remove(sectionId);
+        mRetainedSections.put(sectionId, state);
+        if (mRetainedSections.size() > RETAINED_SECTION_LIMIT) {
+            mRetainedSections.remove(mRetainedSections.keySet().iterator().next());
+        }
+    }
+
+    private boolean restoreSection(BrowseSection section, SectionState state) {
+        mContentList.clearOnScrollListeners();
+        mGridAdapter = state.grid;
+        mShelfAdapter = state.shelves;
+        mSettingsAdapter = null;
+        RecyclerView.LayoutManager layout;
+        if (mShelfAdapter != null) {
+            layout = new LinearLayoutManager(getContext());
+            mContentList.setLayoutManager(layout);
+            mContentList.setAdapter(mShelfAdapter);
+        } else {
+            layout = new GridLayoutManager(getContext(), mGridSpan);
+            mContentList.setLayoutManager(layout);
+            mContentList.setAdapter(mGridAdapter);
+            mContentList.addOnScrollListener(mGridScrollListener);
+        }
+        mDisplayedGroups.clear();
+        for (VideoGroup group : state.groups) {
+            mDisplayedGroups.put(group.getId(), group);
+        }
+        mContentLoadedAt = state.loadedAt;
+        mCurrentCacheable = true;
+        hideEmptyMessage();
+        layout.onRestoreInstanceState(state.scroll);
+        // Adapters must be attached before processors can emit card updates.
+        return mPresenter != null && mPresenter.restoreSection(section.getId(), state.groups, state.selectedVideo);
+    }
+
+    private static final class SectionState {
+        final VideoCardAdapter grid;
+        final ShelfAdapter shelves;
+        final List<VideoGroup> groups;
+        final Video selectedVideo;
+        final Parcelable scroll;
+        final long loadedAt;
+
+        SectionState(VideoCardAdapter grid, ShelfAdapter shelves, List<VideoGroup> groups,
+                     Video selectedVideo, Parcelable scroll, long loadedAt) {
+            this.grid = grid;
+            this.shelves = shelves;
+            this.groups = groups;
+            this.selectedVideo = selectedVideo;
+            this.scroll = scroll;
+            this.loadedAt = loadedAt;
         }
     }
 
@@ -317,6 +451,15 @@ public class MobileBrowseFragment extends Fragment implements BrowseView, MediaS
         }
         switch (group.getAction()) {
             case VideoGroup.ACTION_REPLACE:
+                if (!mSelectingSection) {
+                    mRetainedSections.clear();
+                }
+                mDisplayedGroups.clear();
+                mCurrentCacheable = true;
+                mContentLoadedAt = SystemClock.elapsedRealtime();
+                if (!group.isEmpty()) {
+                    mDisplayedGroups.put(group.getId(), group);
+                }
                 if (mShelfAdapter != null) mShelfAdapter.clear();
                 if (mGridAdapter != null) mGridAdapter.clear();
                 hideEmptyMessage();
@@ -328,6 +471,9 @@ public class MobileBrowseFragment extends Fragment implements BrowseView, MediaS
                 break;
             case VideoGroup.ACTION_REMOVE:
             case VideoGroup.ACTION_REMOVE_AUTHOR:
+                // Removal can update an adapter without changing its source group's list.
+                mCurrentCacheable = false;
+                mRetainedSections.clear();
                 if (mGridAdapter != null) mGridAdapter.remove(group.getVideos());
                 if (mShelfAdapter != null) mShelfAdapter.removeVideos(group.getVideos());
                 break;
@@ -341,11 +487,16 @@ public class MobileBrowseFragment extends Fragment implements BrowseView, MediaS
                     break;
                 }
                 hideEmptyMessage();
+                mDisplayedGroups.put(group.getId(), group);
                 if (mShelfAdapter != null) {
                     mShelfAdapter.appendGroup(group);
                 } else if (mGridAdapter != null) {
-                    // A continuation carries the full cumulative list, so replace.
-                    mGridAdapter.setVideos(group.getVideos());
+                    // Continuations carry the cumulative list; keep existing cards bound.
+                    if (group.getAction() == VideoGroup.ACTION_APPEND) {
+                        mGridAdapter.setVideosIncrementally(group.getVideos());
+                    } else {
+                        mGridAdapter.setVideos(group.getVideos());
+                    }
                 }
                 break;
         }
@@ -366,6 +517,9 @@ public class MobileBrowseFragment extends Fragment implements BrowseView, MediaS
 
     @Override
     public void clearSection(BrowseSection section) {
+        mRetainedSections.clear();
+        mDisplayedGroups.clear();
+        mCurrentCacheable = false;
         if (mShelfAdapter != null) mShelfAdapter.clear();
         if (mGridAdapter != null) mGridAdapter.clear();
     }
@@ -382,6 +536,7 @@ public class MobileBrowseFragment extends Fragment implements BrowseView, MediaS
 
     @Override
     public void showError(ErrorFragmentData data) {
+        mCurrentCacheable = false;
         if (mEmptyContainer == null) {
             return;
         }
@@ -446,8 +601,14 @@ public class MobileBrowseFragment extends Fragment implements BrowseView, MediaS
         }
         for (int i = 0; i < mSectionAdapter.getItemCount(); i++) {
             if (mSectionAdapter.getItem(i).getId() == sectionId) {
-                selectSection(i, true);
-                if (mContentList != null) {
+                // Re-tapping the current tab scrolls up without discarding its feed.
+                // Explicit refresh and presenter-driven selections still reload normally.
+                BrowseSection current = mPresenter != null ? mPresenter.getCurrentSection() : null;
+                boolean alreadySelected = mSectionSelected && current != null && current.getId() == sectionId;
+                if (!alreadySelected) {
+                    selectSection(i, true, true);
+                }
+                if (alreadySelected && mContentList != null) {
                     mContentList.scrollToPosition(0);
                 }
                 return;
@@ -473,11 +634,12 @@ public class MobileBrowseFragment extends Fragment implements BrowseView, MediaS
         popup.show();
     }
 
-    /** The bottom shortcut follows the saved sidebar setting. */
+    /** Hide the shortcut when Shorts content is hidden, even if its section is still pinned. */
     private void updateShortsTabVisibility() {
         if (mBottomTabs != null) {
-            mBottomTabs[1].setVisibility(SidebarService.instance(requireContext())
-                    .isSectionPinned(MediaGroup.TYPE_SHORTS) ? View.VISIBLE : View.GONE);
+            boolean visible = !MediaServiceData.instance().isContentHidden(MediaServiceData.CONTENT_SHORTS_ALL)
+                    && SidebarService.instance(requireContext()).isSectionPinned(MediaGroup.TYPE_SHORTS);
+            mBottomTabs[1].setVisibility(visible ? View.VISIBLE : View.GONE);
         }
     }
 
@@ -538,6 +700,8 @@ public class MobileBrowseFragment extends Fragment implements BrowseView, MediaS
     @Override
     public void onConfigurationChanged(@NonNull Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
+        mRetainedSections.clear();
+        mCurrentCacheable = false;
         mGridSpan = getResources().getInteger(R.integer.mobile_grid_span);
         mGridCardWidth = getResources().getDisplayMetrics().widthPixels / mGridSpan;
         if (mContentList != null && mContentList.getLayoutManager() instanceof GridLayoutManager) {

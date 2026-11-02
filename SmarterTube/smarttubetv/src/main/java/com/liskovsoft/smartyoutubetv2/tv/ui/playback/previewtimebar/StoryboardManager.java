@@ -3,10 +3,12 @@ package com.liskovsoft.smartyoutubetv2.tv.ui.playback.previewtimebar;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
+import android.widget.ImageView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.collection.ArraySet;
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.RequestBuilder;
 import com.bumptech.glide.request.target.CustomTarget;
 import com.bumptech.glide.request.target.Target;
 import com.bumptech.glide.request.transition.Transition;
@@ -22,6 +24,8 @@ import com.liskovsoft.youtubeapi.service.YouTubeServiceManager;
 import io.reactivex.Observable;
 import io.reactivex.disposables.Disposable;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 public class StoryboardManager {
@@ -39,6 +43,8 @@ public class StoryboardManager {
     private int mCurrentImgNum = -1;
     private final Set<Integer> mCachedImageNums = new ArraySet<>();
     private int mSeekDirection = DIRECTION_RIGHT;
+    private ImageView mPreviewView;
+    private final List<Target<?>> mPreloadTargets = new ArrayList<>();
 
     public interface Callback {
         void onBitmapLoaded(Bitmap bitmap);
@@ -51,10 +57,10 @@ public class StoryboardManager {
     }
 
     public void init(Video video, long lengthMs) {
+        clearPreview();
         mLengthMs = lengthMs;
         mSeekPositions = null;
         mStoryboard = null;
-        mCachedImageNums.clear();
 
         RxHelper.disposeActions(mFormatAction);
 
@@ -122,16 +128,71 @@ public class StoryboardManager {
     }
 
     public void getBitmap(int index, Callback callback) {
-        if (mStoryboard == null || mSeekPositions == null || index >= mSeekPositions.length) {
+        if (mStoryboard == null || mSeekPositions == null || index < 0 || index >= mSeekPositions.length) {
             return;
         }
 
         loadPreview(mSeekPositions[index], callback);
     }
 
-    private void loadPreview(long currentPosition, Callback callback) {
-        if (mStoryboard == null || mStoryboard.getGroupDurationMS() == 0) {
+    /** Glide owns the displayed bitmap until this view is replaced or explicitly cleared. */
+    public void getBitmap(int index, ImageView view) {
+        if (mStoryboard == null || mSeekPositions == null || index < 0 || index >= mSeekPositions.length) {
             return;
+        }
+        if (mPreviewView != null && mPreviewView != view) {
+            Glide.with(mContext).clear(mPreviewView);
+        }
+        mPreviewView = view;
+        RequestBuilder<Bitmap> request = previewRequest(mSeekPositions[index]);
+        if (request != null) request.into(view);
+    }
+
+    /** Cancel mobile previews and prefetches without recycling a bitmap still displayed by a caller. */
+    public void clearPreview() {
+        if (mPreviewView != null) {
+            Glide.with(mContext).clear(mPreviewView);
+            mPreviewView = null;
+        }
+        clearPreloads();
+        mCurrentImgNum = -1;
+    }
+
+    private void clearPreloads() {
+        for (Target<?> target : mPreloadTargets) {
+            Glide.with(mContext).clear(target);
+        }
+        mPreloadTargets.clear();
+        mCachedImageNums.clear();
+    }
+
+    public void release() {
+        RxHelper.disposeActions(mFormatAction);
+        mFormatAction = null;
+        clearPreview();
+        mStoryboard = null;
+        mSeekPositions = null;
+    }
+
+    private void loadPreview(long currentPosition, Callback callback) {
+        RequestBuilder<Bitmap> request = previewRequest(currentPosition);
+        if (request == null) return;
+        request.into(new CustomTarget<Bitmap>() {
+            @Override
+            public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
+                callback.onBitmapLoaded(resource);
+            }
+
+            @Override
+            public void onLoadCleared(@Nullable Drawable placeholder) {
+                // Preserve the existing callback ownership used by TV seek rows.
+            }
+        });
+    }
+
+    private RequestBuilder<Bitmap> previewRequest(long currentPosition) {
+        if (mStoryboard == null || mStoryboard.getGroupDurationMS() == 0) {
+            return null;
         }
 
         int groupNum = (int) currentPosition / mStoryboard.getGroupDurationMS();
@@ -142,32 +203,22 @@ public class StoryboardManager {
 
         //Log.d(TAG, "Loading preview. Position: %s, groupNum: %s, groupDurationMS: %s, groupSize", currentPosition, groupNum, mStoryboard.getGroupDurationMS(), size);
 
-        Glide.with(mContext)
+        RequestBuilder<Bitmap> request = Glide.with(mContext)
                 .asBitmap()
                 .load(mStoryboard.getGroupUrl(groupNum))
                 .apply(ViewUtil.glideOptions())
                 .override(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL)
-                .transform(transformation)
-                .into(new CustomTarget<Bitmap>() {
-                    @Override
-                    public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
-                        //Log.d(TAG, "onPreviewLoaded: image hashCode: %s", resource.hashCode());
-                        callback.onBitmapLoaded(resource);
-                    }
-
-                    @Override
-                    public void onLoadCleared(@Nullable Drawable placeholder) {
-                        // NOP
-                    }
-                });
+                .transform(transformation);
 
         if (mCurrentImgNum != groupNum) {
             mSeekDirection = mCurrentImgNum < groupNum ? DIRECTION_RIGHT : DIRECTION_LEFT;
+            clearPreloads();
             mCachedImageNums.add(groupNum);
             mCurrentImgNum = groupNum;
 
             preloadNextImage();
         }
+        return request;
     }
 
     private void preloadNextImage() {
@@ -192,8 +243,8 @@ public class StoryboardManager {
 
         String link = mStoryboard.getGroupUrl(imgNum);
 
-        Glide.with(mContext)
+        mPreloadTargets.add(Glide.with(mContext)
                 .load(link)
-                .preload();
+                .preload());
     }
 }

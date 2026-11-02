@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.os.Looper;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -82,6 +83,7 @@ final class ModernPlayerChrome {
     private final TextView mPreviewTime;
     private final StoryboardManager mStoryboard;
     private int mPreviewIndex = -1;
+    private String mVideoId;
     private final View mActions;
     private final ImageButton mLike;
     private final ImageButton mDislike;
@@ -215,6 +217,9 @@ final class ModernPlayerChrome {
 
     /** Upstream's loadStoryboard(): the video and its length are known, fetch the storyboard. */
     void loadStoryboard(Video video, long durationMs) {
+        mVideoId = video != null ? video.videoId : null;
+        mUserSeeking = false;
+        showPreview(false);
         mStoryboard.init(video, durationMs);
     }
 
@@ -240,6 +245,7 @@ final class ModernPlayerChrome {
             mCentre.setVisibility(View.VISIBLE);
             mPreview.setVisibility(View.GONE);
             mPreviewIndex = -1;
+            mStoryboard.clearPreview();
         }
     }
 
@@ -270,12 +276,8 @@ final class ModernPlayerChrome {
             return;
         }
         mPreviewIndex = index;
-        mStoryboard.getBitmap(index, bitmap -> {
-            // Frames arrive async: drop ones for a position the finger has already left.
-            if (mUserSeeking && index == mPreviewIndex) {
-                mPreviewImage.setImageBitmap(bitmap);
-            }
-        });
+        // Loading into the same view cancels the previous request and keeps bitmap ownership in Glide.
+        mStoryboard.getBitmap(index, mPreviewImage);
     }
 
     /** "1:17 / 19:06 • Chapter title" (YouTube-style), or just the times without chapters. */
@@ -305,6 +307,13 @@ final class ModernPlayerChrome {
     /** Stop following (player paused / backgrounded). */
     void stop() {
         mHandler.removeCallbacks(mPoll);
+        mUserSeeking = false;
+        showPreview(false);
+    }
+
+    void destroy() {
+        stop();
+        mStoryboard.release();
     }
 
     /** Show the chrome exactly when the Leanback overlay is shown and the style/layout allow it. */
@@ -358,6 +367,13 @@ final class ModernPlayerChrome {
     }
 
     void bindVideo(Video video) {
+        String videoId = video != null ? video.videoId : null;
+        if (!TextUtils.equals(mVideoId, videoId)) {
+            mVideoId = videoId;
+            mUserSeeking = false;
+            showPreview(false);
+            mStoryboard.release();
+        }
         mTitle.setText(video != null && video.getTitle() != null ? video.getTitle() : "");
         mChannel.setText(video != null && video.getAuthor() != null ? video.getAuthor() : "");
         if (mSheetShowsUpNext) {

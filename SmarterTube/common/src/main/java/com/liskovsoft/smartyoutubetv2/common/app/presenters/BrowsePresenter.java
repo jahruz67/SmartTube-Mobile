@@ -125,12 +125,11 @@ public class BrowsePresenter extends BasePresenter<BrowseView> implements Sectio
             return;
         }
 
-        updateSections();
-
-        // Move default focus
-        int selectedSectionIndex = findSectionIndex(mCurrentSection != null ? mCurrentSection.getId() : mBootstrapSectionId);
+        initPinnedData();
+        // Build the sections and select once, honoring an explicit startup destination.
+        // Selecting twice cancels the first load and recreates the phone's content adapter.
+        refreshSections(true, mBootstrapSectionId);
         mBootstrapSectionId = -1;
-        getView().selectSection(selectedSectionIndex != -1 ? selectedSectionIndex : mBootSectionIndex, true);
     }
 
     @Override
@@ -302,10 +301,10 @@ public class BrowsePresenter extends BasePresenter<BrowseView> implements Sectio
 
         initPinnedData();
 
-        refreshSections();
+        refreshSections(false, -1);
     }
 
-    private void refreshSections() {
+    private void refreshSections(boolean focusOnContent, int bootstrapSectionId) {
         if (getView() == null) {
             return;
         }
@@ -342,8 +341,8 @@ public class BrowsePresenter extends BasePresenter<BrowseView> implements Sectio
         }
 
         // Refresh and restore last focus
-        int selectedSectionIndex = findSectionIndex(mCurrentSection != null ? mCurrentSection.getId() : -1);
-        getView().selectSection(selectedSectionIndex != -1 ? selectedSectionIndex : mBootSectionIndex, false);
+        int selectedSectionIndex = findSectionIndex(mCurrentSection != null ? mCurrentSection.getId() : bootstrapSectionId);
+        getView().selectSection(selectedSectionIndex != -1 ? selectedSectionIndex : mBootSectionIndex, focusOnContent);
     }
 
     private void initPinnedData() {
@@ -507,6 +506,46 @@ public class BrowsePresenter extends BasePresenter<BrowseView> implements Sectio
         mCurrentVideo = null; // fast scroll through the sections (fix empty selected item)
         updateCurrentSection();
         restoreSelectedItems(); // Don't place anywhere else
+    }
+
+    /** Phone tab retention only: local/multi-grid sections must always load fresh. */
+    public boolean canRetainCurrentSection() {
+        return canRetainSection(mCurrentSection) && !hasPendingActions();
+    }
+
+    private boolean canRetainSection(BrowseSection section) {
+        if (section == null || mLocalGridMappings.containsKey(section.getId())
+                || (section.isAuthOnly() && !getSignInService().isSigned())) {
+            return false;
+        }
+        int type = section.getType();
+        return type == BrowseSection.TYPE_ROW || type == BrowseSection.TYPE_GRID
+                || type == BrowseSection.TYPE_SHORTS_GRID;
+    }
+
+    /** Restore the same source groups used by the phone's retained adapters and pagination. */
+    public boolean restoreSection(int sectionId, List<VideoGroup> groups, Video selectedVideo) {
+        BrowseSection section = findSectionById(sectionId);
+        if (getView() == null || !canRetainSection(section) || groups.isEmpty()) {
+            return false;
+        }
+        for (VideoGroup group : groups) {
+            if (group.getSection() == null || group.getSection().getId() != sectionId) {
+                return false;
+            }
+        }
+        saveSelectedItems();
+        // Cancel the previous tab's requests before switching the active continuation context.
+        disposeActions();
+        mCurrentSection = section;
+        mCurrentVideo = selectedVideo;
+        updateRefreshTime();
+        getView().showProgressBar(false);
+        for (VideoGroup group : groups) {
+            mBrowseProcessor.process(group);
+        }
+        restoreSelectedItems();
+        return true;
     }
 
     @Override

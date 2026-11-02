@@ -453,15 +453,14 @@ public class MobileChannelFragment extends Fragment implements ChannelView {
         if (group == null || mTabsAdapter == null) {
             return;
         }
-        if (group.isShorts() && MediaServiceData.instance().isContentHidden(MediaServiceData.CONTENT_SHORTS_CHANNEL)) {
-            return;
-        }
+        boolean hideShorts = group.isShorts()
+                && MediaServiceData.instance().isContentHidden(MediaServiceData.CONTENT_SHORTS_CHANNEL);
         switch (group.getAction()) {
             case VideoGroup.ACTION_REPLACE:
                 if (group.getPosition() >= 0) {
                     // A positioned replace (upstream in-channel search; TV swaps one row at
                     // the top) becomes one tab at that position; the other tabs stay.
-                    if (!group.isEmpty()) {
+                    if (!group.isEmpty() && !hideShorts) {
                         String title = group.getId() == SEARCH_GROUP_ID && mSearchQuery != null
                                 ? getString(R.string.mobile_channel_search_tab, mSearchQuery) : group.getTitle();
                         int idx = mTabsAdapter.putTab(group.getPosition(), group, title);
@@ -473,7 +472,7 @@ public class MobileChannelFragment extends Fragment implements ChannelView {
                 // A full replace wipes the tabs before appending.
                 mTabsAdapter.clear();
                 resetSortTab();
-                if (!group.isEmpty()) {
+                if (!group.isEmpty() && !hideShorts) {
                     appendTab(group);
                 }
                 break;
@@ -487,7 +486,7 @@ public class MobileChannelFragment extends Fragment implements ChannelView {
                 break;
             default: // ACTION_APPEND / ACTION_PREPEND — a new group is a new tab, a
                      // continuation appends to its existing page.
-                if (!group.isEmpty()) {
+                if (!group.isEmpty() && !hideShorts) {
                     appendTab(group);
                 }
                 break;

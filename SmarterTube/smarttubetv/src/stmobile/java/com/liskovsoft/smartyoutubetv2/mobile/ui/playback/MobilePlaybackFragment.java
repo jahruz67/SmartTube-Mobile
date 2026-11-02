@@ -63,6 +63,7 @@ import com.liskovsoft.youtubeapi.service.YouTubeServiceManager;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 
 /**
@@ -89,10 +90,7 @@ public class MobilePlaybackFragment extends PlaybackFragment {
     private ImageView mBellBtn;
     private LinearLayout mLinkCards;
     private String mLinkCardsKey;
-    private Disposable mLinkCardsAction;
-    /** Exact view count + absolute upload date, fetched with the avatar metadata (expanded view). */
-    private String mExactViews;
-    private String mUploadDate;
+    private final CompositeDisposable mLinkCardsActions = new CompositeDisposable();
     private TextView mChannelView;
     private TextView mSubsView;
     private TextView mViewsView;
@@ -118,11 +116,8 @@ public class MobilePlaybackFragment extends PlaybackFragment {
     private TextView mPortraitDislikeBtn;
     private TextView mPortraitSubscribeBtn;
     private ImageView mPortraitAvatarView;
-    // Independent metadata fetch for the avatar — must NOT use the shared
-    // MediaServiceManager singleton, whose single disposable is constantly disposed by the
-    // player's own metadata loads (which would cancel our avatar request before it resolves).
-    private Disposable mAvatarAction;
     private String mAvatarVideoId;
+    private String mAvatarUrl;
 
     // Action rail buttons — resolved lazily from within the included layout.
     private ImageView mShortsLikeBtn;
@@ -310,6 +305,15 @@ public class MobilePlaybackFragment extends PlaybackFragment {
     }
 
     @Override
+    public void onDestroyView() {
+        if (mModernChrome != null) mModernChrome.destroy();
+        clearLinkCards();
+        mAvatarVideoId = null;
+        mAvatarUrl = null;
+        super.onDestroyView();
+    }
+
+    @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
         applyMobileLayout();
@@ -397,11 +401,10 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         // metadata refreshes of the same video).
         if (!TextUtils.equals(mLastVideoId, video.videoId)) {
             mLastVideoId = video.videoId;
-            mExactViews = null;
-            mUploadDate = null;
+            clearLinkCards();
             setDescriptionExpanded(false);
-            loadAvatar(video);
         }
+        bindAvatar(video);
 
         mTitleView.setText(video.getTitleFull() != null ? video.getTitleFull() : "");
         if (mModernChrome != null) mModernChrome.bindVideo(video);
@@ -429,55 +432,30 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         bindShortsChrome(video);
     }
 
-    /**
-     * Fetch the channel avatar for the portrait meta block. Uses an independent subscription on the
-     * media service so it survives the player's own constant metadata loads (the shared
-     * {@link MediaServiceManager} singleton disposes its single in-flight request on every call).
-     */
-    private void loadAvatar(Video video) {
-        if (video == null || video.videoId == null) {
+    /** Reuse the metadata already synchronized by SuggestionsController. */
+    private void bindAvatar(Video video) {
+        if (TextUtils.equals(mAvatarVideoId, video.videoId)
+                && TextUtils.equals(mAvatarUrl, video.authorImageUrl)) {
             return;
         }
-
-        // Clear the stale portrait avatar while the new one loads. The Shorts rail channel button
-        // keeps its default icon until the avatar arrives (it's always a visible action button).
-        if (mPortraitAvatarView != null) mPortraitAvatarView.setVisibility(View.GONE);
-        if (mShortsChannelBtn != null) mShortsChannelBtn.setImageResource(R.drawable.ic_shorts_channel);
         mAvatarVideoId = video.videoId;
-        RxHelper.disposeActions(mAvatarAction);
-
-        MediaItemService itemService = YouTubeServiceManager.instance().getMediaItemService();
-        if (itemService == null) {
-            return;
+        mAvatarUrl = video.authorImageUrl;
+        if (mPortraitAvatarView != null) {
+            Glide.with(this).clear(mPortraitAvatarView);
+            mPortraitAvatarView.setVisibility(View.GONE);
         }
-
-        final String fetchId = video.videoId;
-        mAvatarAction = RxHelper.execute(
-                video.mediaItem != null
-                        ? itemService.getMetadataObserve(video.mediaItem)
-                        : itemService.getMetadataObserve(video.videoId, video.getPlaylistId(),
-                                video.playlistIndex, video.playlistParams),
-                (MediaItemMetadata metadata) -> {
-                    if (!isAdded() || !TextUtils.equals(fetchId, mAvatarVideoId)) return;
-                    if (metadata != null) {
-                        mExactViews = metadata.getViewCount();
-                        mUploadDate = metadata.getPublishedDate();
-                        refreshInfoLine(PlaybackPresenter.instance(getContext()).getVideo());
-                    }
-                    String url = metadata != null ? metadata.getAuthorImageUrl() : null;
-                    if (url == null || url.isEmpty()) return;
-                    if (mPortraitAvatarView != null) {
-                        Glide.with(MobilePlaybackFragment.this).load(url).circleCrop()
-                                .into(mPortraitAvatarView);
-                        mPortraitAvatarView.setVisibility(View.VISIBLE);
-                    }
-                    if (mShortsChannelBtn != null) {
-                        // The Shorts rail channel button doubles as the channel avatar.
-                        Glide.with(MobilePlaybackFragment.this).load(url).circleCrop()
-                                .into(mShortsChannelBtn);
-                    }
-                },
-                error -> {});
+        if (mShortsChannelBtn != null) {
+            Glide.with(this).clear(mShortsChannelBtn);
+            mShortsChannelBtn.setImageResource(R.drawable.ic_shorts_channel);
+        }
+        if (TextUtils.isEmpty(mAvatarUrl)) return;
+        if (mPortraitAvatarView != null) {
+            Glide.with(this).load(mAvatarUrl).circleCrop().into(mPortraitAvatarView);
+            mPortraitAvatarView.setVisibility(View.VISIBLE);
+        }
+        if (mShortsChannelBtn != null) {
+            Glide.with(this).load(mAvatarUrl).circleCrop().into(mShortsChannelBtn);
+        }
     }
 
     private void bindShortsChrome(Video video) {
@@ -569,7 +547,9 @@ public class MobilePlaybackFragment extends PlaybackFragment {
             if (mLinkCards != null) {
                 mLinkCards.setVisibility(expanded && mLinkCards.getChildCount() > 0 ? View.VISIBLE : View.GONE);
             }
-            refreshInfoLine(PlaybackPresenter.instance(getContext()).getVideo());
+            Video video = PlaybackPresenter.instance(getContext()).getVideo();
+            if (expanded) loadLinkCards(video);
+            refreshInfoLine(video);
         }
     }
 
@@ -613,8 +593,8 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         }
 
         if (expanded) {
-            if (!TextUtils.isEmpty(mExactViews)) views = mExactViews;
-            if (!TextUtils.isEmpty(mUploadDate)) age = mUploadDate;
+            if (!TextUtils.isEmpty(video.viewCount)) views = video.viewCount;
+            if (!TextUtils.isEmpty(video.publishedDate)) age = video.publishedDate;
         }
 
         StringBuilder sb = new StringBuilder();
@@ -631,21 +611,22 @@ public class MobilePlaybackFragment extends PlaybackFragment {
 
     /**
      * YouTube-app style cards for videos linked from the description: thumbnail, title and
-     * "YouTube - channel - age". Metadata comes from an independent subscription (see loadAvatar);
+     * "YouTube - channel - age". Metadata is fetched only while the description is expanded;
      * a link whose lookup fails simply gets no card (the link in the text still works).
      */
     private void loadLinkCards(Video video) {
-        if (mLinkCards == null || video == null) {
+        if (getView() == null || mLinkCards == null || video == null) {
             return;
         }
         String key = video.videoId + "|" + (video.description != null ? video.description.hashCode() : 0);
         if (key.equals(mLinkCardsKey)) {
             return;
         }
+        clearLinkCards();
+        if (mDescriptionView == null || mDescriptionView.getVisibility() != View.VISIBLE) {
+            return;
+        }
         mLinkCardsKey = key;
-        RxHelper.disposeActions(mLinkCardsAction);
-        mLinkCards.removeAllViews();
-        mLinkCards.setVisibility(View.GONE);
 
         MediaItemService itemService = YouTubeServiceManager.instance().getMediaItemService();
         if (itemService == null) {
@@ -658,9 +639,9 @@ public class MobilePlaybackFragment extends PlaybackFragment {
             final String url = link[0];
             final String id = link[1];
             final String forKey = key;
-            RxHelper.execute(itemService.getMetadataObserve(id, null, -1, null),
+            mLinkCardsActions.add(RxHelper.execute(itemService.getMetadataObserve(id, null, -1, null),
                     (MediaItemMetadata md) -> {
-                        if (!isAdded() || mLinkCards == null || !forKey.equals(mLinkCardsKey)
+                        if (!isAdded() || getView() == null || mLinkCards == null || !forKey.equals(mLinkCardsKey)
                                 || md == null || TextUtils.isEmpty(md.getTitle())) {
                             return;
                         }
@@ -681,7 +662,16 @@ public class MobilePlaybackFragment extends PlaybackFragment {
                         mLinkCards.setVisibility(mDescriptionView.getVisibility() == View.VISIBLE
                                 ? View.VISIBLE : View.GONE);
                     },
-                    error -> {});
+                    error -> {}));
+        }
+    }
+
+    private void clearLinkCards() {
+        mLinkCardsKey = null;
+        mLinkCardsActions.clear();
+        if (mLinkCards != null) {
+            mLinkCards.removeAllViews();
+            mLinkCards.setVisibility(View.GONE);
         }
     }
 

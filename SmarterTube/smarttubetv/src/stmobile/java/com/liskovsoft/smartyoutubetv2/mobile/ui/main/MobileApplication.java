@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.app.Application;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.view.View;
+import android.view.ViewTreeObserver;
 
 import com.liskovsoft.smartyoutubetv2.common.app.views.AddDeviceView;
 import com.liskovsoft.smartyoutubetv2.common.app.views.AppDialogView;
@@ -56,13 +58,17 @@ import com.liskovsoft.youtubeapi.service.internal.MediaServiceData;
  * phases will replace them in turn).
  */
 public class MobileApplication extends MainApplication {
+    private boolean mFirstFrameDrawn;
+    private boolean mNotificationReconciliationQueued;
     // Held strongly because AppPrefs stores weak listeners. SidebarService reloads first.
     private final AppPrefs.ProfileChangeListener mApplyNavigationDefaults = () -> {
         applyNavigationDefaults();
         // Account switched: forget the previous account's seen uploads so the new account
         // seeds fresh (no cross-account false alerts) and re-evaluate the poll schedule.
         MobileNotificationPrefs.clearSeenIds(this);
-        NotificationPollWorker.schedule(this);
+        if (mFirstFrameDrawn) {
+            NotificationPollWorker.schedule(this);
+        }
     };
 
     @Override
@@ -90,6 +96,11 @@ public class MobileApplication extends MainApplication {
             }
 
             @Override
+            public void onActivityResumed(Activity activity) {
+                reconcileNotificationsAfterFirstFrame(activity);
+            }
+
+            @Override
             public void onActivityPaused(Activity activity) {
                 if (!(activity instanceof MobileSettingsActivity) && !(activity instanceof MobileAppDialogActivity)) {
                     return;
@@ -108,10 +119,8 @@ public class MobileApplication extends MainApplication {
         AppPrefs.instance(this).addListener(mApplyNavigationDefaults);
         hideShortsOnce();
 
-        // Start (or, if the toggle is off, ensure-cancelled) the upload-notifications poll.
-        // schedule() self-gates on MobileNotificationPrefs.isEnabled(); the worker no-ops when
-        // signed out, so this is safe to call unconditionally on every cold start.
-        NotificationPollWorker.schedule(this);
+        // Reconcile both enabled and disabled polling after the first activity has drawn.
+        // WorkManager initialization must not delay the first visible frame.
 
         // Must run before the *Once() defaults below: it tells a fresh install from an existing
         // one by whether those one-time flags have been written yet.
@@ -129,6 +138,31 @@ public class MobileApplication extends MainApplication {
             if (accounts != null && accounts.size() == 1
                     && MediaServiceManager.instance().getSelectedAccount() == null) {
                 AccountSelectionPresenter.instance(this).selectAccount(accounts.get(0));
+            }
+        });
+    }
+
+    private void reconcileNotificationsAfterFirstFrame(Activity activity) {
+        if (mFirstFrameDrawn || mNotificationReconciliationQueued) {
+            return;
+        }
+        View decor = activity.getWindow().getDecorView();
+        decor.getViewTreeObserver().addOnDrawListener(new ViewTreeObserver.OnDrawListener() {
+            @Override
+            public void onDraw() {
+                boolean reconcile = !mNotificationReconciliationQueued;
+                mNotificationReconciliationQueued = true;
+                // Posting from onDraw runs after this traversal; removing the listener
+                // inside onDraw itself is prohibited by ViewTreeObserver.
+                decor.post(() -> {
+                    if (decor.getViewTreeObserver().isAlive()) {
+                        decor.getViewTreeObserver().removeOnDrawListener(this);
+                    }
+                    if (reconcile) {
+                        mFirstFrameDrawn = true;
+                        NotificationPollWorker.schedule(MobileApplication.this);
+                    }
+                });
             }
         });
     }

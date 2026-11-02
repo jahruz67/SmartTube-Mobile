@@ -24,7 +24,7 @@ public class MediaServiceSearchTagProvider implements SearchTagsProvider {
 
     @Override
     public void search(String query, ResultsCallback callback) {
-        RxHelper.disposeActions(mTagsAction);
+        cancel();
 
         if (mIgnoreEmptyQuery && TextUtils.isEmpty(query)) {
             callback.onResults(null);
@@ -36,5 +36,10 @@ public class MediaServiceSearchTagProvider implements SearchTagsProvider {
                         tags -> callback.onResults(Tag.from(tags)),
                         error -> Log.e(TAG, "Result is empty. Just ignore it. Error msg: %s", error.getMessage())
                 );
+    }
+
+    public void cancel() {
+        RxHelper.disposeActions(mTagsAction);
+        mTagsAction = null;
     }
 }

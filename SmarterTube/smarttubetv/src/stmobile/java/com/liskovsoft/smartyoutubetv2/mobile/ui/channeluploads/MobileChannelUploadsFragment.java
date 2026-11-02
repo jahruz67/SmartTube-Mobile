@@ -127,7 +127,12 @@ public class MobileChannelUploadsFragment extends Fragment implements ChannelUpl
                 // Percent-watched refresh (e.g. back from the player): redraw the watched bars.
                 mAdapter.sync(group.getVideos());
                 break;
-            default: // ACTION_APPEND / ACTION_PREPEND
+            case VideoGroup.ACTION_APPEND:
+                if (!group.isEmpty()) {
+                    mAdapter.setVideosIncrementally(group.getVideos());
+                }
+                break;
+            default: // ACTION_PREPEND
                 if (!group.isEmpty()) {
                     // A continuation carries the full cumulative list, so replace.
                     mAdapter.setVideos(group.getVideos());

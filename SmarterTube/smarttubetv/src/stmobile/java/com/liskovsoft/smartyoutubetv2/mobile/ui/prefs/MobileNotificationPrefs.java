@@ -6,6 +6,7 @@ import android.text.TextUtils;
 import android.text.format.DateUtils;
 
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.Video;
+import com.liskovsoft.youtubeapi.service.internal.MediaServiceData;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -38,6 +39,7 @@ public final class MobileNotificationPrefs {
     private static final String KEY_HISTORY = "history";
     private static final String HISTORY_TIME = "t";
     private static final String HISTORY_VIDEO = "v";
+    private static final String HISTORY_SHORTS = "shorts";
     private static final String DELIM = "\n";
     /** Plenty to cover a poll's worth of new uploads while bounding the stored string. */
     private static final int MAX_SEEN = 300;
@@ -120,7 +122,8 @@ public final class MobileNotificationPrefs {
         try {
             for (Video video : videos) {
                 if (video.videoId != null && ids.add(video.videoId)) {
-                    result.put(new JSONObject().put(HISTORY_TIME, now).put(HISTORY_VIDEO, video.toString()));
+                    result.put(new JSONObject().put(HISTORY_TIME, now).put(HISTORY_VIDEO, video.toString())
+                            .put(HISTORY_SHORTS, video.isShorts));
                 }
             }
 
@@ -149,6 +152,7 @@ public final class MobileNotificationPrefs {
      */
     public static List<Video> getHistory(Context context) {
         List<Video> result = new ArrayList<>();
+        boolean hideShorts = MediaServiceData.instance().isContentHidden(MediaServiceData.CONTENT_SHORTS_ALL);
         JSONArray history = readHistory(context);
         long now = System.currentTimeMillis();
 
@@ -156,6 +160,11 @@ public final class MobileNotificationPrefs {
             JSONObject entry = history.optJSONObject(i);
             Video video = entry != null ? Video.fromString(entry.optString(HISTORY_VIDEO, null)) : null;
             if (video == null || video.videoId == null) {
+                continue;
+            }
+            // Video.toString() does not preserve the Shorts flag.
+            video.isShorts = entry.optBoolean(HISTORY_SHORTS, false);
+            if (hideShorts && video.isShorts) {
                 continue;
             }
             CharSequence time = DateUtils.getRelativeTimeSpanString(

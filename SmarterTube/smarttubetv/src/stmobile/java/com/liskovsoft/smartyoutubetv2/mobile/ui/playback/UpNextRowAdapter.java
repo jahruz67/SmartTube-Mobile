@@ -18,7 +18,9 @@ import com.liskovsoft.smartyoutubetv2.mobile.ui.browse.VideoCardAdapter;
 import com.liskovsoft.smartyoutubetv2.tv.R;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Compact up-next list for the portrait player panel: small 16:9 thumbnail left, title and
@@ -31,6 +33,7 @@ import java.util.List;
 public class UpNextRowAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private static final int TYPE_VIDEO = 0;
     private static final int TYPE_CHAPTERS = 1;
+    private static final Object WATCHED_PAYLOAD = new Object();
 
     public interface OnVideo {
         void onVideo(Video video);
@@ -115,16 +118,29 @@ public class UpNextRowAdapter extends RecyclerView.Adapter<RecyclerView.ViewHold
 
     /** Presenter ACTION_SYNC: refresh percent-watched on matching rows in place. */
     public void sync(List<Video> changed) {
-        if (changed == null) {
+        if (changed == null || changed.isEmpty()) {
             return;
         }
+        Map<Video, List<Integer>> positions = new HashMap<>();
         for (Video video : changed) {
-            for (int i = 0; i < mVideos.size(); i++) {
-                Video origin = mVideos.get(i);
-                if (origin.equals(video)) {
-                    origin.sync(video);
-                    notifyItemChanged(offset() + i);
-                }
+            if (video != null && !positions.containsKey(video)) {
+                positions.put(video, new ArrayList<>());
+            }
+        }
+        for (int i = 0; i < mVideos.size(); i++) {
+            List<Integer> matches = positions.get(mVideos.get(i));
+            if (matches != null) {
+                matches.add(i);
+            }
+        }
+        for (Video video : changed) {
+            List<Integer> matches = positions.get(video);
+            if (matches == null) {
+                continue;
+            }
+            for (int position : matches) {
+                mVideos.get(position).sync(video);
+                notifyItemChanged(offset() + position, WATCHED_PAYLOAD);
             }
         }
     }
@@ -153,6 +169,18 @@ public class UpNextRowAdapter extends RecyclerView.Adapter<RecyclerView.ViewHold
             return new ChaptersHolder(inflater.inflate(R.layout.mobile_up_next_chapters, parent, false));
         }
         return new Holder(inflater.inflate(R.layout.mobile_up_next_row, parent, false));
+    }
+
+    @Override
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position,
+                                @NonNull List<Object> payloads) {
+        if (holder instanceof Holder && !payloads.isEmpty() && payloads.contains(WATCHED_PAYLOAD)) {
+            Holder videoHolder = (Holder) holder;
+            VideoCardAdapter.bindWatchedBar(videoHolder.progress, videoHolder.duration,
+                    mVideos.get(position - offset()));
+            return;
+        }
+        onBindViewHolder(holder, position);
     }
 
     @Override

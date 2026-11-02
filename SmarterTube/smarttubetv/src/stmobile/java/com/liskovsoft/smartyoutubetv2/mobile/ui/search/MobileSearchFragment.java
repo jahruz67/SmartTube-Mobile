@@ -56,6 +56,7 @@ import java.util.Map;
  */
 public class MobileSearchFragment extends Fragment implements SearchView {
     private static final int REQUEST_VOICE_SEARCH = 1001;
+    private static final long SUGGESTION_DELAY_MS = 250;
     private SearchPresenter mPresenter;
     private EditText mSearchInput;
     private RecyclerView mResultsList;
@@ -68,6 +69,8 @@ public class MobileSearchFragment extends Fragment implements SearchView {
     private MediaServiceSearchTagProvider mTagsProvider;
     private final Map<Integer, List<Video>> mGroups = new LinkedHashMap<>();
     private final Handler mUiHandler = new Handler(Looper.getMainLooper());
+    private int mSuggestionGeneration;
+    private String mSuggestionQuery;
     private boolean mProgressShowing;
     private boolean mSwipeRefreshing;
     private boolean mWantSuggestions;
@@ -150,6 +153,16 @@ public class MobileSearchFragment extends Fragment implements SearchView {
     }
 
     @Override
+    public void onDestroyView() {
+        mWantSuggestions = false;
+        cancelSuggestions();
+        if (mSearchInput != null) {
+            mSearchInput.removeTextChangedListener(mQueryWatcher);
+        }
+        super.onDestroyView();
+    }
+
+    @Override
     public void onDestroy() {
         super.onDestroy();
         if (mPresenter != null) {
@@ -185,8 +198,11 @@ public class MobileSearchFragment extends Fragment implements SearchView {
         if (group.isEmpty()) {
             return;
         }
-        // A continuation carries the full cumulative list for its group, so replacing the
-        // slice keyed by group id handles both the first page and later pages.
+        if (group.getAction() == VideoGroup.ACTION_APPEND && appendSearchResults(group)) {
+            hideEmptyMessage();
+            return;
+        }
+        // Replacements and prepends rebuild the slices in their original group order.
         mGroups.put(group.getId(), new ArrayList<>(group.getVideos()));
         rebuildResults();
     }
@@ -216,6 +232,7 @@ public class MobileSearchFragment extends Fragment implements SearchView {
 
     @Override
     public void setTagsProvider(MediaServiceSearchTagProvider provider) {
+        cancelSuggestions();
         mTagsProvider = provider;
     }
 
@@ -319,6 +336,7 @@ public class MobileSearchFragment extends Fragment implements SearchView {
             return;
         }
         mWantSuggestions = false;
+        cancelSuggestions();
         mSuggestionsList.setVisibility(View.GONE);
         hideKeyboard();
         mSearchInput.clearFocus();
@@ -338,6 +356,36 @@ public class MobileSearchFragment extends Fragment implements SearchView {
         submitSearch(tag.tag);
     }
 
+    private boolean appendSearchResults(VideoGroup group) {
+        List<Video> all = group.getVideos();
+        List<Video> previous = mGroups.get(group.getId());
+        if (previous == null) {
+            mGroups.put(group.getId(), new ArrayList<>(all));
+            mResultsAdapter.appendVideos(all);
+            return true;
+        }
+        int oldCount = previous.size();
+        if (all.size() <= oldCount) {
+            return false;
+        }
+        for (int i = 0; i < oldCount; i++) {
+            if (previous.get(i) != all.get(i)) {
+                return false;
+            }
+        }
+        int offset = 0;
+        for (Map.Entry<Integer, List<Video>> entry : mGroups.entrySet()) {
+            if (entry.getKey() == group.getId()) {
+                break;
+            }
+            offset += entry.getValue().size();
+        }
+        List<Video> tail = all.subList(oldCount, all.size());
+        previous.addAll(tail);
+        mResultsAdapter.insertVideos(offset + oldCount, tail);
+        return true;
+    }
+
     private void rebuildResults() {
         List<Video> flat = new ArrayList<>();
         for (List<Video> videos : mGroups.values()) {
@@ -350,17 +398,38 @@ public class MobileSearchFragment extends Fragment implements SearchView {
     }
 
     private void loadSuggestions(String query) {
+        if (query.equals(mSuggestionQuery)) {
+            return;
+        }
+        cancelSuggestions();
         if (mTagsProvider == null) {
             return;
         }
-        mTagsProvider.search(query, results -> mUiHandler.post(() -> {
-            if (!isAdded() || !mWantSuggestions) {
+        mSuggestionQuery = query;
+        int generation = mSuggestionGeneration;
+        mUiHandler.postDelayed(() -> {
+            if (generation != mSuggestionGeneration || !mWantSuggestions || getView() == null) {
                 return;
             }
-            mTagsAdapter.setTags(results);
-            mSuggestionsList.setVisibility(
-                    mTagsAdapter.getItemCount() > 0 ? View.VISIBLE : View.GONE);
-        }));
+            mTagsProvider.search(query, results -> mUiHandler.post(() -> {
+                if (!isAdded() || getView() == null || !mWantSuggestions
+                        || generation != mSuggestionGeneration) {
+                    return;
+                }
+                mTagsAdapter.setTags(results);
+                mSuggestionsList.setVisibility(
+                        mTagsAdapter.getItemCount() > 0 ? View.VISIBLE : View.GONE);
+            }));
+        }, SUGGESTION_DELAY_MS);
+    }
+
+    private void cancelSuggestions() {
+        mSuggestionGeneration++;
+        mSuggestionQuery = null;
+        mUiHandler.removeCallbacksAndMessages(null);
+        if (mTagsProvider != null) {
+            mTagsProvider.cancel();
+        }
     }
 
     private final TextWatcher mQueryWatcher = new TextWatcher() {
@@ -377,6 +446,7 @@ public class MobileSearchFragment extends Fragment implements SearchView {
             }
             if (s.length() == 0) {
                 mWantSuggestions = false;
+                cancelSuggestions();
                 mSuggestionsList.setVisibility(View.GONE);
                 if (mTagsAdapter != null) {
                     mTagsAdapter.clear();

@@ -1,5 +1,6 @@
 package com.liskovsoft.smartyoutubetv2.mobile.ui.browse;
 
+import android.os.Parcelable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -41,6 +42,7 @@ public class ShelfAdapter extends RecyclerView.Adapter<ShelfAdapter.ViewHolder> 
     // last video off the *group*, where the Video↔Group back-reference is guaranteed
     // (the cards' raw Video objects sometimes lose it on Home's mixed-source shelves).
     private final List<VideoGroup> mGroups = new ArrayList<>();
+    private final List<ScrollState> mScrollStates = new ArrayList<>();
     private final RecyclerView.RecycledViewPool mPool = new RecyclerView.RecycledViewPool();
 
     public ShelfAdapter(int cardWidth, VideoCardAdapter.OnVideoAction click,
@@ -71,11 +73,14 @@ public class ShelfAdapter extends RecyclerView.Adapter<ShelfAdapter.ViewHolder> 
             VideoCardAdapter adapter = mAdapters.get(idx);
             List<Video> all = group.getVideos();
             int oldCount = adapter.getItemCount();
-            if (all != null && all.size() > oldCount) {
-                adapter.appendVideos(all.subList(oldCount, all.size()));
-            } else if (all != null && all.size() < oldCount) {
-                // Shrunk (a refresh, not a continuation) — full replace; no scroll to keep.
-                adapter.setVideos(all);
+            if (all != null) {
+                if (group.getAction() != VideoGroup.ACTION_APPEND || all.size() < oldCount) {
+                    mScrollStates.set(idx, new ScrollState());
+                    adapter.setVideos(all);
+                    notifyItemChanged(idx);
+                } else {
+                    adapter.setVideosIncrementally(all);
+                }
             }
             mGroups.set(idx, group);
         } else {
@@ -85,6 +90,7 @@ public class ShelfAdapter extends RecyclerView.Adapter<ShelfAdapter.ViewHolder> 
             mTitles.add(group.getTitle() != null ? group.getTitle() : "");
             mAdapters.add(adapter);
             mGroups.add(group);
+            mScrollStates.add(new ScrollState());
             notifyItemInserted(mAdapters.size() - 1);
         }
     }
@@ -107,6 +113,7 @@ public class ShelfAdapter extends RecyclerView.Adapter<ShelfAdapter.ViewHolder> 
         mTitles.clear();
         mAdapters.clear();
         mGroups.clear();
+        mScrollStates.clear();
         notifyDataSetChanged();
     }
 
@@ -125,20 +132,73 @@ public class ShelfAdapter extends RecyclerView.Adapter<ShelfAdapter.ViewHolder> 
                 new LinearLayoutManager(parent.getContext(), LinearLayoutManager.HORIZONTAL, false));
         holder.list.setRecycledViewPool(mPool);
         if (mScrollEnd != null) {
-            holder.list.addOnScrollListener(new HorizontalScrollEndListener(holder));
+            holder.scrollEndListener = new HorizontalScrollEndListener(holder);
+            holder.list.addOnScrollListener(holder.scrollEndListener);
         }
         return holder;
     }
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+        saveScrollState(holder);
         holder.title.setText(mTitles.get(position));
-        holder.list.setAdapter(mAdapters.get(position));
+        ScrollState state = mScrollStates.get(position);
+        boolean changed = holder.scrollState != state || holder.list.getAdapter() != mAdapters.get(position);
+        holder.scrollState = state;
+        if (changed) {
+            holder.list.setAdapter(mAdapters.get(position));
+            RecyclerView.LayoutManager layout = holder.list.getLayoutManager();
+            if (layout != null && state.layout != null) {
+                layout.onRestoreInstanceState(state.layout);
+            } else {
+                holder.list.scrollToPosition(0);
+            }
+            if (holder.scrollEndListener != null) {
+                holder.scrollEndListener.mLastFiredAt = -1;
+            }
+        }
+    }
+
+    @Override
+    public void onViewDetachedFromWindow(@NonNull ViewHolder holder) {
+        saveScrollState(holder);
+        super.onViewDetachedFromWindow(holder);
+    }
+
+    @Override
+    public void onViewRecycled(@NonNull ViewHolder holder) {
+        saveScrollState(holder);
+        holder.scrollState = null;
+        super.onViewRecycled(holder);
+    }
+
+    @Override
+    public void onDetachedFromRecyclerView(@NonNull RecyclerView recyclerView) {
+        for (int i = 0; i < recyclerView.getChildCount(); i++) {
+            RecyclerView.ViewHolder holder = recyclerView.getChildViewHolder(recyclerView.getChildAt(i));
+            if (holder instanceof ViewHolder) {
+                saveScrollState((ViewHolder) holder);
+            }
+        }
+        super.onDetachedFromRecyclerView(recyclerView);
+    }
+
+    private static void saveScrollState(ViewHolder holder) {
+        RecyclerView.LayoutManager layout = holder.list.getLayoutManager();
+        if (holder.scrollState != null && layout != null) {
+            holder.scrollState.layout = layout.onSaveInstanceState();
+        }
+    }
+
+    private static class ScrollState {
+        Parcelable layout;
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
         final TextView title;
         final RecyclerView list;
+        ScrollState scrollState;
+        HorizontalScrollEndListener scrollEndListener;
 
         ViewHolder(View itemView) {
             super(itemView);
