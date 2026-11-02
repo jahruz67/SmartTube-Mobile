@@ -98,7 +98,9 @@ public class MediaNotificationService extends Service {
         String action = intent != null ? intent.getAction() : null;
 
         if (ACTION_UPDATE.equals(action)) {
-            MediaSessionCompat.Token token = intent.getParcelableExtra(EXTRA_SESSION_TOKEN);
+            MediaSessionCompat.Token token = Build.VERSION.SDK_INT >= 33
+                    ? intent.getParcelableExtra(EXTRA_SESSION_TOKEN, MediaSessionCompat.Token.class)
+                    : intent.getParcelableExtra(EXTRA_SESSION_TOKEN);
             if (token == null) {
                 stopSelfCompletely();
                 return START_NOT_STICKY;
@@ -109,6 +111,7 @@ public class MediaNotificationService extends Service {
             } catch (Exception e) {
                 // ForegroundServiceStartNotAllowedException (Android 12+)
                 Log.e(TAG, "startForeground failed: %s", e.getMessage());
+                stopSelfCompletely();
             }
         } else if (mController == null) {
             // Restarted without a session (process recreated) or a stale action: nothing to show.

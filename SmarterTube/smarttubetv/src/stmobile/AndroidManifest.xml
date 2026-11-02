@@ -14,6 +14,14 @@
           xmlns:tools="http://schemas.android.com/tools"
           package="com.liskovsoft.smartyoutubetv2.tv">
 
+    <!-- Scoped storage replaces these legacy permissions on newer Android versions. -->
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
+
     <!-- Make the app installable on non-TV (phone/tablet) devices -->
     <uses-feature
         android:name="android.software.leanback"
@@ -180,6 +188,7 @@
              carousel); also keeps background audio alive. -->
         <service
             android:name="com.liskovsoft.smartyoutubetv2.mobile.notifications.MediaNotificationService"
+            android:foregroundServiceType="mediaPlayback"
             android:exported="false" />
 
     </application>
