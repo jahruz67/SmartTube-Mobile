@@ -4,14 +4,13 @@
     user picks "Dark" via the in-app Theme setting, which calls
     AppCompatDelegate.setDefaultNightMode(MODE_NIGHT_YES)).
 
-    These values are the alpha2/alpha3 look - kept byte-identical so existing
-    users see no visual change when they're in dark mode.
+    A lighter purple accent keeps controls readable against dark surfaces.
 -->
 <resources>
     <color name="brand_primary">#0F0F0F</color>
     <color name="brand_primary_dark">#000000</color>
     <color name="brand_on_primary">#FFFFFFFF</color>
-    <color name="brand_accent">#FFB300</color>
+    <color name="brand_accent">#BB86FC</color>
     <color name="brand_accent_on">#FF000000</color>
 
     <color name="mobile_background">@color/brand_primary</color>

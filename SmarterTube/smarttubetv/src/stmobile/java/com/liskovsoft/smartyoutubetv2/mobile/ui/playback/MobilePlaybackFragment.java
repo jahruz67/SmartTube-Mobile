@@ -47,6 +47,7 @@ import com.liskovsoft.smartyoutubetv2.common.app.models.playback.manager.PlayerU
 import com.liskovsoft.smartyoutubetv2.common.app.presenters.BrowsePresenter;
 import com.liskovsoft.smartyoutubetv2.common.app.presenters.ChannelPresenter;
 import com.liskovsoft.smartyoutubetv2.common.app.presenters.PlaybackPresenter;
+import com.liskovsoft.smartyoutubetv2.common.app.presenters.service.SidebarService;
 import com.liskovsoft.smartyoutubetv2.common.misc.MediaServiceManager;
 import com.liskovsoft.smartyoutubetv2.mobile.notifications.MediaNotificationService;
 import com.liskovsoft.smartyoutubetv2.common.prefs.PlayerData;
@@ -59,6 +60,7 @@ import com.liskovsoft.smartyoutubetv2.tv.R;
 import com.liskovsoft.smartyoutubetv2.tv.ui.playback.PlaybackFragment;
 import com.liskovsoft.smartyoutubetv2.tv.ui.playback.other.VideoPlayerGlue;
 import com.liskovsoft.youtubeapi.service.YouTubeServiceManager;
+import com.liskovsoft.youtubeapi.service.internal.MediaServiceData;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -245,6 +247,7 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         // The player style may have changed in Settings while we were away (#46).
         mStyle = MobilePlayerStylePrefs.getStyle(requireContext());
         mSwipeEnabled = MobilePlayerStylePrefs.isSwipeGesturesEnabled(requireContext());
+        updateShortsTabVisibility();
         applyMobileLayout();
         if (mModernChrome != null) mModernChrome.start();
         updateSettingsButton();
@@ -2375,6 +2378,16 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         }
     }
 
+    /** Match the browse bar's Shorts visibility, including changes made in Settings. */
+    private void updateShortsTabVisibility() {
+        if (mShortsNavBar != null) {
+            boolean visible = !MediaServiceData.instance().isContentHidden(MediaServiceData.CONTENT_SHORTS_ALL)
+                    && SidebarService.instance(requireContext()).isSectionPinned(MediaGroup.TYPE_SHORTS);
+            mShortsNavBar.findViewById(R.id.shorts_nav_shorts)
+                    .setVisibility(visible ? View.VISIBLE : View.GONE);
+        }
+    }
+
     private void initShortsViews(Activity activity) {
         mShortsActionRail = activity.findViewById(R.id.mobile_shorts_action_rail);
         mShortsBackBtn = activity.findViewById(R.id.mobile_shorts_back_btn);
@@ -2432,6 +2445,7 @@ public class MobilePlaybackFragment extends PlaybackFragment {
 
         // Bottom navigation bar.
         mShortsNavBar = activity.findViewById(R.id.mobile_shorts_nav_bar);
+        updateShortsTabVisibility();
         if (mShortsNavBar != null) {
             // Ensure nav bar draws on top of the profile sheet during slide-up animation.
             mShortsNavBar.bringToFront();

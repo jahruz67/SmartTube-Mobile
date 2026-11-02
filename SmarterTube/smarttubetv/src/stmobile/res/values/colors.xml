@@ -12,8 +12,8 @@
     <color name="brand_primary">#FFFFFFFF</color>
     <color name="brand_primary_dark">#FFE0E0E0</color>
     <color name="brand_on_primary">#FF000000</color>
-    <color name="brand_accent">#FFB300</color>
-    <color name="brand_accent_on">#FF000000</color>
+    <color name="brand_accent">#7C3AED</color>
+    <color name="brand_accent_on">#FFFFFFFF</color>
 
     <color name="mobile_background">@color/brand_primary</color>
     <color name="mobile_surface">#FFF5F5F5</color>

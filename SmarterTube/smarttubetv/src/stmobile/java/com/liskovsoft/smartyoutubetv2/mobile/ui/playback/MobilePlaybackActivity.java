@@ -1,20 +1,28 @@
 package com.liskovsoft.smartyoutubetv2.mobile.ui.playback;
 
+import android.app.PictureInPictureParams;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
+import android.graphics.Rect;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.util.Rational;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.OrientationEventListener;
+import android.view.View;
 
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Lifecycle;
 
+import com.liskovsoft.sharedutils.helpers.Helpers;
+import com.liskovsoft.sharedutils.mylogger.Log;
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.Video;
 import com.liskovsoft.smartyoutubetv2.common.app.presenters.PlaybackPresenter;
 import com.liskovsoft.smartyoutubetv2.common.prefs.PlayerData;
+import com.liskovsoft.smartyoutubetv2.common.utils.Utils;
 import com.liskovsoft.smartyoutubetv2.mobile.ui.base.ImmersiveBars;
 import com.liskovsoft.smartyoutubetv2.tv.R;
 import com.liskovsoft.smartyoutubetv2.tv.ui.playback.PlaybackActivity;
@@ -58,6 +66,55 @@ public class MobilePlaybackActivity extends PlaybackActivity {
         applyOrientationForCurrentVideo();
     }
 
+    @Override
+    public void onUserLeaveHint() {
+        // Only leaving active playback should open a mini player. In-app navigation and
+        // paused videos must not pin the activity, even when the PiP setting is selected.
+        if (mMobileFragment == null || !mMobileFragment.isPlaying() || isInPipMode()
+                || isBackPressed() || isFinishing() || getViewManager().isNewViewPending()) {
+            return;
+        }
+
+        if (!Utils.isHardScreenOff(this) && enterMiniPlayer()) {
+            return;
+        }
+
+        // Keep the existing background-audio behavior on screen lock or when PiP is
+        // unavailable. Avoid retrying a failed PiP request through the shared activity.
+        if (getPlayerData().getBackgroundMode() != PlayerData.BACKGROUND_MODE_PIP) {
+            super.onUserLeaveHint();
+        }
+    }
+
+    private boolean enterMiniPlayer() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O || !Helpers.isPictureInPictureSupported(this)) {
+            return false;
+        }
+
+        Video video = PlaybackPresenter.instance(this).getVideo();
+        PictureInPictureParams.Builder params = new PictureInPictureParams.Builder()
+                .setAspectRatio(video != null && video.isShorts ? new Rational(9, 16) : new Rational(16, 9));
+        View player = findViewById(R.id.playback_controls_fragment);
+        Rect bounds = new Rect();
+        if (player != null && player.getGlobalVisibleRect(bounds)) {
+            params.setSourceRectHint(bounds);
+        }
+
+        try {
+            if (!enterPictureInPictureMode(params.build())) {
+                return false;
+            }
+        } catch (IllegalStateException | IllegalArgumentException | SecurityException e) {
+            Log.e(MobilePlaybackActivity.class.getSimpleName(), e.getMessage());
+            return false;
+        }
+
+        mMobileFragment.blockEngine(true);
+        sIsInPipMode = true;
+        getViewManager().blockTop(this);
+        return true;
+    }
+
     /**
      * Phone Back UX (issue #23): pressing Back leaves the video for good.
      *
@@ -70,14 +127,15 @@ public class MobilePlaybackActivity extends PlaybackActivity {
      * audio and nothing to loop into.
      *
      * Left to the base class:
-     * - PIP (either already in PIP, or the user picked {@code BACKGROUND_MODE_PIP}) — Back should
+     * - PIP (either already in PIP, or playing with {@code BACKGROUND_MODE_PIP}) — Back should
      *   enter/keep PIP, an explicit opt-in feature, not be hijacked into a stop.
      * - Home / lock-screen background audio — that runs through onUserLeaveHint/onStop, a different
      *   path that this override doesn't touch, so listening with the screen off still works.
      */
     @Override
     public void onBackPressed() {
-        if (isInPipMode() || getPlayerData().getBackgroundMode() == PlayerData.BACKGROUND_MODE_PIP) {
+        if (isInPipMode() || (getPlayerData().getBackgroundMode() == PlayerData.BACKGROUND_MODE_PIP
+                && mMobileFragment != null && mMobileFragment.isPlaying())) {
             super.onBackPressed();
             return;
         }
@@ -124,6 +182,7 @@ public class MobilePlaybackActivity extends PlaybackActivity {
     @Override
     public void onPictureInPictureModeChanged(boolean isInPictureInPictureMode) {
         super.onPictureInPictureModeChanged(isInPictureInPictureMode);
+        sIsInPipMode = isInPictureInPictureMode;
 
         if (!isInPictureInPictureMode
                 && !getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED)) {
