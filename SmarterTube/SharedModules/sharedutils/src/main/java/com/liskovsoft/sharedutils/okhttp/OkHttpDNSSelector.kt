@@ -4,6 +4,7 @@ import okhttp3.Dns
 import java.net.Inet4Address
 import java.net.Inet6Address
 import java.net.InetAddress
+import java.net.UnknownHostException
 
 /**
  * Fix for the [issue](https://github.com/facebook/react-native/issues/32730)
@@ -31,7 +32,12 @@ class OkHttpDNSSelector(private val mode: IPvMode) : Dns {
     }
 
     override fun lookup(hostname: String): List<InetAddress> {
-        var addresses = Dns.SYSTEM.lookup(hostname)
+        var addresses = try {
+            Dns.SYSTEM.lookup(hostname)
+        } catch (error: UnknownHostException) {
+            // Address ordering cannot help when the system DNS fails to resolve the host.
+            PublicDnsResolver.google().lookup(hostname)
+        }
 
         // More memory efficient
         addresses = when (mode) {

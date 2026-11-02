@@ -373,7 +373,7 @@ public final class DebugInfoManager implements Runnable, Player.EventListener {
         PlayerTweaksData playerTweaksData = PlayerTweaksData.instance(mContext);
         String engine = playerTweaksData.getPlayerDataSource() == PlayerTweaksData.PLAYER_DATA_SOURCE_OKHTTP ? "OkHttp" :
                 playerTweaksData.getPlayerDataSource() == PlayerTweaksData.PLAYER_DATA_SOURCE_CRONET
-                        && CronetManager.getEngine(mContext) != null ? "Cronet" : "Default";
+                        && CronetManager.getEngine(mContext) != null ? "Cronet" : "HttpURLConnection";
         String protocol;
         Object manifest = mPlayer.getCurrentManifest();
         if (manifest == null) {
