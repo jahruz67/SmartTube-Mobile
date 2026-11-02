@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android equivalent of smarttube_mobile_dev_icon.svg. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="100"
+    android:viewportHeight="100">
+    <path
+        android:fillColor="#132330"
+        android:pathData="M28,4 H72 A24,24 0,0 1,96 28 V72 A24,24 0,0 1,72 96 H28 A24,24 0,0 1,4 72 V28 A24,24 0,0 1,28 4 Z" />
+    <path
+        android:fillColor="#32CDBC"
+        android:pathData="M22.5,30 A4.5,4.5 0,0 1,27 34.5 V65.5 A4.5,4.5 0,0 1,18 65.5 V34.5 A4.5,4.5 0,0 1,22.5 30 Z" />
+    <path
+        android:fillColor="#EFF9F8"
+        android:pathData="M37,26 V74 L76,50 Z" />
+</vector>

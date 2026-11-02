@@ -111,9 +111,11 @@ def apply(root: Path, check_only: bool = False) -> None:
         after = func(before)
         changes.append((full, before, after, rel))
     icon_changes = []
-    for density in ICON_SIZES:
-        src = ROOT / 'overlays/dev-icons' / (density + '.png')
-        dst = root / 'smarttubetv/src/stmobile/res' / ('mipmap-' + density) / 'smarttube_mobile_dev_icon.png'
+    icon_sources = [(density + '.png', 'mipmap-' + density) for density in ICON_SIZES]
+    icon_sources.append(('smarttube_mobile_dev_icon.xml', 'mipmap-anydpi'))
+    for filename, folder in icon_sources:
+        src = ROOT / 'overlays/dev-icons' / filename
+        dst = root / 'smarttubetv/src/stmobile/res' / folder / ('smarttube_mobile_dev_icon' + src.suffix)
         payload = src.read_bytes()
         if dst.exists() and dst.read_bytes() != payload:
             raise ValueError(f'Existing launcher icon collision: {dst}')
