@@ -32,23 +32,11 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Restore permanent release signing key
-        env:
-          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
-          KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
-          ALIAS: ${{ secrets.ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+      - name: Use repository release signing key
         run: |
           set -euo pipefail
-          for name in SIGNING_KEY KEY_STORE_PASSWORD ALIAS KEY_PASSWORD; do
-            if [[ -z "${!name}" ]]; then
-              echo "::error::Missing repository secret: $name. Release builds require a permanent signing key; debug signing is never used."
-              exit 1
-            fi
-          done
-          umask 077
-          printf '%s' "$SIGNING_KEY" | base64 --decode > "$RUNNER_TEMP/mobile-release.jks"
-          printf 'MOBILE_KEYSTORE_PATH=%s/mobile-release.jks\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
+          test -s signing/mobile-release.jks
+          printf 'MOBILE_KEYSTORE_PATH=%s/signing/mobile-release.jks\n' "$GITHUB_WORKSPACE" >> "$GITHUB_ENV"
 
       - name: Set increasing production version
         run: |
@@ -68,9 +56,10 @@ jobs:
       - name: Build signed mobile release APKs
         working-directory: SmarterTube
         env:
-          MOBILE_KEYSTORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
-          MOBILE_KEY_ALIAS: ${{ secrets.ALIAS }}
-          MOBILE_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          # Repository-managed signing identity. Preserve this key for all future updates.
+          MOBILE_KEYSTORE_PASSWORD: smarttube-mobile-release
+          MOBILE_KEY_ALIAS: mobile-release
+          MOBILE_KEY_PASSWORD: smarttube-mobile-release
         run: |
           set -euo pipefail
           printf 'sdk.dir=%s\n' "$ANDROID_HOME" > local.properties
@@ -91,10 +80,6 @@ jobs:
           done
           cd release-assets
           sha256sum *.apk > SHA256SUMS.txt
-
-      - name: Remove signing material
-        if: always()
-        run: rm -f -- "$RUNNER_TEMP/mobile-release.jks"
 
       - name: Publish universal APK as a GitHub Release
         env:
