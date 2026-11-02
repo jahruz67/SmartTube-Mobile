@@ -40,13 +40,13 @@ public class PlaybackModeAction extends MultiAction {
 
         mContext = context;
         Drawable[] drawables = new Drawable[7];
-        BitmapDrawable repeatNoneDrawable = (BitmapDrawable) ContextCompat.getDrawable(context, R.drawable.action_mode_none);
-        BitmapDrawable repeatOneDrawable = (BitmapDrawable) ContextCompat.getDrawable(context, R.drawable.action_mode_one);
-        BitmapDrawable repeatAllDrawable = (BitmapDrawable) ContextCompat.getDrawable(context, R.drawable.action_mode_all);
-        BitmapDrawable repeatPauseDrawable = (BitmapDrawable) ContextCompat.getDrawable(context, R.drawable.action_mode_pause);
-        BitmapDrawable repeatListDrawable = (BitmapDrawable) ContextCompat.getDrawable(context, R.drawable.action_mode_list);
-        BitmapDrawable repeatShuffleDrawable = (BitmapDrawable) ContextCompat.getDrawable(context, R.drawable.action_mode_shuffle);
-        BitmapDrawable reverseListDrawable = (BitmapDrawable) ContextCompat.getDrawable(context, R.drawable.action_mode_reverse_list);
+        Drawable repeatNoneDrawable = ContextCompat.getDrawable(context, R.drawable.action_mode_none);
+        Drawable repeatOneDrawable = ContextCompat.getDrawable(context, R.drawable.action_mode_one);
+        Drawable repeatAllDrawable = ContextCompat.getDrawable(context, R.drawable.action_mode_all);
+        Drawable repeatPauseDrawable = ContextCompat.getDrawable(context, R.drawable.action_mode_pause);
+        Drawable repeatListDrawable = ContextCompat.getDrawable(context, R.drawable.action_mode_list);
+        Drawable repeatShuffleDrawable = ContextCompat.getDrawable(context, R.drawable.action_mode_shuffle);
+        Drawable reverseListDrawable = ContextCompat.getDrawable(context, R.drawable.action_mode_reverse_list);
         drawables[INDEX_NONE] = ActionHelpers.createDrawable(context, repeatNoneDrawable, selectionColor);
         drawables[INDEX_ONE] = ActionHelpers.createDrawable(context, repeatOneDrawable, selectionColor);
         drawables[INDEX_ALL] = ActionHelpers.createDrawable(context, repeatAllDrawable, selectionColor);

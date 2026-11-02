@@ -27,10 +27,23 @@ public class ActionHelpers {
         return ContextCompat.getColor(context, R.color.gray);
     }
 
-    public static BitmapDrawable createDrawable(Context context, BitmapDrawable bitmapDrawable, int bitmapColor) {
-        return bitmapDrawable == null ? null
+    public static BitmapDrawable createDrawable(Context context, Drawable drawable, int bitmapColor) {
+        return drawable == null ? null
                 : new BitmapDrawable(context.getResources(),
-                createBitmap(bitmapDrawable.getBitmap(), bitmapColor));
+                createBitmap(toBitmap(context, drawable), bitmapColor));
+    }
+
+    private static Bitmap toBitmap(Context context, Drawable drawable) {
+        if (drawable instanceof BitmapDrawable) {
+            return ((BitmapDrawable) drawable).getBitmap();
+        }
+        int width = Math.max(drawable.getIntrinsicWidth(), 1);
+        int height = Math.max(drawable.getIntrinsicHeight(), 1);
+        Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+        drawable.setBounds(0, 0, width, height);
+        drawable.draw(canvas);
+        return bitmap;
     }
 
     public static Bitmap createBitmap(Bitmap bitmap, int color) {
