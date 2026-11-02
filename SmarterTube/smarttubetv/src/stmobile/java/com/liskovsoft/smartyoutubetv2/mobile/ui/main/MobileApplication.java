@@ -19,12 +19,17 @@ import com.liskovsoft.smartyoutubetv2.common.app.views.WebBrowserView;
 import com.liskovsoft.mediaserviceinterfaces.data.MediaGroup;
 import com.liskovsoft.smartyoutubetv2.common.app.models.playback.manager.PlayerConstants;
 import com.liskovsoft.smartyoutubetv2.common.app.presenters.BrowsePresenter;
+import com.liskovsoft.smartyoutubetv2.common.app.presenters.dialogs.AccountSelectionPresenter;
 import com.liskovsoft.smartyoutubetv2.common.app.presenters.service.SidebarService;
 import com.liskovsoft.smartyoutubetv2.common.app.presenters.settings.GeneralSettingsPresenter;
+import com.liskovsoft.smartyoutubetv2.common.misc.MediaServiceManager;
 import com.liskovsoft.smartyoutubetv2.common.prefs.AppPrefs;
+import com.liskovsoft.smartyoutubetv2.common.prefs.GeneralData;
+import com.liskovsoft.smartyoutubetv2.common.prefs.MainUIData;
 import com.liskovsoft.smartyoutubetv2.common.prefs.PlayerData;
 import com.liskovsoft.smartyoutubetv2.common.prefs.PlayerTweaksData;
 import com.liskovsoft.smartyoutubetv2.mobile.ui.browse.MobileBrowseActivity;
+import com.liskovsoft.smartyoutubetv2.mobile.ui.browse.MobileSettingsActivity;
 import com.liskovsoft.smartyoutubetv2.mobile.ui.channel.MobileChannelActivity;
 import com.liskovsoft.smartyoutubetv2.mobile.ui.channeluploads.MobileChannelUploadsActivity;
 import com.liskovsoft.smartyoutubetv2.mobile.ui.dialogs.MobileAppDialogActivity;
@@ -40,6 +45,7 @@ import com.liskovsoft.smartyoutubetv2.tv.ui.adddevice.AddDeviceActivity;
 import com.liskovsoft.smartyoutubetv2.tv.ui.main.MainApplication;
 import com.liskovsoft.smartyoutubetv2.tv.ui.main.SplashActivity;
 import com.liskovsoft.smartyoutubetv2.tv.ui.webbrowser.WebBrowserActivity;
+import com.liskovsoft.youtubeapi.service.internal.MediaServiceData;
 
 /**
  * Application class for the phone (stmobile) flavor.
@@ -50,18 +56,9 @@ import com.liskovsoft.smartyoutubetv2.tv.ui.webbrowser.WebBrowserActivity;
  * phases will replace them in turn).
  */
 public class MobileApplication extends MainApplication {
-    /**
-     * Re-applies the notifications-section default whenever the active account changes.
-     *
-     * The sidebar is per-account state ({@code AppPrefs.getSidebarData} is profile-keyed), and
-     * SidebarService reloads it on every account switch — so a one-shot enable would only ever
-     * reach the account active at boot. This listener fires after SidebarService has reloaded the
-     * new account's sidebar (plain listeners run after it), re-adding the section for that account.
-     * {@code enableSection} is idempotent, so this never duplicates. Held as a field because
-     * AppPrefs keeps listeners in a WeakHashSet and would otherwise let it be collected.
-     */
-    private final AppPrefs.ProfileChangeListener mEnableNotificationsSection = () -> {
-        SidebarService.instance(this).enableSection(MediaGroup.TYPE_NOTIFICATIONS, true);
+    // Held strongly because AppPrefs stores weak listeners. SidebarService reloads first.
+    private final AppPrefs.ProfileChangeListener mApplyNavigationDefaults = () -> {
+        applyNavigationDefaults();
         // Account switched: forget the previous account's seen uploads so the new account
         // seeds fresh (no cross-account false alerts) and re-evaluate the poll schedule.
         MobileNotificationPrefs.clearSeenIds(this);
@@ -91,15 +88,25 @@ public class MobileApplication extends MainApplication {
             public void onActivityStarted(Activity activity) {
                 StatsReporter.onForeground(activity);
             }
+
+            @Override
+            public void onActivityPaused(Activity activity) {
+                if (!(activity instanceof MobileSettingsActivity) && !(activity instanceof MobileAppDialogActivity)) {
+                    return;
+                }
+                // These stores normally wait 5–10 seconds. Request a save when settings
+                // closes or goes into the background, before a quick exit can lose choices.
+                GeneralData.instance(MobileApplication.this).persistNow();
+                MainUIData.instance(MobileApplication.this).persistNow();
+                PlayerData.instance(MobileApplication.this).persistNow();
+                PlayerTweaksData.instance(MobileApplication.this).persistNow();
+                MediaServiceData.instance().persistNow();
+            }
         });
 
-        // Always surface the YouTube notifications inbox as a phone nav-drawer tab, for every
-        // account. The section is fully wired upstream but hidden by default
-        // (SidebarService.initPinnedItems). Enable it for the account active now and re-enable on
-        // every account switch via the listener below. stmobile-only — shared common code is
-        // untouched, so the fork stays upstream-mergeable.
-        SidebarService.instance(this).enableSection(MediaGroup.TYPE_NOTIFICATIONS, true);
-        AppPrefs.instance(this).addListener(mEnableNotificationsSection);
+        applyNavigationDefaults();
+        AppPrefs.instance(this).addListener(mApplyNavigationDefaults);
+        hideShortsOnce();
 
         // Start (or, if the toggle is off, ensure-cancelled) the upload-notifications poll.
         // schedule() self-gates on MobileNotificationPrefs.isEnabled(); the worker no-ops when
@@ -117,6 +124,28 @@ public class MobileApplication extends MainApplication {
         // instead of popping a "Position of …" picker after every tick — a TV-remote flow that
         // reads as broken on a touchscreen. Reordering stays under "Context menu sorting".
         GeneralSettingsPresenter.sAskMenuItemPosition = false;
+
+        MediaServiceManager.instance().loadAccounts(accounts -> {
+            if (accounts != null && accounts.size() == 1
+                    && MediaServiceManager.instance().getSelectedAccount() == null) {
+                AccountSelectionPresenter.instance(this).selectAccount(accounts.get(0));
+            }
+        });
+    }
+
+    private void applyNavigationDefaults() {
+        SidebarService.instance(this).applyDefaultSectionsOnce(1,
+                MediaGroup.TYPE_NOTIFICATIONS, MediaGroup.TYPE_HOME, MediaGroup.TYPE_CHANNEL_UPLOADS,
+                MediaGroup.TYPE_SUBSCRIPTIONS, MediaGroup.TYPE_HISTORY, MediaGroup.TYPE_SETTINGS);
+    }
+
+    private void hideShortsOnce() {
+        AppPrefs prefs = AppPrefs.instance(this);
+        if (prefs.getData("mobile_shorts_defaults_v1") == null) {
+            MediaServiceData.instance().setContentHidden(MediaServiceData.CONTENT_SHORTS_ALL, true);
+            MediaServiceData.instance().persistNow();
+            prefs.setData("mobile_shorts_defaults_v1", "true");
+        }
     }
 
     /**

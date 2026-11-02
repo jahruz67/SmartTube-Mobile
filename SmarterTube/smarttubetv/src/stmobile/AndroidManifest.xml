@@ -25,7 +25,7 @@
         tools:replace="android:required" />
 
     <!-- Point the phone build at its own Application class (routing seam for later phases),
-         and swap in the phone-port branding (adaptive launcher icon, "SmarterTube" label
+         and swap in the phone-port branding (launcher icon and app label
          already overridden via @string/app_name in stmobile/values/strings.xml). -->
     <application
         android:name="com.liskovsoft.smartyoutubetv2.mobile.ui.main.MobileApplication"

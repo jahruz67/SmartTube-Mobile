@@ -20,7 +20,7 @@
     <!-- About screen -->
     <string name="mobile_about_title">About SmartTube Mobile Dev</string>
     <string name="mobile_about_drawer_entry">About this app</string>
-    <string name="mobile_about_tagline">Phone &amp; tablet fork of SmartTube</string>
+    <string name="mobile_about_tagline">YouTube for phones &amp; tablets</string>
     <string name="mobile_about_version">Version %1$s</string>
     <string name="mobile_about_body">Independent experimental build. Mobile interface based on SmarterTube by CodeSculptor; engine from SmartTube by yuliskov. Not affiliated with either developer. Original MIT attribution and license remain in the source project.\n\nDevelopment build; see included reports for verified features.</string>
     <string name="mobile_about_link_upstream">Upstream: github.com/yuliskov/SmartTube</string>
@@ -37,10 +37,10 @@
     <string name="mobile_about_download">Download APK</string>
     <string name="mobile_whats_new_title">What\'s new in %1$s</string>
     <string name="mobile_whats_new_full_notes">Release notes</string>
-    <string name="mobile_update_notice">SmarterTube %1$s is available</string>
+    <string name="mobile_update_notice">SmartTube Mobile Dev %1$s is available</string>
     <string name="mobile_update_notice_view">View</string>
     <string name="mobile_update_details_title">Update available: %1$s</string>
-    <string name="mobile_update_details_no_notes">A newer version of SmarterTube is available.</string>
+    <string name="mobile_update_details_no_notes">A newer version of SmartTube Mobile Dev is available.</string>
     <string name="mobile_update_later">Later</string>
     <string name="mobile_about_url_releases" translatable="false">https://github.com/CodeSculptor/SmarterTube/releases</string>
     <!-- GitHub releases LIST endpoint (not /releases/latest, which hides prereleases/betas). -->
@@ -54,7 +54,7 @@
 
     <!-- Player style (#46) -->
     <string name="mobile_player_style_title">Player style</string>
-    <string name="mobile_player_style_classic">Classic: SmartTube-style controls</string>
+    <string name="mobile_player_style_classic">Classic controls</string>
     <string name="mobile_player_style_modern">Modern: phone-style controls</string>
     <string name="mobile_player_style_tap_to_pause">Tap to pause: modern, tap the video to pause</string>
     <string name="mobile_player_previous">Previous video</string>
@@ -95,7 +95,7 @@
     <string name="mobile_notifications_option_off">Off</string>
     <string name="mobile_notifications_channel_name">New uploads</string>
     <string name="mobile_notifications_prompt_title">Get notified about new uploads?</string>
-    <string name="mobile_notifications_prompt_message">SmarterTube can check your subscriptions in the background and notify you when a channel you follow uploads. You can change this later in Settings → Upload notifications.</string>
+    <string name="mobile_notifications_prompt_message">SmartTube Mobile Dev can check your subscriptions in the background and notify you when a channel you follow uploads. You can change this later in Settings → Upload notifications.</string>
     <string name="mobile_notifications_prompt_yes">Turn on</string>
     <string name="mobile_notifications_prompt_no">Not now</string>
     <string name="mobile_uploads_summary_title">New uploads</string>
@@ -106,12 +106,12 @@
     <!-- Base URL of the fork's stats Worker (stats-worker/ in the repo). Empty = feature dormant. -->
     <string name="mobile_stats_endpoint" translatable="false"></string>
     <string name="mobile_stats_title">Anonymous stats</string>
-    <string name="mobile_stats_prompt_title">Help improve SmarterTube?</string>
-    <string name="mobile_stats_details">SmarterTube can send the developer:\n\n• an anonymous \"app was used today\" count, at most once a day\n• crash reports (code locations only)\n\nEach includes just the app version and Android version (crash reports also include the phone model).\n\nNever sent: your account, videos, channels, searches or any ID that could identify you.\n\nYou can change this any time in Settings → Anonymous stats.</string>
+    <string name="mobile_stats_prompt_title">Help improve SmartTube Mobile Dev?</string>
+    <string name="mobile_stats_details">SmartTube Mobile Dev can send the developer:\n\n• an anonymous \"app was used today\" count, at most once a day\n• crash reports (code locations only)\n\nEach includes just the app version and Android version (crash reports also include the phone model).\n\nNever sent: your account, videos, channels, searches or any ID that could identify you.\n\nYou can change this any time in Settings → Anonymous stats.</string>
     <string name="mobile_stats_prompt_yes">Sure</string>
     <string name="mobile_stats_prompt_no">No thanks</string>
     <string name="mobile_stats_whats_sent">What\'s sent?</string>
-    <string name="mobile_stats_crash_title">SmarterTube crashed last time</string>
+    <string name="mobile_stats_crash_title">SmartTube Mobile Dev crashed last time</string>
     <string name="mobile_stats_crash_message">Send an anonymous crash report? It contains only code locations, the app and Android versions and the phone model — no account, video or search data.</string>
     <string name="mobile_stats_crash_send">Send</string>
     <string name="mobile_stats_crash_discard">Don\'t send</string>

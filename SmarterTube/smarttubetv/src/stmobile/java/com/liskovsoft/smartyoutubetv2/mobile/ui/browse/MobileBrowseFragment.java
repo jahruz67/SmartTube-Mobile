@@ -38,6 +38,7 @@ import com.liskovsoft.smartyoutubetv2.common.app.presenters.BrowsePresenter;
 import com.liskovsoft.smartyoutubetv2.common.app.presenters.SearchPresenter;
 import com.liskovsoft.smartyoutubetv2.common.app.presenters.dialogs.AccountSelectionPresenter;
 import com.liskovsoft.smartyoutubetv2.common.app.presenters.settings.AccountSettingsPresenter;
+import com.liskovsoft.smartyoutubetv2.common.app.presenters.service.SidebarService;
 import com.liskovsoft.smartyoutubetv2.common.app.views.BrowseView;
 import com.liskovsoft.smartyoutubetv2.common.misc.MediaServiceManager;
 import com.liskovsoft.smartyoutubetv2.mobile.ui.about.MobileAboutActivity;
@@ -150,6 +151,7 @@ public class MobileBrowseFragment extends Fragment implements BrowseView, MediaS
         mBottomTabs[3].setOnClickListener(this::showLibraryMenu);
         mBottomTabs[4].setOnClickListener(v ->
                 SearchPresenter.instance(requireContext()).startSearch(null));
+        updateShortsTabVisibility();
         RecyclerView sectionList = view.findViewById(R.id.section_list);
         sectionList.setLayoutManager(new LinearLayoutManager(getContext()));
         sectionList.setAdapter(mSectionAdapter);
@@ -194,6 +196,7 @@ public class MobileBrowseFragment extends Fragment implements BrowseView, MediaS
         if (mPresenter != null) {
             mPresenter.onViewResumed();
         }
+        updateShortsTabVisibility();
     }
 
     @Override
@@ -253,6 +256,7 @@ public class MobileBrowseFragment extends Fragment implements BrowseView, MediaS
     public void addSection(int index, BrowseSection section) {
         if (mSectionAdapter != null && section != null) {
             mSectionAdapter.add(index, section);
+            updateShortsTabVisibility();
             // Auto-open a default section so the user lands on videos rather than an empty
             // "pick a section" Home — notably after sign-in, where the section list is
             // rebuilt. Deferred via post() so a presenter-driven selection during the same
@@ -275,6 +279,7 @@ public class MobileBrowseFragment extends Fragment implements BrowseView, MediaS
     public void removeSection(BrowseSection section) {
         if (mSectionAdapter != null) {
             mSectionAdapter.remove(section);
+            updateShortsTabVisibility();
         }
     }
 
@@ -466,6 +471,14 @@ public class MobileBrowseFragment extends Fragment implements BrowseView, MediaS
             return true;
         });
         popup.show();
+    }
+
+    /** The bottom shortcut follows the saved sidebar setting. */
+    private void updateShortsTabVisibility() {
+        if (mBottomTabs != null) {
+            mBottomTabs[1].setVisibility(SidebarService.instance(requireContext())
+                    .isSectionPinned(MediaGroup.TYPE_SHORTS) ? View.VISIBLE : View.GONE);
+        }
     }
 
     /** Keep visual selection in sync when either the drawer or bottom bar navigates. */

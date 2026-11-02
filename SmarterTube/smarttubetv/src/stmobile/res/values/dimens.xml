@@ -5,6 +5,9 @@
     can widen it on tablets.
 -->
 <resources>
+    <dimen name="mobile_toolbar_height">80dp</dimen>
+    <dimen name="mobile_toolbar_padding_top">16dp</dimen>
+    <dimen name="mobile_toolbar_padding_bottom">8dp</dimen>
     <dimen name="mobile_drawer_width">280dp</dimen>
 
     <!--

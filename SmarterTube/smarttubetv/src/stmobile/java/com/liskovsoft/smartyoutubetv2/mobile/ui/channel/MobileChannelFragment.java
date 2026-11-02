@@ -45,6 +45,7 @@ import com.liskovsoft.smartyoutubetv2.common.misc.MediaServiceManager;
 import com.liskovsoft.smartyoutubetv2.mobile.ui.browse.VideoCardAdapter;
 import com.liskovsoft.smartyoutubetv2.tv.R;
 import com.liskovsoft.youtubeapi.service.YouTubeServiceManager;
+import com.liskovsoft.youtubeapi.service.internal.MediaServiceData;
 
 import io.reactivex.Observable;
 import io.reactivex.disposables.Disposable;
@@ -450,6 +451,9 @@ public class MobileChannelFragment extends Fragment implements ChannelView {
     @Override
     public void update(VideoGroup group) {
         if (group == null || mTabsAdapter == null) {
+            return;
+        }
+        if (group.isShorts() && MediaServiceData.instance().isContentHidden(MediaServiceData.CONTENT_SHORTS_CHANNEL)) {
             return;
         }
         switch (group.getAction()) {

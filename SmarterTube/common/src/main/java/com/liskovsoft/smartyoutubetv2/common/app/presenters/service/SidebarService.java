@@ -26,6 +26,7 @@ public class SidebarService implements ProfileChangeListener {
     private final AppPrefs mPrefs;
     private boolean mIsSettingsSectionEnabled;
     private int mBootSectionId;
+    private int mDefaultsVersion;
     private final static int RESERVED_ID = 100;
 
     private SidebarService(Context context) {
@@ -108,6 +109,25 @@ public class SidebarService implements ProfileChangeListener {
 
     public Map<Integer, Integer> getDefaultSections() {
         return mDefaultSections;
+    }
+
+    /** Apply a flavor's navigation defaults once per account, preserving custom pins. */
+    public void applyDefaultSectionsOnce(int version, int... sectionIds) {
+        if (mDefaultsVersion >= version) {
+            return;
+        }
+        Helpers.removeIf(mPinnedItems, item -> item == null || mDefaultSections.containsValue(item.sectionId));
+        for (int i = 0; i < sectionIds.length; i++) {
+            Video item = new Video();
+            item.sectionId = sectionIds[i];
+            mPinnedItems.add(i, item);
+        }
+        mIsSettingsSectionEnabled = true;
+        if (!isSectionPinned(mBootSectionId)) {
+            mBootSectionId = MediaGroup.TYPE_HOME;
+        }
+        mDefaultsVersion = version;
+        persistState();
     }
 
     private int getDefaultSectionIndex(int sectionId) {
@@ -295,6 +315,7 @@ public class SidebarService implements ProfileChangeListener {
         mPinnedItems = Helpers.parseList(split, 0, Video::fromString);
         mBootSectionId = Helpers.parseInt(split, 1, MediaGroup.TYPE_HOME);
         mIsSettingsSectionEnabled = Helpers.parseBoolean(split, 2, true);
+        mDefaultsVersion = Helpers.parseInt(split, 3, 0);
 
         transferOldPinnedItems();
 
@@ -321,7 +342,7 @@ public class SidebarService implements ProfileChangeListener {
     }
 
     public void persistState() {
-        mPrefs.setSidebarData(Helpers.mergeData(mPinnedItems, mBootSectionId, mIsSettingsSectionEnabled));
+        mPrefs.setSidebarData(Helpers.mergeData(mPinnedItems, mBootSectionId, mIsSettingsSectionEnabled, mDefaultsVersion));
     }
 
     @Override
