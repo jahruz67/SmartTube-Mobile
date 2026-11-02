@@ -4,9 +4,12 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.animation.AccelerateInterpolator;
+import android.view.animation.DecelerateInterpolator;
 
 /** Watches normal touches, cancelling the player's gesture only when a downward drag takes over. */
 final class SwipeToDismiss {
+    private static final float DISMISS_DISTANCE_DP = 128;
+    private static final float DRAG_RESISTANCE = 0.65f;
     private final View mContent;
     private final Runnable mDismiss;
     private final float mSlop;
@@ -20,7 +23,7 @@ final class SwipeToDismiss {
         mContent = content;
         mDismiss = dismiss;
         mSlop = ViewConfiguration.get(content.getContext()).getScaledTouchSlop() * 2;
-        mDistance = 64 * content.getResources().getDisplayMetrics().density;
+        mDistance = DISMISS_DISTANCE_DP * content.getResources().getDisplayMetrics().density;
     }
 
     boolean isActive() {
@@ -59,7 +62,7 @@ final class SwipeToDismiss {
                         return false;
                     }
                 }
-                if (mDragging) mContent.setTranslationY(Math.max(0, dy));
+                if (mDragging) applyDrag(dy);
                 return mDragging;
             case MotionEvent.ACTION_UP:
                 float releaseY = event.getRawY() - mDown.getRawY();
@@ -71,7 +74,7 @@ final class SwipeToDismiss {
                     return false;
                 }
                 if (!mDragging) cancelPlayerTouch.route(event);
-                mContent.setTranslationY(Math.max(0, releaseY));
+                applyDrag(releaseY);
                 releaseDown();
                 settle(dismiss);
                 return true;
@@ -94,11 +97,15 @@ final class SwipeToDismiss {
         }
     }
 
+    private void applyDrag(float distance) {
+        mContent.setTranslationY(Math.max(0, distance - mSlop) * DRAG_RESISTANCE);
+    }
+
     private void settle(boolean dismiss) {
         mSettling = true;
         mContent.animate().translationY(dismiss ? mContent.getHeight() : 0)
-                .setDuration(dismiss ? 180 : 140)
-                .setInterpolator(new AccelerateInterpolator())
+                .setDuration(dismiss ? 180 : 220)
+                .setInterpolator(dismiss ? new AccelerateInterpolator() : new DecelerateInterpolator())
                 .withEndAction(() -> {
                     mSettling = false;
                     if (dismiss) mDismiss.run();

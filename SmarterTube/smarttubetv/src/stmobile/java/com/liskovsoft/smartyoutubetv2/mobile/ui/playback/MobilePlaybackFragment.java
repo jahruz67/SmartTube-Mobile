@@ -847,6 +847,8 @@ public class MobilePlaybackFragment extends PlaybackFragment {
 
         if (mSwipeToDismiss != null && !mReplayingTouch
                 && event.getActionMasked() == MotionEvent.ACTION_DOWN && !isInPipMode()
+                // Leave a generous top band for Android's status/notification shade, even when hidden.
+                && event.getY() > Math.max(48 * getResources().getDisplayMetrics().density, mCutoutBands.top)
                 && viewContainsRaw(playerView, event.getRawX(), event.getRawY())
                 && (mPinch == null || !mPinch.isZoomed())
                 // Keep volume/brightness on the landscape sides; the middle dismisses.
