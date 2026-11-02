@@ -6,7 +6,9 @@ import android.content.res.Configuration;
 import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
 import android.os.Handler;
+import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.MediaSessionCompat;
+import android.support.v4.media.session.PlaybackStateCompat;
 import android.text.TextUtils;
 import android.text.style.ClickableSpan;
 import android.view.GestureDetector;
@@ -83,6 +85,33 @@ import io.reactivex.disposables.Disposable;
  * through the standard {@link PlaybackPresenter#onSuggestionItemClicked(Video)} path.
  */
 public class MobilePlaybackFragment extends PlaybackFragment {
+    private MediaControllerCompat mMiniPlayerController;
+    private final MediaControllerCompat.Callback mMiniPlayerCallback = new MediaControllerCompat.Callback() {
+        @Override
+        public void onPlaybackStateChanged(PlaybackStateCompat state) {
+            updateMiniPlayerPlaybackState(state);
+        }
+    };
+
+    private void updateMiniPlayerPlaybackState(PlaybackStateCompat state) {
+        Activity activity = getActivity();
+        if (activity instanceof MobilePlaybackActivity) {
+            boolean active = state != null && getPlayWhenReady()
+                    && (state.getState() == PlaybackStateCompat.STATE_PLAYING
+                    || state.getState() == PlaybackStateCompat.STATE_BUFFERING);
+            ((MobilePlaybackActivity) activity).onMiniPlayerPlaybackStateChanged(active);
+        }
+    }
+
+    @Override
+    public void setPlayWhenReady(boolean play) {
+        super.setPlayWhenReady(play);
+        // Disable auto-entry immediately on a touch pause, before the asynchronous session callback.
+        if (!play) {
+            updateMiniPlayerPlaybackState(null);
+        }
+    }
+
     private ConstraintLayout mRoot;
     private LinearLayout mPanel;
     private TextView mTitleView;
@@ -281,6 +310,14 @@ public class MobilePlaybackFragment extends PlaybackFragment {
 
     @Override
     protected void onMediaSessionCreated(MediaSessionCompat session) {
+        if (mMiniPlayerController != null) {
+            mMiniPlayerController.unregisterCallback(mMiniPlayerCallback);
+        }
+        mMiniPlayerController = session != null ? session.getController() : null;
+        if (mMiniPlayerController != null) {
+            mMiniPlayerController.registerCallback(mMiniPlayerCallback);
+        }
+        updateMiniPlayerPlaybackState(mMiniPlayerController != null ? mMiniPlayerController.getPlaybackState() : null);
         mSessionToken = session != null ? session.getSessionToken() : null;
         Context ctx = getContext();
         if (ctx == null) return;

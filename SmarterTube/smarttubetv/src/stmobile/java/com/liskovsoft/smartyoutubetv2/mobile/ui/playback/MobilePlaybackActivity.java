@@ -21,6 +21,7 @@ import com.liskovsoft.sharedutils.helpers.Helpers;
 import com.liskovsoft.sharedutils.mylogger.Log;
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.Video;
 import com.liskovsoft.smartyoutubetv2.common.app.presenters.PlaybackPresenter;
+import com.liskovsoft.smartyoutubetv2.common.app.views.PlaybackView;
 import com.liskovsoft.smartyoutubetv2.common.prefs.PlayerData;
 import com.liskovsoft.smartyoutubetv2.common.utils.Utils;
 import com.liskovsoft.smartyoutubetv2.mobile.ui.base.ImmersiveBars;
@@ -42,6 +43,7 @@ import com.liskovsoft.smartyoutubetv2.tv.ui.playback.PlaybackActivity;
  */
 public class MobilePlaybackActivity extends PlaybackActivity {
     private MobilePlaybackFragment mMobileFragment;
+    private boolean mMiniPlayerPlaybackActive;
     // Full-screen button (#46): the orientation it forced, and a sensor watch that hands rotation
     // back to the device once the phone is physically turned to match.
     private int mForcedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
@@ -58,6 +60,7 @@ public class MobilePlaybackActivity extends PlaybackActivity {
         }
 
         applyOrientationForCurrentVideo();
+        updateMiniPlayerParams();
     }
 
     @Override
@@ -70,8 +73,9 @@ public class MobilePlaybackActivity extends PlaybackActivity {
     public void onUserLeaveHint() {
         // Only leaving active playback should open a mini player. In-app navigation and
         // paused videos must not pin the activity, even when the PiP setting is selected.
-        if (mMobileFragment == null || !mMobileFragment.isPlaying() || isInPipMode()
-                || isBackPressed() || isFinishing() || getViewManager().isNewViewPending()) {
+        if (mMobileFragment == null || !mMiniPlayerPlaybackActive || !mMobileFragment.getPlayWhenReady()
+                || isInPipMode() || isBackPressed() || isFinishing()
+                || (getViewManager().isNewViewPending() && !getViewManager().isViewPending(PlaybackView.class))) {
             return;
         }
 
@@ -91,17 +95,9 @@ public class MobilePlaybackActivity extends PlaybackActivity {
             return false;
         }
 
-        Video video = PlaybackPresenter.instance(this).getVideo();
-        PictureInPictureParams.Builder params = new PictureInPictureParams.Builder()
-                .setAspectRatio(video != null && video.isShorts ? new Rational(9, 16) : new Rational(16, 9));
-        View player = findViewById(R.id.playback_controls_fragment);
-        Rect bounds = new Rect();
-        if (player != null && player.getGlobalVisibleRect(bounds)) {
-            params.setSourceRectHint(bounds);
-        }
-
         try {
-            if (!enterPictureInPictureMode(params.build())) {
+            if (!enterPictureInPictureMode(createMiniPlayerParams())) {
+                Log.e(MobilePlaybackActivity.class.getSimpleName(), "Picture-in-picture entry rejected by Android");
                 return false;
             }
         } catch (IllegalStateException | IllegalArgumentException | SecurityException e) {
@@ -113,6 +109,39 @@ public class MobilePlaybackActivity extends PlaybackActivity {
         sIsInPipMode = true;
         getViewManager().blockTop(this);
         return true;
+    }
+
+    void onMiniPlayerPlaybackStateChanged(boolean active) {
+        mMiniPlayerPlaybackActive = active;
+        updateMiniPlayerParams();
+    }
+
+    private void updateMiniPlayerParams() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S || !Helpers.isPictureInPictureSupported(this)) {
+            return;
+        }
+        try {
+            // Android 12+ needs this registered during playback, before the Home gesture.
+            setPictureInPictureParams(createMiniPlayerParams());
+        } catch (IllegalStateException | IllegalArgumentException | SecurityException e) {
+            Log.e(MobilePlaybackActivity.class.getSimpleName(), e.getMessage());
+        }
+    }
+
+    @android.annotation.TargetApi(Build.VERSION_CODES.O)
+    private PictureInPictureParams createMiniPlayerParams() {
+        Video video = PlaybackPresenter.instance(this).getVideo();
+        PictureInPictureParams.Builder params = new PictureInPictureParams.Builder()
+                .setAspectRatio(video != null && video.isShorts ? new Rational(9, 16) : new Rational(16, 9));
+        View player = findViewById(R.id.playback_controls_fragment);
+        Rect bounds = new Rect();
+        if (player != null && player.getGlobalVisibleRect(bounds)) {
+            params.setSourceRectHint(bounds);
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            params.setAutoEnterEnabled(mMiniPlayerPlaybackActive && !isFinishing());
+        }
+        return params.build();
     }
 
     /**
@@ -183,6 +212,12 @@ public class MobilePlaybackActivity extends PlaybackActivity {
     public void onPictureInPictureModeChanged(boolean isInPictureInPictureMode) {
         super.onPictureInPictureModeChanged(isInPictureInPictureMode);
         sIsInPipMode = isInPictureInPictureMode;
+
+        // Both Android's automatic entry and the older manual entry must retain the engine.
+        if (isInPictureInPictureMode && mMobileFragment != null) {
+            mMobileFragment.blockEngine(true);
+            getViewManager().blockTop(this);
+        }
 
         if (!isInPictureInPictureMode
                 && !getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED)) {
@@ -298,6 +333,7 @@ public class MobilePlaybackActivity extends PlaybackActivity {
         reapplyFullscreen();
         // Again once the rotation has been laid out: some ROMs re-show the bars as it settles.
         getWindow().getDecorView().post(this::reapplyFullscreen);
+        updateMiniPlayerParams();
     }
 
     private void reapplyFullscreen() {
@@ -316,6 +352,7 @@ public class MobilePlaybackActivity extends PlaybackActivity {
     protected void onResume() {
         super.onResume();
         reapplyFullscreen();
+        updateMiniPlayerParams();
         if (mForcedOrientation != ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED) {
             watchForMatchingOrientation();
         }
