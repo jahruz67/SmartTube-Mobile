@@ -1,10 +1,12 @@
 package com.liskovsoft.sharedutils.okhttp
 
 import okhttp3.Dns
+import okhttp3.OkHttpClient
 import java.net.Inet4Address
 import java.net.Inet6Address
 import java.net.InetAddress
 import java.net.UnknownHostException
+import java.util.concurrent.TimeUnit
 
 /**
  * Fix for the [issue](https://github.com/facebook/react-native/issues/32730)
@@ -15,7 +17,22 @@ import java.net.UnknownHostException
  * [3](https://github.com/yschimke/okurl/blob/b24caf077223cf54e2ab26589839e5ba2205c691/src/main/java/com/baulsupp/oksocial/network/DnsSelector.java)
  * [4](https://stackoverflow.com/questions/64559405/how-do-i-force-my-android-app-to-use-ipv4-instead-of-ipv6)
  */
-class OkHttpDNSSelector(private val mode: IPvMode) : Dns {
+class OkHttpDNSSelector @JvmOverloads constructor(
+    private val mode: IPvMode,
+    private val dns: Dns = Dns.SYSTEM
+) : Dns {
+
+    companion object {
+        private val fallbackDns: Dns by lazy {
+            // Bootstrap by IP over HTTPS when system DNS or public DNS on port 53 fails.
+            val client = OkHttpClient.Builder()
+                .connectTimeout(5, TimeUnit.SECONDS)
+                .readTimeout(5, TimeUnit.SECONDS)
+                .callTimeout(10, TimeUnit.SECONDS)
+                .build()
+            DohProviders.buildGooglePost(client)
+        }
+    }
 
     enum class IPvMode(val code: String) {
         SYSTEM("system"),
@@ -33,10 +50,9 @@ class OkHttpDNSSelector(private val mode: IPvMode) : Dns {
 
     override fun lookup(hostname: String): List<InetAddress> {
         var addresses = try {
-            Dns.SYSTEM.lookup(hostname)
+            dns.lookup(hostname)
         } catch (error: UnknownHostException) {
-            // Address ordering cannot help when the system DNS fails to resolve the host.
-            PublicDnsResolver.google().lookup(hostname)
+            fallbackDns.lookup(hostname)
         }
 
         // More memory efficient

@@ -267,22 +267,22 @@ final class OkHttpCommons {
         //    Security.insertProviderAt(Conscrypt.newProvider(), 1);
         //}
 
-        // NOTE: replaces the DNS above
-        if (GlobalPreferences.sInstance != null) {
-            int dnsType = GlobalPreferences.sInstance.getPreferredDnsType();
-
-            switch (dnsType) {
-                case GlobalPreferences.DNS_TYPE_IPV4:
-                    // Cause hangs and crashes (especially on Android 8 devices or Dune HD)
-                    // NOTE: useful only on api <= 19
-                    //forceIPv4Dns(okBuilder);
-                    preferIPv4Dns(okBuilder); // alt method
-                    break;
-                case GlobalPreferences.DNS_TYPE_GOOGLE:
-                    // May help with 'java.net.ProtocolException: Too many follow-up requests: 21'
-                    forceGoogleDns(okBuilder);
-                    break;
-            }
+        int dnsType = GlobalPreferences.sInstance != null
+                ? GlobalPreferences.sInstance.getPreferredDnsType() : GlobalPreferences.DNS_TYPE_SYSTEM;
+        switch (dnsType) {
+            case GlobalPreferences.DNS_TYPE_IPV4:
+                // Cause hangs and crashes (especially on Android 8 devices or Dune HD)
+                // NOTE: useful only on api <= 19
+                //forceIPv4Dns(okBuilder);
+                preferIPv4Dns(okBuilder); // alt method
+                break;
+            case GlobalPreferences.DNS_TYPE_GOOGLE:
+                // May help with 'java.net.ProtocolException: Too many follow-up requests: 21'
+                forceGoogleDns(okBuilder);
+                break;
+            default:
+                okBuilder.dns(new OkHttpDNSSelector(OkHttpDNSSelector.IPvMode.SYSTEM));
+                break;
         }
         setupProxy(okBuilder); // proxy configured in system props
         setupConnectionFix(okBuilder);
@@ -355,7 +355,7 @@ final class OkHttpCommons {
     }
 
     private static void forceGoogleDns(OkHttpClient.Builder okBuilder) {
-        okBuilder.dns(PublicDnsResolver.google());
+        okBuilder.dns(new OkHttpDNSSelector(OkHttpDNSSelector.IPvMode.SYSTEM, PublicDnsResolver.google()));
     }
 
     /**
