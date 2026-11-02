@@ -1,0 +1,7 @@
+# Python tooling caches
+__pycache__/
+*.py[cod]
+
+# Local Windows/macOS metadata
+Thumbs.db
+.DS_Store

@@ -18,7 +18,7 @@ function Invoke-Checked {
 }
 
 if (-not (Test-Path -LiteralPath "$JdkPath\bin\javac.exe")) { throw 'Set JdkPath to JDK 17.' }
-foreach ($component in @('platforms\android-34\android.jar', 'build-tools\30.0.3\aapt.exe')) {
+foreach ($component in @('platforms\android-36\android.jar', 'build-tools\35.0.0\aapt.exe')) {
     if (-not (Test-Path -LiteralPath (Join-Path $SdkPath $component))) {
         throw "Missing Android SDK component: $component"
     }
@@ -37,12 +37,12 @@ $env:JAVA_HOME = $JdkPath
 $env:ANDROID_HOME = $SdkPath
 Set-Content -LiteralPath "$source\local.properties" -Value ('sdk.dir=' + $SdkPath.Replace('\', '/'))
 Invoke-Checked 'python' @('-m', 'unittest', 'discover', '-s', "$kit\tests", '-v') "$reports\kit-tests.log"
-foreach ($script in @('apply-bottom-navigation.py', 'apply-development-identity.py', 'install-mobile-smoke-test.py', 'apply-build-compatibility.py')) {
-    Invoke-Checked 'python' @("$kit\scripts\$script", $source) "$reports\$script.log"
-}
+# SmarterTube/ is the already-patched, versioned source tree. The overlay scripts in the
+# build kit are for creating a patched checkout from upstream; applying them here would
+# target old source anchors and could overwrite intentional updates.
 Push-Location $source
 try {
-    Invoke-Checked '.\gradlew.bat' @('--no-daemon', '--console=plain', "-Dorg.gradle.java.home=$JdkPath", ':smarttubetv:assembleStmobileDebug', ':smarttubetv:testStmobileDebugUnitTest', ':common:testStmobileDebugUnitTest', ':smarttubetv:assembleStmobileDebugAndroidTest') "$reports\build-windows.log"
+    Invoke-Checked '.\gradlew.bat' @('--no-daemon', '--console=plain', "-Dorg.gradle.java.home=$JdkPath", 'clean', ':smarttubetv:assembleStmobileDebug', ':smarttubetv:testStmobileDebugUnitTest', ':common:testStmobileDebugUnitTest', ':smarttubetv:assembleStmobileDebugAndroidTest') "$reports\build-windows.log"
 } finally {
     Pop-Location
 }

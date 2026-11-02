@@ -18,11 +18,11 @@ Feature availability can depend on upstream services and Android version.
 
 ## Requirements
 
-- **Device:** Android 4.2 (API 17) or newer, with a touchscreen.
+- **Device:** Android 8 (API 26) or newer, with a touchscreen.
 - **Development:** JDK 17 and an Android SDK installation containing:
-  - Android SDK Platform 34
-  - Android SDK Build Tools 30.0.3
-  - Android NDK 21.0.6113669
+  - Android SDK Platform 36
+  - Android SDK Build Tools 35.0.0
+  - Android NDK 28.2.13676358
 
 The repository includes a Gradle wrapper; a separate Gradle installation is unnecessary. Building requires internet access to download dependencies.
 
@@ -68,6 +68,14 @@ Generated APKs are written to:
 SmarterTube/smarttubetv/build/outputs/apk/stmobile/debug/
 ```
 
+To build and run the local JVM and instrumentation APK compilation checks on Windows, use the repository script from PowerShell:
+
+```powershell
+.\Build-Android.ps1
+```
+
+The script runs the build-kit unit tests, assembles the mobile debug APKs, runs the mobile and shared JVM tests, compiles the instrumentation test APK, and checks APK package identity and signatures. Instrumentation tests require a connected device or emulator to execute; this script only compiles them.
+
 The application ID is `dev.smarttubemobile.unofficial`. Debug builds use Android's debug signing key unless a local `keystore.properties` configures another key.
 
 ## Project structure
@@ -83,7 +91,7 @@ reports/                          Historical build and verification reports
 Build-Android.ps1                 Original pinned-source Windows build workflow
 ```
 
-For current development, build the checked-out sources directly with Gradle. The original build-kit scripts target a pinned upstream revision and may reapply development patches.
+The repository contains the patched source tree and the scripts used to create the mobile changes from the pinned upstream checkout. Build the checked-out sources directly; do not reapply those overlay scripts here.
 
 ## Development
 
