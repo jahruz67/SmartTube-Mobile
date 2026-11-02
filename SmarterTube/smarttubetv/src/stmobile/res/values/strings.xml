@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Phone (stmobile) flavor strings. Kept separate from src/main so upstream merges stay clean. -->
+    <!-- Override the launcher name for the phone build (src/main ships it as "SmartTube"). -->
+    <string name="app_name" translatable="false">SmartTube Mobile Dev</string>
+    <string name="mobile_signin_instructions">Tap Continue below. A browser opens inside the app — sign in to your Google account, check the code matches, and tap Allow. Then come back here; this screen will close once Google confirms.</string>
+    <string name="mobile_signin_code_label">Your sign-in code</string>
+    <string name="mobile_signin_continue">Continue in browser</string>
+    <string name="mobile_signin_done_return">Done? Return to app</string>
+    <string name="mobile_signin_error_title">Sign-in failed</string>
+    <string name="mobile_signin_error_generic">%1$s</string>
+    <string name="mobile_signin_retry">Retry sign-in</string>
+    <string name="mobile_search_hint">Search YouTube</string>
+    <string name="mobile_account_hint">Switch account</string>
+    <string name="mobile_search_no_results">No results found.</string>
+    <string name="mobile_search_voice">Voice search</string>
+    <string name="mobile_search_voice_prompt">Speak to search</string>
+    <string name="mobile_search_voice_unavailable">Voice search isn\'t available on this device.</string>
+
+    <!-- About screen -->
+    <string name="mobile_about_title">About SmartTube Mobile Dev</string>
+    <string name="mobile_about_drawer_entry">About this app</string>
+    <string name="mobile_about_tagline">Phone &amp; tablet fork of SmartTube</string>
+    <string name="mobile_about_version">Version %1$s</string>
+    <string name="mobile_about_body">Independent experimental build. Mobile interface based on SmarterTube by CodeSculptor; engine from SmartTube by yuliskov. Not affiliated with either developer. Original MIT attribution and license remain in the source project.\n\nDevelopment build; see included reports for verified features.</string>
+    <string name="mobile_about_link_upstream">Upstream: github.com/yuliskov/SmartTube</string>
+    <string name="mobile_about_link_fork">Fork: github.com/CodeSculptor/SmarterTube</string>
+    <string name="mobile_about_url_upstream" translatable="false">https://github.com/yuliskov/SmartTube</string>
+    <string name="mobile_about_url_fork" translatable="false">https://github.com/CodeSculptor/SmarterTube</string>
+    <string name="mobile_about_check_updates">Check for updates</string>
+    <string name="mobile_about_checking">Checking…</string>
+    <string name="mobile_about_up_to_date">You\'re up to date (%1$s).</string>
+    <string name="mobile_about_update_available">Update available: %1$s</string>
+    <string name="mobile_about_no_asset">An update is available but no APK matches this device. Open the releases page to choose one.</string>
+    <string name="mobile_about_check_failed">Couldn\'t check for updates. Check your connection and try again.</string>
+    <string name="mobile_about_open_releases">Open releases</string>
+    <string name="mobile_about_download">Download APK</string>
+    <string name="mobile_whats_new_title">What\'s new in %1$s</string>
+    <string name="mobile_whats_new_full_notes">Release notes</string>
+    <string name="mobile_update_notice">SmarterTube %1$s is available</string>
+    <string name="mobile_update_notice_view">View</string>
+    <string name="mobile_update_details_title">Update available: %1$s</string>
+    <string name="mobile_update_details_no_notes">A newer version of SmarterTube is available.</string>
+    <string name="mobile_update_later">Later</string>
+    <string name="mobile_about_url_releases" translatable="false">https://github.com/CodeSculptor/SmarterTube/releases</string>
+    <!-- GitHub releases LIST endpoint (not /releases/latest, which hides prereleases/betas). -->
+    <string name="mobile_about_url_releases_api" translatable="false">https://api.github.com/repos/CodeSculptor/SmarterTube/releases?per_page=30</string>
+
+    <!-- Theme picker (light/dark) -->
+    <string name="mobile_theme_title">Theme</string>
+    <string name="mobile_theme_option_system">Follow system</string>
+    <string name="mobile_theme_option_light">Light</string>
+    <string name="mobile_theme_option_dark">Dark</string>
+
+    <!-- Player style (#46) -->
+    <string name="mobile_player_style_title">Player style</string>
+    <string name="mobile_player_style_classic">Classic: SmartTube-style controls</string>
+    <string name="mobile_player_style_modern">Modern: phone-style controls</string>
+    <string name="mobile_player_style_tap_to_pause">Tap to pause: modern, tap the video to pause</string>
+    <string name="mobile_player_previous">Previous video</string>
+    <string name="mobile_player_play_pause">Play or pause</string>
+    <string name="mobile_player_next">Next video</string>
+    <string name="mobile_player_collapse">Close player</string>
+    <string name="mobile_player_captions">Captions</string>
+    <string name="mobile_player_settings">Player settings</string>
+    <string name="mobile_app_settings">App settings</string>
+    <string name="mobile_player_fullscreen">Full screen</string>
+    <string name="mobile_player_exit_fullscreen">Exit full screen</string>
+    <string name="mobile_player_like">Like</string>
+    <string name="mobile_player_dislike">Dislike</string>
+    <string name="mobile_player_comments">Comments</string>
+    <string name="mobile_player_save">Save to playlist</string>
+    <string name="mobile_player_share">Share</string>
+    <string name="mobile_share_link_start_at">Share link (start at %1$s)</string>
+    <string name="mobile_player_more">More</string>
+    <string name="mobile_player_back_to_settings">‹  Player settings</string>
+    <string name="mobile_player_more_videos">More videos</string>
+    <string name="mobile_player_save_short">Save</string>
+    <string name="mobile_player_queue">Queue</string>
+
+    <!-- Swipe gestures (#48) -->
+    <string name="mobile_swipe_gestures_title">Swipe gestures</string>
+    <string name="mobile_swipe_gestures_on">On: swipe up/down for volume (right) and brightness (left) in landscape</string>
+    <string name="mobile_swipe_gestures_volume_only">Volume only: swipe up/down on the right in landscape; the left side is left alone</string>
+    <string name="mobile_swipe_gestures_off">Off</string>
+
+    <!-- Channel page -->
+    <string name="notification_bell">Notification preference</string>
+    <string name="channel_avatar">Channel avatar</string>
+
+    <!-- Upload notifications (Part 2 - push) -->
+    <string name="mobile_notifications_title">Upload notifications</string>
+    <string name="mobile_notifications_summary">Get notified when channels you follow upload</string>
+    <string name="mobile_notifications_option_on">On</string>
+    <string name="mobile_notifications_option_off">Off</string>
+    <string name="mobile_notifications_channel_name">New uploads</string>
+    <string name="mobile_notifications_prompt_title">Get notified about new uploads?</string>
+    <string name="mobile_notifications_prompt_message">SmarterTube can check your subscriptions in the background and notify you when a channel you follow uploads. You can change this later in Settings → Upload notifications.</string>
+    <string name="mobile_notifications_prompt_yes">Turn on</string>
+    <string name="mobile_notifications_prompt_no">Not now</string>
+    <string name="mobile_uploads_summary_title">New uploads</string>
+    <string name="mobile_uploads_summary_text">%1$d new video(s) from your subscriptions</string>
+    <string name="mobile_uploads_new_video">New video</string>
+
+    <!-- Opt-in anonymous stats (usage heartbeat + crash reports). See mobile/stats/StatsReporter. -->
+    <!-- Base URL of the fork's stats Worker (stats-worker/ in the repo). Empty = feature dormant. -->
+    <string name="mobile_stats_endpoint" translatable="false"></string>
+    <string name="mobile_stats_title">Anonymous stats</string>
+    <string name="mobile_stats_prompt_title">Help improve SmarterTube?</string>
+    <string name="mobile_stats_details">SmarterTube can send the developer:\n\n• an anonymous \"app was used today\" count, at most once a day\n• crash reports (code locations only)\n\nEach includes just the app version and Android version (crash reports also include the phone model).\n\nNever sent: your account, videos, channels, searches or any ID that could identify you.\n\nYou can change this any time in Settings → Anonymous stats.</string>
+    <string name="mobile_stats_prompt_yes">Sure</string>
+    <string name="mobile_stats_prompt_no">No thanks</string>
+    <string name="mobile_stats_whats_sent">What\'s sent?</string>
+    <string name="mobile_stats_crash_title">SmarterTube crashed last time</string>
+    <string name="mobile_stats_crash_message">Send an anonymous crash report? It contains only code locations, the app and Android versions and the phone model — no account, video or search data.</string>
+    <string name="mobile_stats_crash_send">Send</string>
+    <string name="mobile_stats_crash_discard">Don\'t send</string>
+
+    <!-- Channel page: sort + in-channel search (parity pass, session A) -->
+    <string name="mobile_channel_search_hint">Search this channel</string>
+    <string name="mobile_channel_search_close">Close search</string>
+    <string name="mobile_channel_search_tab">Search: %1$s</string>
+
+    <!-- Media notification transport actions (accessibility labels) -->
+    <string name="media_notification_previous">Previous</string>
+    <string name="media_notification_play">Play</string>
+    <string name="media_notification_pause">Pause</string>
+    <string name="media_notification_next">Next</string>
+
+    <!-- Pinch to zoom in the landscape player (#85) -->
+    <string name="mobile_zoom_fit">Original</string>
+
+</resources>

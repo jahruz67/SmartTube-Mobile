@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.liskovsoft.smartyoutubetv2.common.app.models.playback.controllers.SuggestionsControllerTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-11-02T02:28:31" hostname="DESKTOP-EQUHKN9" time="26.386">
+  <properties/>
+  <testcase name="mixAutoplayPrefersInMixItemOverSection" classname="com.liskovsoft.smartyoutubetv2.common.app.models.playback.controllers.SuggestionsControllerTest" time="26.386"/>
+  <system-out><![CDATA[Called loadFromPath(/system/framework/framework-res.apk, true); mode=binary sdk=28
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

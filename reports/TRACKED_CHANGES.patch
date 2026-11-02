@@ -1,0 +1,381 @@
+diff --git a/common/build.gradle b/common/build.gradle
+index a49ce5f..cdc4651 100644
+--- a/common/build.gradle
++++ b/common/build.gradle
+@@ -62,6 +62,8 @@ dependencies {
+     implementation 'androidx.appcompat:appcompat:' + appCompatXVersion
+     testImplementation 'junit:junit:' + junitVersion
+     testImplementation 'org.robolectric:robolectric:' + robolectricVersion
++    // The mobile regression tests run on the PC's JDK 17.
++    testStmobileImplementation 'org.robolectric:robolectric:4.10.3'
+ 
+     implementation project(':sharedutils')
+     implementation project(':fragment-1.1.0')
+diff --git a/gradlew.bat b/gradlew.bat
+index bf01323..aec9973 100644
+--- a/gradlew.bat
++++ b/gradlew.bat
+@@ -16,9 +16,6 @@ if "%DIRNAME%" == "" set DIRNAME=.
+ set APP_BASE_NAME=%~n0
+ set APP_HOME=%DIRNAME%
+ 
+-@rem My tweak. Cleanup cache (fix build errors)
+-rd /s /q "%DIRNAME%\.gradle"
+-
+ @rem Find java.exe
+ if defined JAVA_HOME goto findJavaFromJavaHome
+ 
+diff --git a/smarttubetv/build.gradle b/smarttubetv/build.gradle
+index ddb1de7..f3148e7 100644
+--- a/smarttubetv/build.gradle
++++ b/smarttubetv/build.gradle
+@@ -202,7 +202,7 @@ android {
+             // qualifier (an Android package is implicitly the app; tablets included).
+             // Renamed from the legacy app.smarttube.mobile in the 2026-06 beta — a one-time
+             // clean break (the old id does NOT upgrade in place; see docs/upstream-merge.md).
+-            applicationId "com.codesculptor.smartertube"
++            applicationId "dev.smarttubemobile.unofficial"
+             // Fall back to ststable for dependency modules that don't
+             // declare an stmobile flavor.
+             matchingFallbacks = ['ststable']
+@@ -283,7 +283,7 @@ android {
+             // 23743 = v0.9.10-beta.1+st32.68 (landscape crop with an app language set #82, media notification #84, PiP lock/unlock
+             //         #69, Android 7-10 nav-bar strip #47; share from current time #83, smooth pinch zoom #85; upstream 32.68).
+             versionCode 23743
+-            versionName "v0.9.10-beta.1+st32.68"
++            versionName "v0.1.0-alpha.3+st32.68"
+         }
+     }
+ }
+@@ -334,6 +334,11 @@ dependencies {
+     androidTestImplementation 'androidx.test:runner:' + testXSupportVersion
+     androidTestImplementation 'androidx.test:rules:' + testXSupportVersion
+     androidTestImplementation 'androidx.test.espresso:espresso-core:' + espressoVersion
++    // Mobile test activities must declare exported state for target SDK 31+.
++    androidTestStmobileImplementation 'androidx.test.ext:junit:1.1.5'
++    androidTestStmobileImplementation 'androidx.test:runner:1.5.2'
++    androidTestStmobileImplementation 'androidx.test:rules:1.5.0'
++    androidTestStmobileImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+ 
+     implementation project(':fragment-1.1.0')
+     implementation project(':leanback-1.0.0')
+diff --git a/smarttubetv/src/stmobile/AndroidManifest.xml b/smarttubetv/src/stmobile/AndroidManifest.xml
+index 6a4c1ea..34cf6a7 100644
+--- a/smarttubetv/src/stmobile/AndroidManifest.xml
++++ b/smarttubetv/src/stmobile/AndroidManifest.xml
+@@ -29,8 +29,8 @@
+          already overridden via @string/app_name in stmobile/values/strings.xml). -->
+     <application
+         android:name="com.liskovsoft.smartyoutubetv2.mobile.ui.main.MobileApplication"
+-        android:icon="@mipmap/ic_launcher"
+-        android:roundIcon="@mipmap/ic_launcher_round"
++        android:icon="@mipmap/smarttube_mobile_dev_icon"
++        android:roundIcon="@mipmap/smarttube_mobile_dev_icon"
+         tools:replace="android:name,android:icon,android:roundIcon">
+ 
+         <!-- SplashActivity (launcher) is left as-is: it finishes itself right after
+diff --git a/smarttubetv/src/stmobile/java/com/liskovsoft/smartyoutubetv2/mobile/ui/about/MobileAboutActivity.java b/smarttubetv/src/stmobile/java/com/liskovsoft/smartyoutubetv2/mobile/ui/about/MobileAboutActivity.java
+index f13426d..4c76453 100644
+--- a/smarttubetv/src/stmobile/java/com/liskovsoft/smartyoutubetv2/mobile/ui/about/MobileAboutActivity.java
++++ b/smarttubetv/src/stmobile/java/com/liskovsoft/smartyoutubetv2/mobile/ui/about/MobileAboutActivity.java
+@@ -44,7 +44,8 @@ public class MobileAboutActivity extends AppCompatActivity {
+         findViewById(R.id.link_fork).setOnClickListener(v ->
+                 openUrl(getString(R.string.mobile_about_url_fork)));
+ 
+-        findViewById(R.id.btn_check_updates).setOnClickListener(v -> checkForUpdates());
++        // Upstream releases use another package/signature and cannot update this build.
++        findViewById(R.id.btn_check_updates).setVisibility(android.view.View.GONE);
+     }
+ 
+     /**
+diff --git a/smarttubetv/src/stmobile/java/com/liskovsoft/smartyoutubetv2/mobile/ui/browse/MobileBrowseActivity.java b/smarttubetv/src/stmobile/java/com/liskovsoft/smartyoutubetv2/mobile/ui/browse/MobileBrowseActivity.java
+index fff1642..e920e65 100644
+--- a/smarttubetv/src/stmobile/java/com/liskovsoft/smartyoutubetv2/mobile/ui/browse/MobileBrowseActivity.java
++++ b/smarttubetv/src/stmobile/java/com/liskovsoft/smartyoutubetv2/mobile/ui/browse/MobileBrowseActivity.java
+@@ -51,7 +51,8 @@ public class MobileBrowseActivity extends MobileActivity {
+             dialogs.add(done -> StatsDialogs.maybeShowOnHome(this, done));
+         }
+         // update-available notice + one-time "What's new"
+-        dialogs.add(done -> LaunchUpdateNotices.onHomeCreated(this, done));
++        // Experimental build: never offer an incompatible upstream-signed APK.
++        // No automatic update source is configured for this independent package.
+         dialogs.start();
+     }
+ 
+diff --git a/smarttubetv/src/stmobile/java/com/liskovsoft/smartyoutubetv2/mobile/ui/browse/MobileBrowseFragment.java b/smarttubetv/src/stmobile/java/com/liskovsoft/smartyoutubetv2/mobile/ui/browse/MobileBrowseFragment.java
+index 4e58714..cd2221d 100644
+--- a/smarttubetv/src/stmobile/java/com/liskovsoft/smartyoutubetv2/mobile/ui/browse/MobileBrowseFragment.java
++++ b/smarttubetv/src/stmobile/java/com/liskovsoft/smartyoutubetv2/mobile/ui/browse/MobileBrowseFragment.java
+@@ -12,6 +12,7 @@ import android.view.ViewGroup;
+ import android.widget.Button;
+ import android.widget.ImageView;
+ import android.widget.ProgressBar;
++import android.widget.PopupMenu;
+ import android.widget.TextView;
+ 
+ import androidx.annotation.NonNull;
+@@ -27,6 +28,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+ 
+ import com.bumptech.glide.Glide;
+ import com.liskovsoft.mediaserviceinterfaces.oauth.Account;
++import com.liskovsoft.mediaserviceinterfaces.data.MediaGroup;
+ import com.liskovsoft.smartyoutubetv2.common.app.models.data.BrowseSection;
+ import com.liskovsoft.smartyoutubetv2.common.app.models.data.SettingsGroup;
+ import com.liskovsoft.smartyoutubetv2.common.app.models.data.Video;
+@@ -64,6 +66,9 @@ public class MobileBrowseFragment extends Fragment implements BrowseView, MediaS
+     private TextView mToolbarTitle;
+     private ImageView mAccountView;
+     private SectionAdapter mSectionAdapter;
++    /** Browse navigation only; all content continues through the upstream BrowsePresenter. */
++    @Nullable
++    private View[] mBottomTabs;
+     private VideoCardAdapter mGridAdapter;
+     private ShelfAdapter mShelfAdapter;
+     private SettingsItemAdapter mSettingsAdapter;
+@@ -130,6 +135,21 @@ public class MobileBrowseFragment extends Fragment implements BrowseView, MediaS
+         mShelfCardWidth = (int) (screenWidth * 0.42f);
+ 
+         mSectionAdapter = new SectionAdapter(this::onSectionPicked);
++        // The bottom bar links to the exact same section instances used by the drawer.
++        // Do not create parallel content loaders or a second navigation back stack.
++        mBottomTabs = new View[] {
++                view.findViewById(R.id.bottom_home),
++                view.findViewById(R.id.bottom_shorts),
++                view.findViewById(R.id.bottom_subscriptions),
++                view.findViewById(R.id.bottom_library),
++                view.findViewById(R.id.bottom_search)
++        };
++        mBottomTabs[0].setOnClickListener(v -> selectBottomSection(MediaGroup.TYPE_HOME));
++        mBottomTabs[1].setOnClickListener(v -> selectBottomSection(MediaGroup.TYPE_SHORTS));
++        mBottomTabs[2].setOnClickListener(v -> selectBottomSection(MediaGroup.TYPE_SUBSCRIPTIONS));
++        mBottomTabs[3].setOnClickListener(this::showLibraryMenu);
++        mBottomTabs[4].setOnClickListener(v ->
++                SearchPresenter.instance(requireContext()).startSearch(null));
+         RecyclerView sectionList = view.findViewById(R.id.section_list);
+         sectionList.setLayoutManager(new LinearLayoutManager(getContext()));
+         sectionList.setAdapter(mSectionAdapter);
+@@ -275,6 +295,7 @@ public class MobileBrowseFragment extends Fragment implements BrowseView, MediaS
+         BrowseSection section = mSectionAdapter.getItem(index);
+         mSectionSelected = true;
+         mSectionAdapter.setSelected(section);
++        updateBottomSelection(section.getId());
+         if (mToolbarTitle != null) {
+             mToolbarTitle.setText(section.getTitle());
+         }
+@@ -413,6 +434,65 @@ public class MobileBrowseFragment extends Fragment implements BrowseView, MediaS
+         updateAccountIcon();
+     }
+ 
++    /** Navigate using the existing presenter and section adapter, preserving auth handling. */
++    private void selectBottomSection(int sectionId) {
++        if (mSectionAdapter == null) {
++            return;
++        }
++        for (int i = 0; i < mSectionAdapter.getItemCount(); i++) {
++            if (mSectionAdapter.getItem(i).getId() == sectionId) {
++                selectSection(i, true);
++                if (mContentList != null) {
++                    mContentList.scrollToPosition(0);
++                }
++                return;
++            }
++        }
++        // A user may have hidden a default section in SmartTube's sidebar settings.
++        // Do not display a fake screen or silently navigate to the wrong content.
++        if (mDrawer != null) {
++            mDrawer.openDrawer(GravityCompat.START);
++        }
++    }
++
++    /** Library is a real menu over existing History, Playlists and My videos sections. */
++    private void showLibraryMenu(View anchor) {
++        PopupMenu popup = new PopupMenu(requireContext(), anchor);
++        popup.getMenu().add(0, MediaGroup.TYPE_HISTORY, 0, R.string.mobile_nav_history);
++        popup.getMenu().add(0, MediaGroup.TYPE_USER_PLAYLISTS, 1, R.string.mobile_nav_playlists);
++        popup.getMenu().add(0, MediaGroup.TYPE_MY_VIDEOS, 2, R.string.mobile_nav_my_videos);
++        popup.setOnMenuItemClickListener(item -> {
++            selectBottomSection(item.getItemId());
++            return true;
++        });
++        popup.show();
++    }
++
++    /** Keep visual selection in sync when either the drawer or bottom bar navigates. */
++    private void updateBottomSelection(int sectionId) {
++        if (mBottomTabs == null) {
++            return;
++        }
++        int selected = -1;
++        if (sectionId == MediaGroup.TYPE_HOME) selected = 0;
++        else if (sectionId == MediaGroup.TYPE_SHORTS) selected = 1;
++        else if (sectionId == MediaGroup.TYPE_SUBSCRIPTIONS) selected = 2;
++        else if (sectionId == MediaGroup.TYPE_HISTORY ||
++                sectionId == MediaGroup.TYPE_USER_PLAYLISTS ||
++                sectionId == MediaGroup.TYPE_MY_VIDEOS) selected = 3;
++        for (int i = 0; i < mBottomTabs.length; i++) {
++            View tab = mBottomTabs[i];
++            boolean active = i == selected;
++            tab.setSelected(active);
++            int color = ContextCompat.getColor(requireContext(),
++                    active ? R.color.brand_accent : R.color.mobile_text_secondary);
++            ImageView icon = tab.findViewById(R.id.bottom_icon);
++            TextView label = tab.findViewById(R.id.bottom_label);
++            icon.setColorFilter(color);
++            label.setTextColor(color);
++        }
++    }
++
+     // ----- helpers -----
+ 
+     private void setupContentForType(int type) {
+diff --git a/smarttubetv/src/stmobile/res/layout/mobile_browse_fragment.xml b/smarttubetv/src/stmobile/res/layout/mobile_browse_fragment.xml
+index 1c5f8d1..abed6ad 100644
+--- a/smarttubetv/src/stmobile/res/layout/mobile_browse_fragment.xml
++++ b/smarttubetv/src/stmobile/res/layout/mobile_browse_fragment.xml
+@@ -123,6 +123,109 @@
+                     android:visibility="gone" />
+             </LinearLayout>
+         </FrameLayout>
++        <!-- SmartTube Mobile: persistent browse navigation. The drawer remains available. -->
++        <LinearLayout
++            android:id="@+id/mobile_bottom_navigation"
++            android:layout_width="match_parent"
++            android:layout_height="64dp"
++            android:orientation="horizontal"
++            android:background="@color/mobile_surface"
++            android:gravity="center_vertical">
++            <LinearLayout
++                android:id="@+id/bottom_home"
++                android:layout_width="0dp"
++                android:layout_height="match_parent"
++                android:layout_weight="1"
++                android:orientation="vertical"
++                android:gravity="center"
++                android:clickable="true"
++                android:focusable="true"
++                android:importantForAccessibility="yes"
++                android:contentDescription="@string/mobile_nav_home"
++                android:background="?android:attr/selectableItemBackground">
++                <ImageView android:id="@+id/bottom_icon" android:layout_width="24dp"
++                    android:layout_height="24dp" android:src="@drawable/icon_home"
++                    android:contentDescription="@null"
++                    android:importantForAccessibility="no" />
++                <TextView android:id="@+id/bottom_label" android:layout_width="wrap_content"
++                    android:layout_height="wrap_content" android:layout_marginTop="3dp"
++                    android:text="@string/mobile_nav_home" android:textSize="12sp"
++                    android:textColor="@color/mobile_text_secondary"
++                    android:importantForAccessibility="no" />
++            </LinearLayout>
++            <LinearLayout
++                android:id="@+id/bottom_shorts"
++                android:layout_width="0dp" android:layout_height="match_parent"
++                android:layout_weight="1" android:orientation="vertical"
++                android:gravity="center" android:clickable="true" android:focusable="true"
++                android:importantForAccessibility="yes"
++                android:contentDescription="@string/mobile_nav_shorts"
++                android:background="?android:attr/selectableItemBackground">
++                <ImageView android:id="@id/bottom_icon" android:layout_width="24dp"
++                    android:layout_height="24dp" android:src="@drawable/icon_shorts"
++                    android:contentDescription="@null"
++                    android:importantForAccessibility="no" />
++                <TextView android:id="@id/bottom_label" android:layout_width="wrap_content"
++                    android:layout_height="wrap_content" android:layout_marginTop="3dp"
++                    android:text="@string/mobile_nav_shorts" android:textSize="12sp"
++                    android:textColor="@color/mobile_text_secondary"
++                    android:importantForAccessibility="no" />
++            </LinearLayout>
++            <LinearLayout
++                android:id="@+id/bottom_subscriptions"
++                android:layout_width="0dp" android:layout_height="match_parent"
++                android:layout_weight="1" android:orientation="vertical"
++                android:gravity="center" android:clickable="true" android:focusable="true"
++                android:importantForAccessibility="yes"
++                android:contentDescription="@string/mobile_nav_subscriptions"
++                android:background="?android:attr/selectableItemBackground">
++                <ImageView android:id="@id/bottom_icon" android:layout_width="24dp"
++                    android:layout_height="24dp" android:src="@drawable/icon_subscriptions"
++                    android:contentDescription="@null"
++                    android:importantForAccessibility="no" />
++                <TextView android:id="@id/bottom_label" android:layout_width="wrap_content"
++                    android:layout_height="wrap_content" android:layout_marginTop="3dp"
++                    android:text="@string/mobile_nav_subscriptions" android:textSize="12sp"
++                    android:textColor="@color/mobile_text_secondary"
++                    android:importantForAccessibility="no" />
++            </LinearLayout>
++            <LinearLayout
++                android:id="@+id/bottom_library"
++                android:layout_width="0dp" android:layout_height="match_parent"
++                android:layout_weight="1" android:orientation="vertical"
++                android:gravity="center" android:clickable="true" android:focusable="true"
++                android:importantForAccessibility="yes"
++                android:contentDescription="@string/mobile_nav_library"
++                android:background="?android:attr/selectableItemBackground">
++                <ImageView android:id="@id/bottom_icon" android:layout_width="24dp"
++                    android:layout_height="24dp" android:src="@drawable/icon_playlist"
++                    android:contentDescription="@null"
++                    android:importantForAccessibility="no" />
++                <TextView android:id="@id/bottom_label" android:layout_width="wrap_content"
++                    android:layout_height="wrap_content" android:layout_marginTop="3dp"
++                    android:text="@string/mobile_nav_library" android:textSize="12sp"
++                    android:textColor="@color/mobile_text_secondary"
++                    android:importantForAccessibility="no" />
++            </LinearLayout>
++            <LinearLayout
++                android:id="@+id/bottom_search"
++                android:layout_width="0dp" android:layout_height="match_parent"
++                android:layout_weight="1" android:orientation="vertical"
++                android:gravity="center" android:clickable="true" android:focusable="true"
++                android:importantForAccessibility="yes"
++                android:contentDescription="@string/mobile_nav_search"
++                android:background="?android:attr/selectableItemBackground">
++                <ImageView android:id="@id/bottom_icon" android:layout_width="24dp"
++                    android:layout_height="24dp" android:src="@android:drawable/ic_menu_search"
++                    android:contentDescription="@null"
++                    android:importantForAccessibility="no" />
++                <TextView android:id="@id/bottom_label" android:layout_width="wrap_content"
++                    android:layout_height="wrap_content" android:layout_marginTop="3dp"
++                    android:text="@string/mobile_nav_search" android:textSize="12sp"
++                    android:textColor="@color/mobile_text_secondary"
++                    android:importantForAccessibility="no" />
++            </LinearLayout>
++        </LinearLayout>
+     </LinearLayout>
+ 
+     <!-- Drawer menu: scrollable section list + pinned About footer at the bottom. -->
+diff --git a/smarttubetv/src/stmobile/res/values/strings.xml b/smarttubetv/src/stmobile/res/values/strings.xml
+index 62364d0..4148c11 100644
+--- a/smarttubetv/src/stmobile/res/values/strings.xml
++++ b/smarttubetv/src/stmobile/res/values/strings.xml
+@@ -2,7 +2,7 @@
+ <resources>
+     <!-- Phone (stmobile) flavor strings. Kept separate from src/main so upstream merges stay clean. -->
+     <!-- Override the launcher name for the phone build (src/main ships it as "SmartTube"). -->
+-    <string name="app_name" translatable="false">SmarterTube</string>
++    <string name="app_name" translatable="false">SmartTube Mobile Dev</string>
+     <string name="mobile_signin_instructions">Tap Continue below. A browser opens inside the app — sign in to your Google account, check the code matches, and tap Allow. Then come back here; this screen will close once Google confirms.</string>
+     <string name="mobile_signin_code_label">Your sign-in code</string>
+     <string name="mobile_signin_continue">Continue in browser</string>
+@@ -18,11 +18,11 @@
+     <string name="mobile_search_voice_unavailable">Voice search isn\'t available on this device.</string>
+ 
+     <!-- About screen -->
+-    <string name="mobile_about_title">About SmarterTube</string>
+-    <string name="mobile_about_drawer_entry">About SmarterTube</string>
++    <string name="mobile_about_title">About SmartTube Mobile Dev</string>
++    <string name="mobile_about_drawer_entry">About this app</string>
+     <string name="mobile_about_tagline">Phone &amp; tablet fork of SmartTube</string>
+     <string name="mobile_about_version">Version %1$s</string>
+-    <string name="mobile_about_body">SmarterTube is a phone and tablet fork of SmartTube by yuliskov. The YouTube client code is upstream\'s work, merged from upstream on every release. This fork adds the phone/tablet UI on top.\n\nLicensed under MIT, same as upstream.</string>
++    <string name="mobile_about_body">Independent experimental build. Mobile interface based on SmarterTube by CodeSculptor; engine from SmartTube by yuliskov. Not affiliated with either developer. Original MIT attribution and license remain in the source project.\n\nDevelopment build; see included reports for verified features.</string>
+     <string name="mobile_about_link_upstream">Upstream: github.com/yuliskov/SmartTube</string>
+     <string name="mobile_about_link_fork">Fork: github.com/CodeSculptor/SmarterTube</string>
+     <string name="mobile_about_url_upstream" translatable="false">https://github.com/yuliskov/SmartTube</string>
+@@ -104,7 +104,7 @@
+ 
+     <!-- Opt-in anonymous stats (usage heartbeat + crash reports). See mobile/stats/StatsReporter. -->
+     <!-- Base URL of the fork's stats Worker (stats-worker/ in the repo). Empty = feature dormant. -->
+-    <string name="mobile_stats_endpoint" translatable="false">https://smartertube-stats.codesculptor.workers.dev</string>
++    <string name="mobile_stats_endpoint" translatable="false"></string>
+     <string name="mobile_stats_title">Anonymous stats</string>
+     <string name="mobile_stats_prompt_title">Help improve SmarterTube?</string>
+     <string name="mobile_stats_details">SmarterTube can send the developer:\n\n• an anonymous \"app was used today\" count, at most once a day\n• crash reports (code locations only)\n\nEach includes just the app version and Android version (crash reports also include the phone model).\n\nNever sent: your account, videos, channels, searches or any ID that could identify you.\n\nYou can change this any time in Settings → Anonymous stats.</string>

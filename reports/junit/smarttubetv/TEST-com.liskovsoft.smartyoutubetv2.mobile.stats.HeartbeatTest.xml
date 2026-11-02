@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.liskovsoft.smartyoutubetv2.mobile.stats.HeartbeatTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-11-02T02:27:58" hostname="DESKTOP-EQUHKN9" time="0.024">
+  <properties/>
+  <testcase name="weekIndexChangesOnlyOnMondays" classname="com.liskovsoft.smartyoutubetv2.mobile.stats.HeartbeatTest" time="0.003"/>
+  <testcase name="jsonPayloadHasNoIdentifiers" classname="com.liskovsoft.smartyoutubetv2.mobile.stats.HeartbeatTest" time="0.001"/>
+  <testcase name="nextDaySameWeekAndMonth" classname="com.liskovsoft.smartyoutubetv2.mobile.stats.HeartbeatTest" time="0.0"/>
+  <testcase name="firstEverPingFlagsEverything" classname="com.liskovsoft.smartyoutubetv2.mobile.stats.HeartbeatTest" time="0.0"/>
+  <testcase name="mondayStartsNewWeek" classname="com.liskovsoft.smartyoutubetv2.mobile.stats.HeartbeatTest" time="0.001"/>
+  <testcase name="secondPingSameUtcDayIsSuppressed" classname="com.liskovsoft.smartyoutubetv2.mobile.stats.HeartbeatTest" time="0.0"/>
+  <testcase name="firstOfMonthStartsNewMonthButNotNecessarilyWeek" classname="com.liskovsoft.smartyoutubetv2.mobile.stats.HeartbeatTest" time="0.0"/>
+  <testcase name="monthIndexMatchesCalendarAcrossYearsAndLeapDays" classname="com.liskovsoft.smartyoutubetv2.mobile.stats.HeartbeatTest" time="0.018"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

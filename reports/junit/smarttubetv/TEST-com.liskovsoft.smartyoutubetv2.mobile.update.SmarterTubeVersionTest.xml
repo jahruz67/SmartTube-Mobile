@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.liskovsoft.smartyoutubetv2.mobile.update.SmarterTubeVersionTest" tests="23" skipped="0" failures="0" errors="0" timestamp="2026-11-02T02:27:58" hostname="DESKTOP-EQUHKN9" time="0.004">
+  <properties/>
+  <testcase name="alphaIsOlderThanBeta" classname="com.liskovsoft.smartyoutubetv2.mobile.update.SmarterTubeVersionTest" time="0.001"/>
+  <testcase name="rcIsOlderThanStable" classname="com.liskovsoft.smartyoutubetv2.mobile.update.SmarterTubeVersionTest" time="0.0"/>
+  <testcase name="malformedTagsAreIgnored" classname="com.liskovsoft.smartyoutubetv2.mobile.update.SmarterTubeVersionTest" time="0.0"/>
+  <testcase name="betaIsOlderThanRc" classname="com.liskovsoft.smartyoutubetv2.mobile.update.SmarterTubeVersionTest" time="0.0"/>
+  <testcase name="parsesReleaseCandidate" classname="com.liskovsoft.smartyoutubetv2.mobile.update.SmarterTubeVersionTest" time="0.0"/>
+  <testcase name="stableChannelSeesStableOnly" classname="com.liskovsoft.smartyoutubetv2.mobile.update.SmarterTubeVersionTest" time="0.0"/>
+  <testcase name="parsesNewSchemeBeta" classname="com.liskovsoft.smartyoutubetv2.mobile.update.SmarterTubeVersionTest" time="0.0"/>
+  <testcase name="patchBumpIsNewer" classname="com.liskovsoft.smartyoutubetv2.mobile.update.SmarterTubeVersionTest" time="0.0"/>
+  <testcase name="legacyDespite10LabelStillOlderThanBetaReset" classname="com.liskovsoft.smartyoutubetv2.mobile.update.SmarterTubeVersionTest" time="0.0"/>
+  <testcase name="beta2IsNewerThanBeta1" classname="com.liskovsoft.smartyoutubetv2.mobile.update.SmarterTubeVersionTest" time="0.0"/>
+  <testcase name="alphaChannelSeesEverything" classname="com.liskovsoft.smartyoutubetv2.mobile.update.SmarterTubeVersionTest" time="0.0"/>
+  <testcase name="parsesUpstreamBetaTail" classname="com.liskovsoft.smartyoutubetv2.mobile.update.SmarterTubeVersionTest" time="0.0"/>
+  <testcase name="parsesNewSchemeBeta2" classname="com.liskovsoft.smartyoutubetv2.mobile.update.SmarterTubeVersionTest" time="0.0"/>
+  <testcase name="legacyBeta1Recognised" classname="com.liskovsoft.smartyoutubetv2.mobile.update.SmarterTubeVersionTest" time="0.0"/>
+  <testcase name="legacyVisibleToBetaAndAlphaButNotStable" classname="com.liskovsoft.smartyoutubetv2.mobile.update.SmarterTubeVersionTest" time="0.0"/>
+  <testcase name="betaChannelSeesBetaRcStable" classname="com.liskovsoft.smartyoutubetv2.mobile.update.SmarterTubeVersionTest" time="0.0"/>
+  <testcase name="parsesNewSchemeDifferentUpstream" classname="com.liskovsoft.smartyoutubetv2.mobile.update.SmarterTubeVersionTest" time="0.0"/>
+  <testcase name="legacyIsOlderThanBetaReset" classname="com.liskovsoft.smartyoutubetv2.mobile.update.SmarterTubeVersionTest" time="0.0"/>
+  <testcase name="parsesStableWithNoChannelSuffix" classname="com.liskovsoft.smartyoutubetv2.mobile.update.SmarterTubeVersionTest" time="0.0"/>
+  <testcase name="upstreamTvTagIsIgnored" classname="com.liskovsoft.smartyoutubetv2.mobile.update.SmarterTubeVersionTest" time="0.0"/>
+  <testcase name="newerUpstreamDoesNotBeatOlderProductVersion" classname="com.liskovsoft.smartyoutubetv2.mobile.update.SmarterTubeVersionTest" time="0.0"/>
+  <testcase name="legacyTagIsRecognised" classname="com.liskovsoft.smartyoutubetv2.mobile.update.SmarterTubeVersionTest" time="0.0"/>
+  <testcase name="buildMetadataDoesNotAffectPrecedence" classname="com.liskovsoft.smartyoutubetv2.mobile.update.SmarterTubeVersionTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

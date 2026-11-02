@@ -1,0 +1,46 @@
+{
+  "SmartTubeMobile-debug-arm64-v8a.apk": {
+    "bytes": 37916119,
+    "sha256": "23afb9187f30881b7f3073c98f5118bbdc968798a1c9ffdca68c195da717d460",
+    "native_libraries": [
+      "lib/arm64-v8a/libconscrypt_jni.so",
+      "lib/arm64-v8a/libcronet.105.0.5195.68.so",
+      "lib/arm64-v8a/libglide-webp.so",
+      "lib/arm64-v8a/libj2v8.so"
+    ]
+  },
+  "SmartTubeMobile-debug-armeabi-v7a.apk": {
+    "bytes": 35536220,
+    "sha256": "432c6ec1f2b97519e8ed529a325ac1d9f18989af8724df3756a434d5ed1075dc",
+    "native_libraries": [
+      "lib/armeabi-v7a/libconscrypt_jni.so",
+      "lib/armeabi-v7a/libcronet.105.0.5195.68.so",
+      "lib/armeabi-v7a/libglide-webp.so",
+      "lib/armeabi-v7a/libj2v8.so"
+    ]
+  },
+  "SmartTubeMobile-debug-universal.apk": {
+    "bytes": 49415856,
+    "sha256": "97923765887d5fcfc5d7daea06cb59fa421c2ec103ed6be4bdd978539cd496be",
+    "native_libraries": [
+      "lib/arm64-v8a/libconscrypt_jni.so",
+      "lib/arm64-v8a/libcronet.105.0.5195.68.so",
+      "lib/arm64-v8a/libglide-webp.so",
+      "lib/arm64-v8a/libj2v8.so",
+      "lib/armeabi-v7a/libconscrypt_jni.so",
+      "lib/armeabi-v7a/libcronet.105.0.5195.68.so",
+      "lib/armeabi-v7a/libglide-webp.so",
+      "lib/armeabi-v7a/libj2v8.so"
+    ]
+  },
+  "SmartTubeMobile-debug-x86.apk": {
+    "bytes": 38854406,
+    "sha256": "ada0bc19a1c5c3839cc6169d24145c35a5ec3f0ef981faa9e1a3ecccc0ed941c",
+    "native_libraries": [
+      "lib/x86/libconscrypt_jni.so",
+      "lib/x86/libcronet.105.0.5195.68.so",
+      "lib/x86/libglide-webp.so",
+      "lib/x86/libj2v8.so"
+    ]
+  }
+}

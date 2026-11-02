@@ -1,0 +1,11 @@
+UNCHANGED: smarttubetv\build.gradle
+UNCHANGED: smarttubetv\src\stmobile\res\values\strings.xml
+UNCHANGED: smarttubetv\src\stmobile\java\com\liskovsoft\smartyoutubetv2\mobile\ui\browse\MobileBrowseActivity.java
+UNCHANGED: smarttubetv\src\stmobile\java\com\liskovsoft\smartyoutubetv2\mobile\ui\about\MobileAboutActivity.java
+UNCHANGED: smarttubetv\src\stmobile\AndroidManifest.xml
+INSTALL: smarttubetv\src\stmobile\res\mipmap-mdpi\smarttube_mobile_dev_icon.png
+INSTALL: smarttubetv\src\stmobile\res\mipmap-hdpi\smarttube_mobile_dev_icon.png
+INSTALL: smarttubetv\src\stmobile\res\mipmap-xhdpi\smarttube_mobile_dev_icon.png
+INSTALL: smarttubetv\src\stmobile\res\mipmap-xxhdpi\smarttube_mobile_dev_icon.png
+INSTALL: smarttubetv\src\stmobile\res\mipmap-xxxhdpi\smarttube_mobile_dev_icon.png
+Identity isolated; distinct launcher icon; inherited telemetry and incompatible updates disabled.

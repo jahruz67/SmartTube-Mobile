@@ -1,0 +1,1015 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. See https://docs.gradle.org/7.5/userguide/gradle_daemon.html#sec:disabling_the_daemon.
+Daemon will be stopped at the end of the build 
+
+> Configure project :appupdatechecker2
+WARNING:The option setting 'android.jetifier.ignorelist=bcprov' is experimental.
+Warning: SDK processing. This version only understands SDK XML versions up to 3 but an SDK XML file of version 4 was encountered. This can happen if you use versions of Android Studio and the command-line tools that were released at different times.
+
+> Task :smarttubetv:preBuild UP-TO-DATE
+> Task :smarttubetv:preStmobileDebugBuild UP-TO-DATE
+> Task :smarttubetv:mergeStmobileDebugNativeDebugMetadata NO-SOURCE
+> Task :chatkit:preBuild UP-TO-DATE
+> Task :chatkit:preDebugBuild UP-TO-DATE
+> Task :commons-io-2.8.0:preBuild UP-TO-DATE
+> Task :commons-io-2.8.0:preDebugBuild UP-TO-DATE
+> Task :commons-io-2.8.0:compileDebugAidl NO-SOURCE
+> Task :sharedutils:preBuild UP-TO-DATE
+> Task :sharedutils:preDebugBuild UP-TO-DATE
+> Task :sharedutils:compileDebugAidl NO-SOURCE
+> Task :chatkit:compileDebugAidl NO-SOURCE
+> Task :sharedutils:packageDebugRenderscript NO-SOURCE
+> Task :chatkit:compileDebugRenderscript NO-SOURCE
+> Task :chatkit:generateDebugBuildConfig UP-TO-DATE
+> Task :chatkit:generateDebugResValues UP-TO-DATE
+> Task :chatkit:generateDebugResources UP-TO-DATE
+> Task :chatkit:packageDebugResources UP-TO-DATE
+> Task :chatkit:parseDebugLocalResources UP-TO-DATE
+> Task :chatkit:processDebugManifest UP-TO-DATE
+> Task :commons-io-2.8.0:compileDebugRenderscript NO-SOURCE
+> Task :commons-io-2.8.0:generateDebugResValues UP-TO-DATE
+> Task :commons-io-2.8.0:generateDebugResources UP-TO-DATE
+> Task :commons-io-2.8.0:packageDebugResources UP-TO-DATE
+> Task :commons-io-2.8.0:parseDebugLocalResources UP-TO-DATE
+> Task :commons-io-2.8.0:processDebugManifest UP-TO-DATE
+> Task :commons-io-2.8.0:generateDebugRFile UP-TO-DATE
+> Task :commons-io-2.8.0:packageDebugRenderscript NO-SOURCE
+> Task :sharedutils:compileDebugRenderscript NO-SOURCE
+> Task :sharedutils:generateDebugResValues UP-TO-DATE
+> Task :sharedutils:generateDebugResources UP-TO-DATE
+> Task :sharedutils:packageDebugResources UP-TO-DATE
+> Task :sharedutils:parseDebugLocalResources UP-TO-DATE
+> Task :sharedutils:processDebugManifest UP-TO-DATE
+> Task :sharedutils:generateDebugRFile UP-TO-DATE
+> Task :chatkit:generateDebugRFile UP-TO-DATE
+> Task :chatkit:javaPreCompileDebug UP-TO-DATE
+> Task :commons-io-2.8.0:generateDebugBuildConfig UP-TO-DATE
+> Task :commons-io-2.8.0:javaPreCompileDebug UP-TO-DATE
+> Task :commons-io-2.8.0:compileDebugJavaWithJavac UP-TO-DATE
+> Task :commons-io-2.8.0:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :sharedutils:generateDebugBuildConfig UP-TO-DATE
+> Task :sharedutils:compileDebugKotlin UP-TO-DATE
+> Task :sharedutils:javaPreCompileDebug UP-TO-DATE
+> Task :sharedutils:compileDebugJavaWithJavac UP-TO-DATE
+> Task :sharedutils:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :chatkit:compileDebugJavaWithJavac UP-TO-DATE
+> Task :chatkit:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :appupdatechecker2:preBuild UP-TO-DATE
+> Task :appupdatechecker2:preStstableDebugBuild UP-TO-DATE
+> Task :appupdatechecker2:compileStstableDebugAidl NO-SOURCE
+> Task :appupdatechecker2:compileStstableDebugRenderscript NO-SOURCE
+> Task :appupdatechecker2:generateStstableDebugBuildConfig UP-TO-DATE
+> Task :appupdatechecker2:generateStstableDebugResValues UP-TO-DATE
+> Task :appupdatechecker2:generateStstableDebugResources UP-TO-DATE
+> Task :appupdatechecker2:packageStstableDebugResources UP-TO-DATE
+> Task :appupdatechecker2:parseStstableDebugLocalResources UP-TO-DATE
+> Task :appupdatechecker2:processStstableDebugManifest UP-TO-DATE
+> Task :appupdatechecker2:generateStstableDebugRFile UP-TO-DATE
+> Task :appupdatechecker2:javaPreCompileStstableDebug UP-TO-DATE
+> Task :appupdatechecker2:compileStstableDebugJavaWithJavac UP-TO-DATE
+> Task :appupdatechecker2:bundleLibCompileToJarStstableDebug UP-TO-DATE
+> Task :common:preBuild UP-TO-DATE
+> Task :common:preStmobileDebugBuild UP-TO-DATE
+> Task :exoplayer-extension-cronet:preBuild UP-TO-DATE
+> Task :exoplayer-extension-cronet:preStstableDebugBuild UP-TO-DATE
+> Task :exoplayer-library-core:preBuild UP-TO-DATE
+> Task :exoplayer-library-core:preDebugBuild UP-TO-DATE
+> Task :exoplayer-library-core:compileDebugAidl NO-SOURCE
+> Task :exoplayer-extension-cronet:compileStstableDebugAidl NO-SOURCE
+> Task :exoplayer-extension-okhttp:preBuild UP-TO-DATE
+> Task :exoplayer-extension-okhttp:preDebugBuild UP-TO-DATE
+> Task :exoplayer-extension-okhttp:compileDebugAidl NO-SOURCE
+> Task :exoplayer-library:preBuild UP-TO-DATE
+> Task :exoplayer-library:preStstableDebugBuild UP-TO-DATE
+> Task :exoplayer-library-dash:preBuild UP-TO-DATE
+> Task :exoplayer-library-dash:preStstableDebugBuild UP-TO-DATE
+> Task :mediaserviceinterfaces:preBuild UP-TO-DATE
+> Task :mediaserviceinterfaces:preDebugBuild UP-TO-DATE
+> Task :mediaserviceinterfaces:compileDebugAidl NO-SOURCE
+> Task :j2v8:preBuild UP-TO-DATE
+> Task :j2v8:preDebugBuild UP-TO-DATE
+> Task :j2v8:compileDebugAidl NO-SOURCE
+> Task :youtubeapi:preBuild UP-TO-DATE
+> Task :youtubeapi:preStstableDebugBuild UP-TO-DATE
+> Task :youtubeapi:compileStstableDebugAidl NO-SOURCE
+> Task :exoplayer-library-dash:compileStstableDebugAidl NO-SOURCE
+> Task :exoplayer-library-hls:preBuild UP-TO-DATE
+> Task :exoplayer-library-hls:preDebugBuild UP-TO-DATE
+> Task :exoplayer-library-hls:compileDebugAidl NO-SOURCE
+> Task :exoplayer-library-sabr:preBuild UP-TO-DATE
+> Task :exoplayer-library-sabr:preStstableDebugBuild UP-TO-DATE
+> Task :exoplayer-library-sabr:compileStstableDebugAidl NO-SOURCE
+> Task :exoplayer-library-smoothstreaming:preBuild UP-TO-DATE
+> Task :exoplayer-library-smoothstreaming:preDebugBuild UP-TO-DATE
+> Task :exoplayer-library-smoothstreaming:compileDebugAidl NO-SOURCE
+> Task :exoplayer-library-ui:preBuild UP-TO-DATE
+> Task :exoplayer-library-ui:preDebugBuild UP-TO-DATE
+> Task :exoplayer-library-ui:compileDebugAidl NO-SOURCE
+> Task :exoplayer-library:compileStstableDebugAidl NO-SOURCE
+> Task :filepicker-lib:preBuild UP-TO-DATE
+> Task :filepicker-lib:preDebugBuild UP-TO-DATE
+> Task :fragment-1.1.0:preBuild UP-TO-DATE
+> Task :fragment-1.1.0:preDebugBuild UP-TO-DATE
+> Task :fragment-1.1.0:compileDebugAidl NO-SOURCE
+> Task :filepicker-lib:compileDebugAidl NO-SOURCE
+> Task :leanback-1.0.0:preBuild UP-TO-DATE
+> Task :leanback-1.0.0:preDebugBuild UP-TO-DATE
+> Task :leanback-1.0.0:compileDebugAidl NO-SOURCE
+> Task :leanbackassistant:preBuild UP-TO-DATE
+> Task :leanbackassistant:preStstableDebugBuild UP-TO-DATE
+> Task :leanbackassistant:compileStstableDebugAidl NO-SOURCE
+> Task :slidableactivity:preBuild UP-TO-DATE
+> Task :slidableactivity:preDebugBuild UP-TO-DATE
+> Task :slidableactivity:compileDebugAidl NO-SOURCE
+> Task :common:compileStmobileDebugAidl NO-SOURCE
+> Task :appupdatechecker2:packageStstableDebugRenderscript NO-SOURCE
+> Task :exoplayer-extension-cronet:packageStstableDebugRenderscript NO-SOURCE
+> Task :exoplayer-extension-okhttp:packageDebugRenderscript NO-SOURCE
+> Task :exoplayer-library:packageStstableDebugRenderscript NO-SOURCE
+> Task :exoplayer-library-core:packageDebugRenderscript NO-SOURCE
+> Task :exoplayer-library-dash:packageStstableDebugRenderscript NO-SOURCE
+> Task :exoplayer-library-hls:packageDebugRenderscript NO-SOURCE
+> Task :exoplayer-library-sabr:packageStstableDebugRenderscript NO-SOURCE
+> Task :exoplayer-library-smoothstreaming:packageDebugRenderscript NO-SOURCE
+> Task :exoplayer-library-ui:packageDebugRenderscript NO-SOURCE
+> Task :filepicker-lib:packageDebugRenderscript NO-SOURCE
+> Task :fragment-1.1.0:packageDebugRenderscript NO-SOURCE
+> Task :leanbackassistant:packageStstableDebugRenderscript NO-SOURCE
+> Task :mediaserviceinterfaces:packageDebugRenderscript NO-SOURCE
+> Task :slidableactivity:packageDebugRenderscript NO-SOURCE
+> Task :youtubeapi:packageStstableDebugRenderscript NO-SOURCE
+> Task :common:compileStmobileDebugRenderscript NO-SOURCE
+> Task :common:generateStmobileDebugBuildConfig UP-TO-DATE
+> Task :common:generateStmobileDebugResValues UP-TO-DATE
+> Task :common:generateStmobileDebugResources UP-TO-DATE
+> Task :common:packageStmobileDebugResources UP-TO-DATE
+> Task :common:parseStmobileDebugLocalResources UP-TO-DATE
+> Task :common:processStmobileDebugManifest UP-TO-DATE
+> Task :exoplayer-extension-cronet:compileStstableDebugRenderscript NO-SOURCE
+> Task :exoplayer-extension-cronet:generateStstableDebugResValues UP-TO-DATE
+> Task :exoplayer-extension-cronet:generateStstableDebugResources UP-TO-DATE
+> Task :exoplayer-extension-cronet:packageStstableDebugResources UP-TO-DATE
+> Task :exoplayer-extension-cronet:parseStstableDebugLocalResources UP-TO-DATE
+> Task :exoplayer-extension-cronet:processStstableDebugManifest UP-TO-DATE
+> Task :exoplayer-library-core:compileDebugRenderscript NO-SOURCE
+> Task :exoplayer-library-core:generateDebugResValues UP-TO-DATE
+> Task :exoplayer-library-core:generateDebugResources UP-TO-DATE
+> Task :exoplayer-library-core:packageDebugResources UP-TO-DATE
+> Task :exoplayer-library-core:parseDebugLocalResources UP-TO-DATE
+> Task :exoplayer-library-core:processDebugManifest UP-TO-DATE
+> Task :exoplayer-library-core:generateDebugRFile UP-TO-DATE
+> Task :exoplayer-extension-cronet:generateStstableDebugRFile UP-TO-DATE
+> Task :exoplayer-extension-okhttp:compileDebugRenderscript NO-SOURCE
+> Task :exoplayer-extension-okhttp:generateDebugResValues UP-TO-DATE
+> Task :exoplayer-extension-okhttp:generateDebugResources UP-TO-DATE
+> Task :exoplayer-extension-okhttp:packageDebugResources UP-TO-DATE
+> Task :exoplayer-extension-okhttp:parseDebugLocalResources UP-TO-DATE
+> Task :exoplayer-extension-okhttp:processDebugManifest UP-TO-DATE
+> Task :exoplayer-extension-okhttp:generateDebugRFile UP-TO-DATE
+> Task :exoplayer-library:compileStstableDebugRenderscript NO-SOURCE
+> Task :exoplayer-library:generateStstableDebugResValues UP-TO-DATE
+> Task :exoplayer-library:generateStstableDebugResources UP-TO-DATE
+> Task :exoplayer-library:packageStstableDebugResources UP-TO-DATE
+> Task :exoplayer-library:parseStstableDebugLocalResources UP-TO-DATE
+> Task :exoplayer-library:processStstableDebugManifest UP-TO-DATE
+> Task :exoplayer-library-dash:compileStstableDebugRenderscript NO-SOURCE
+> Task :exoplayer-library-dash:generateStstableDebugResValues UP-TO-DATE
+> Task :exoplayer-library-dash:generateStstableDebugResources UP-TO-DATE
+> Task :exoplayer-library-dash:packageStstableDebugResources UP-TO-DATE
+> Task :exoplayer-library-dash:parseStstableDebugLocalResources UP-TO-DATE
+> Task :exoplayer-library-dash:processStstableDebugManifest UP-TO-DATE
+> Task :mediaserviceinterfaces:compileDebugRenderscript NO-SOURCE
+> Task :mediaserviceinterfaces:generateDebugResValues UP-TO-DATE
+> Task :mediaserviceinterfaces:generateDebugResources UP-TO-DATE
+> Task :mediaserviceinterfaces:packageDebugResources UP-TO-DATE
+> Task :mediaserviceinterfaces:parseDebugLocalResources UP-TO-DATE
+> Task :mediaserviceinterfaces:processDebugManifest UP-TO-DATE
+> Task :mediaserviceinterfaces:generateDebugRFile UP-TO-DATE
+> Task :j2v8:compileDebugRenderscript NO-SOURCE
+> Task :j2v8:generateDebugResValues UP-TO-DATE
+> Task :j2v8:generateDebugResources UP-TO-DATE
+> Task :j2v8:packageDebugResources UP-TO-DATE
+> Task :j2v8:parseDebugLocalResources UP-TO-DATE
+> Task :j2v8:processDebugManifest UP-TO-DATE
+> Task :j2v8:generateDebugRFile UP-TO-DATE
+> Task :j2v8:packageDebugRenderscript NO-SOURCE
+> Task :youtubeapi:compileStstableDebugRenderscript NO-SOURCE
+> Task :youtubeapi:generateStstableDebugResValues UP-TO-DATE
+> Task :youtubeapi:generateStstableDebugResources UP-TO-DATE
+> Task :youtubeapi:packageStstableDebugResources UP-TO-DATE
+> Task :youtubeapi:parseStstableDebugLocalResources UP-TO-DATE
+> Task :youtubeapi:processStstableDebugManifest UP-TO-DATE
+> Task :youtubeapi:generateStstableDebugRFile UP-TO-DATE
+> Task :exoplayer-library-dash:generateStstableDebugRFile UP-TO-DATE
+> Task :exoplayer-library-hls:compileDebugRenderscript NO-SOURCE
+> Task :exoplayer-library-hls:generateDebugResValues UP-TO-DATE
+> Task :exoplayer-library-hls:generateDebugResources UP-TO-DATE
+> Task :exoplayer-library-hls:packageDebugResources UP-TO-DATE
+> Task :exoplayer-library-hls:parseDebugLocalResources UP-TO-DATE
+> Task :exoplayer-library-hls:processDebugManifest UP-TO-DATE
+> Task :exoplayer-library-hls:generateDebugRFile UP-TO-DATE
+> Task :exoplayer-library-sabr:compileStstableDebugRenderscript NO-SOURCE
+> Task :exoplayer-library-sabr:generateStstableDebugResValues UP-TO-DATE
+> Task :exoplayer-library-sabr:generateStstableDebugResources UP-TO-DATE
+> Task :exoplayer-library-sabr:packageStstableDebugResources UP-TO-DATE
+> Task :exoplayer-library-sabr:parseStstableDebugLocalResources UP-TO-DATE
+> Task :exoplayer-library-sabr:processStstableDebugManifest UP-TO-DATE
+> Task :exoplayer-library-sabr:generateStstableDebugRFile UP-TO-DATE
+> Task :exoplayer-library-smoothstreaming:compileDebugRenderscript NO-SOURCE
+> Task :exoplayer-library-smoothstreaming:generateDebugResValues UP-TO-DATE
+> Task :exoplayer-library-smoothstreaming:generateDebugResources UP-TO-DATE
+> Task :exoplayer-library-smoothstreaming:packageDebugResources UP-TO-DATE
+> Task :exoplayer-library-smoothstreaming:parseDebugLocalResources UP-TO-DATE
+> Task :exoplayer-library-smoothstreaming:processDebugManifest UP-TO-DATE
+> Task :exoplayer-library-smoothstreaming:generateDebugRFile UP-TO-DATE
+> Task :exoplayer-library-ui:compileDebugRenderscript NO-SOURCE
+> Task :exoplayer-library-ui:generateDebugResValues UP-TO-DATE
+> Task :exoplayer-library-ui:generateDebugResources UP-TO-DATE
+> Task :exoplayer-library-ui:packageDebugResources UP-TO-DATE
+> Task :exoplayer-library-ui:parseDebugLocalResources UP-TO-DATE
+> Task :exoplayer-library-ui:processDebugManifest UP-TO-DATE
+> Task :exoplayer-library-ui:generateDebugRFile UP-TO-DATE
+> Task :exoplayer-library:generateStstableDebugRFile UP-TO-DATE
+> Task :filepicker-lib:compileDebugRenderscript NO-SOURCE
+> Task :filepicker-lib:generateDebugResValues UP-TO-DATE
+> Task :filepicker-lib:generateDebugResources UP-TO-DATE
+> Task :filepicker-lib:packageDebugResources UP-TO-DATE
+> Task :filepicker-lib:parseDebugLocalResources UP-TO-DATE
+> Task :filepicker-lib:processDebugManifest UP-TO-DATE
+> Task :fragment-1.1.0:compileDebugRenderscript NO-SOURCE
+> Task :fragment-1.1.0:generateDebugResValues UP-TO-DATE
+> Task :fragment-1.1.0:generateDebugResources UP-TO-DATE
+> Task :fragment-1.1.0:packageDebugResources UP-TO-DATE
+> Task :fragment-1.1.0:parseDebugLocalResources UP-TO-DATE
+> Task :fragment-1.1.0:processDebugManifest UP-TO-DATE
+> Task :fragment-1.1.0:generateDebugRFile UP-TO-DATE
+> Task :filepicker-lib:generateDebugRFile UP-TO-DATE
+> Task :leanback-1.0.0:compileDebugRenderscript NO-SOURCE
+> Task :leanback-1.0.0:generateDebugResValues UP-TO-DATE
+> Task :leanback-1.0.0:generateDebugResources UP-TO-DATE
+> Task :leanback-1.0.0:packageDebugResources UP-TO-DATE
+> Task :leanback-1.0.0:parseDebugLocalResources UP-TO-DATE
+> Task :leanback-1.0.0:processDebugManifest UP-TO-DATE
+> Task :leanback-1.0.0:generateDebugRFile UP-TO-DATE
+> Task :leanback-1.0.0:packageDebugRenderscript NO-SOURCE
+> Task :leanbackassistant:compileStstableDebugRenderscript NO-SOURCE
+> Task :leanbackassistant:generateStstableDebugResValues UP-TO-DATE
+> Task :leanbackassistant:generateStstableDebugResources UP-TO-DATE
+> Task :leanbackassistant:packageStstableDebugResources UP-TO-DATE
+> Task :leanbackassistant:parseStstableDebugLocalResources UP-TO-DATE
+> Task :leanbackassistant:processStstableDebugManifest UP-TO-DATE
+> Task :leanbackassistant:generateStstableDebugRFile UP-TO-DATE
+> Task :slidableactivity:compileDebugRenderscript NO-SOURCE
+> Task :slidableactivity:generateDebugResValues UP-TO-DATE
+> Task :slidableactivity:generateDebugResources UP-TO-DATE
+> Task :slidableactivity:packageDebugResources UP-TO-DATE
+> Task :slidableactivity:parseDebugLocalResources UP-TO-DATE
+> Task :slidableactivity:processDebugManifest UP-TO-DATE
+> Task :slidableactivity:generateDebugRFile UP-TO-DATE
+> Task :common:generateStmobileDebugRFile UP-TO-DATE
+> Task :exoplayer-extension-cronet:generateStstableDebugBuildConfig UP-TO-DATE
+> Task :exoplayer-extension-cronet:javaPreCompileStstableDebug UP-TO-DATE
+> Task :exoplayer-library-core:generateDebugBuildConfig UP-TO-DATE
+> Task :exoplayer-library-core:javaPreCompileDebug UP-TO-DATE
+> Task :exoplayer-library-core:compileDebugJavaWithJavac UP-TO-DATE
+> Task :exoplayer-library-core:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :exoplayer-extension-cronet:compileStstableDebugJavaWithJavac UP-TO-DATE
+> Task :exoplayer-extension-cronet:bundleLibCompileToJarStstableDebug UP-TO-DATE
+> Task :exoplayer-extension-okhttp:generateDebugBuildConfig UP-TO-DATE
+> Task :exoplayer-extension-okhttp:javaPreCompileDebug UP-TO-DATE
+> Task :exoplayer-extension-okhttp:compileDebugJavaWithJavac UP-TO-DATE
+> Task :exoplayer-extension-okhttp:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :exoplayer-library:generateStstableDebugBuildConfig UP-TO-DATE
+> Task :exoplayer-library:javaPreCompileStstableDebug UP-TO-DATE
+> Task :exoplayer-library-dash:generateStstableDebugBuildConfig UP-TO-DATE
+> Task :exoplayer-library-dash:javaPreCompileStstableDebug UP-TO-DATE
+> Task :mediaserviceinterfaces:generateDebugBuildConfig UP-TO-DATE
+> Task :mediaserviceinterfaces:javaPreCompileDebug UP-TO-DATE
+> Task :mediaserviceinterfaces:compileDebugJavaWithJavac UP-TO-DATE
+> Task :mediaserviceinterfaces:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :j2v8:generateDebugBuildConfig UP-TO-DATE
+> Task :j2v8:javaPreCompileDebug UP-TO-DATE
+> Task :j2v8:compileDebugJavaWithJavac UP-TO-DATE
+> Task :j2v8:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :youtubeapi:generateStstableDebugBuildConfig UP-TO-DATE
+> Task :youtubeapi:compileStstableDebugKotlin UP-TO-DATE
+> Task :youtubeapi:javaPreCompileStstableDebug UP-TO-DATE
+> Task :youtubeapi:compileStstableDebugJavaWithJavac UP-TO-DATE
+> Task :youtubeapi:bundleLibCompileToJarStstableDebug UP-TO-DATE
+> Task :exoplayer-library-dash:compileStstableDebugJavaWithJavac UP-TO-DATE
+> Task :exoplayer-library-dash:bundleLibCompileToJarStstableDebug UP-TO-DATE
+> Task :exoplayer-library-hls:generateDebugBuildConfig UP-TO-DATE
+> Task :exoplayer-library-hls:javaPreCompileDebug UP-TO-DATE
+> Task :exoplayer-library-hls:compileDebugJavaWithJavac UP-TO-DATE
+> Task :exoplayer-library-hls:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :exoplayer-library-sabr:generateStstableDebugBuildConfig UP-TO-DATE
+> Task :exoplayer-library-sabr:protobufDummy UP-TO-DATE
+> Task :exoplayer-library-sabr:extractDebugProto UP-TO-DATE
+> Task :exoplayer-library-core:processDebugJavaRes NO-SOURCE
+> Task :exoplayer-library-core:bundleLibResDebug NO-SOURCE
+> Task :exoplayer-library-core:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :exoplayer-library-core:createFullJarDebug UP-TO-DATE
+> Task :mediaserviceinterfaces:processDebugJavaRes NO-SOURCE
+> Task :mediaserviceinterfaces:bundleLibResDebug NO-SOURCE
+> Task :mediaserviceinterfaces:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :mediaserviceinterfaces:createFullJarDebug UP-TO-DATE
+> Task :sharedutils:processDebugJavaRes NO-SOURCE
+> Task :sharedutils:bundleLibResDebug UP-TO-DATE
+> Task :sharedutils:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :sharedutils:createFullJarDebug UP-TO-DATE
+> Task :youtubeapi:processStstableDebugJavaRes NO-SOURCE
+> Task :youtubeapi:bundleLibResStstableDebug UP-TO-DATE
+> Task :youtubeapi:bundleLibRuntimeToJarStstableDebug UP-TO-DATE
+> Task :youtubeapi:createFullJarStstableDebug UP-TO-DATE
+> Task :exoplayer-library-sabr:extractIncludeStstableDebugProto UP-TO-DATE
+> Task :exoplayer-library-sabr:extractProto UP-TO-DATE
+> Task :exoplayer-library-sabr:extractStstableDebugProto UP-TO-DATE
+> Task :exoplayer-library-sabr:extractStstableProto UP-TO-DATE
+> Task :exoplayer-library-sabr:generateStstableDebugProto UP-TO-DATE
+> Task :exoplayer-library-sabr:javaPreCompileStstableDebug UP-TO-DATE
+> Task :exoplayer-library-sabr:compileStstableDebugJavaWithJavac UP-TO-DATE
+> Task :exoplayer-library-sabr:bundleLibCompileToJarStstableDebug UP-TO-DATE
+> Task :exoplayer-library-smoothstreaming:generateDebugBuildConfig UP-TO-DATE
+> Task :exoplayer-library-smoothstreaming:javaPreCompileDebug UP-TO-DATE
+> Task :exoplayer-library-smoothstreaming:compileDebugJavaWithJavac UP-TO-DATE
+> Task :exoplayer-library-smoothstreaming:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :exoplayer-library-ui:generateDebugBuildConfig UP-TO-DATE
+> Task :exoplayer-library-ui:javaPreCompileDebug UP-TO-DATE
+> Task :exoplayer-library-ui:compileDebugJavaWithJavac UP-TO-DATE
+> Task :exoplayer-library-ui:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :exoplayer-library:compileStstableDebugJavaWithJavac UP-TO-DATE
+> Task :exoplayer-library:bundleLibCompileToJarStstableDebug UP-TO-DATE
+> Task :filepicker-lib:generateDebugBuildConfig UP-TO-DATE
+> Task :filepicker-lib:javaPreCompileDebug UP-TO-DATE
+> Task :fragment-1.1.0:generateDebugBuildConfig UP-TO-DATE
+> Task :fragment-1.1.0:javaPreCompileDebug UP-TO-DATE
+> Task :fragment-1.1.0:compileDebugJavaWithJavac UP-TO-DATE
+> Task :fragment-1.1.0:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :filepicker-lib:compileDebugJavaWithJavac UP-TO-DATE
+> Task :filepicker-lib:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :leanback-1.0.0:generateDebugBuildConfig UP-TO-DATE
+> Task :leanback-1.0.0:javaPreCompileDebug UP-TO-DATE
+> Task :leanback-1.0.0:compileDebugJavaWithJavac UP-TO-DATE
+> Task :leanback-1.0.0:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :leanbackassistant:generateStstableDebugBuildConfig UP-TO-DATE
+> Task :leanbackassistant:javaPreCompileStstableDebug UP-TO-DATE
+> Task :leanbackassistant:compileStstableDebugJavaWithJavac UP-TO-DATE
+> Task :leanbackassistant:bundleLibCompileToJarStstableDebug UP-TO-DATE
+> Task :slidableactivity:generateDebugBuildConfig UP-TO-DATE
+> Task :slidableactivity:javaPreCompileDebug UP-TO-DATE
+> Task :slidableactivity:compileDebugJavaWithJavac UP-TO-DATE
+> Task :slidableactivity:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :common:compileStmobileDebugKotlin UP-TO-DATE
+> Task :common:javaPreCompileStmobileDebug UP-TO-DATE
+> Task :common:compileStmobileDebugJavaWithJavac UP-TO-DATE
+> Task :common:bundleLibCompileToJarStmobileDebug UP-TO-DATE
+> Task :doubletapplayerview:preBuild UP-TO-DATE
+> Task :doubletapplayerview:preDebugBuild UP-TO-DATE
+> Task :doubletapplayerview:compileDebugAidl NO-SOURCE
+> Task :doubletapplayerview:compileDebugRenderscript NO-SOURCE
+> Task :doubletapplayerview:generateDebugBuildConfig UP-TO-DATE
+> Task :doubletapplayerview:generateDebugResValues UP-TO-DATE
+> Task :doubletapplayerview:generateDebugResources UP-TO-DATE
+> Task :doubletapplayerview:packageDebugResources UP-TO-DATE
+> Task :doubletapplayerview:parseDebugLocalResources UP-TO-DATE
+> Task :doubletapplayerview:processDebugManifest UP-TO-DATE
+> Task :doubletapplayerview:generateDebugRFile UP-TO-DATE
+> Task :doubletapplayerview:compileDebugKotlin UP-TO-DATE
+> Task :doubletapplayerview:javaPreCompileDebug UP-TO-DATE
+> Task :doubletapplayerview:compileDebugJavaWithJavac UP-TO-DATE
+> Task :doubletapplayerview:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :exoplayer-extension-leanback:preBuild UP-TO-DATE
+> Task :exoplayer-extension-leanback:preDebugBuild UP-TO-DATE
+> Task :exoplayer-extension-leanback:compileDebugAidl NO-SOURCE
+> Task :exoplayer-extension-leanback:compileDebugRenderscript NO-SOURCE
+> Task :exoplayer-extension-leanback:generateDebugBuildConfig UP-TO-DATE
+> Task :exoplayer-extension-leanback:generateDebugResValues UP-TO-DATE
+> Task :exoplayer-extension-leanback:generateDebugResources UP-TO-DATE
+> Task :exoplayer-extension-leanback:packageDebugResources UP-TO-DATE
+> Task :exoplayer-extension-leanback:parseDebugLocalResources UP-TO-DATE
+> Task :exoplayer-extension-leanback:processDebugManifest UP-TO-DATE
+> Task :exoplayer-extension-leanback:generateDebugRFile UP-TO-DATE
+> Task :exoplayer-extension-leanback:javaPreCompileDebug UP-TO-DATE
+> Task :exoplayer-extension-leanback:compileDebugJavaWithJavac UP-TO-DATE
+> Task :exoplayer-extension-leanback:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :exoplayer-extension-mediasession:preBuild UP-TO-DATE
+> Task :exoplayer-extension-mediasession:preDebugBuild UP-TO-DATE
+> Task :exoplayer-extension-mediasession:compileDebugAidl NO-SOURCE
+> Task :exoplayer-extension-mediasession:compileDebugRenderscript NO-SOURCE
+> Task :exoplayer-extension-mediasession:generateDebugBuildConfig UP-TO-DATE
+> Task :exoplayer-extension-mediasession:generateDebugResValues UP-TO-DATE
+> Task :exoplayer-extension-mediasession:generateDebugResources UP-TO-DATE
+> Task :exoplayer-extension-mediasession:packageDebugResources UP-TO-DATE
+> Task :exoplayer-extension-mediasession:parseDebugLocalResources UP-TO-DATE
+> Task :exoplayer-extension-mediasession:processDebugManifest UP-TO-DATE
+> Task :exoplayer-extension-mediasession:generateDebugRFile UP-TO-DATE
+> Task :exoplayer-extension-mediasession:javaPreCompileDebug UP-TO-DATE
+> Task :exoplayer-extension-mediasession:compileDebugJavaWithJavac UP-TO-DATE
+> Task :exoplayer-extension-mediasession:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :smarttubetv:compileStmobileDebugAidl NO-SOURCE
+> Task :chatkit:packageDebugRenderscript NO-SOURCE
+> Task :common:packageStmobileDebugRenderscript NO-SOURCE
+> Task :doubletapplayerview:packageDebugRenderscript NO-SOURCE
+> Task :exoplayer-extension-leanback:packageDebugRenderscript NO-SOURCE
+> Task :exoplayer-extension-mediasession:packageDebugRenderscript NO-SOURCE
+> Task :smarttubetv:compileStmobileDebugRenderscript NO-SOURCE
+> Task :smarttubetv:generateStmobileDebugBuildConfig
+> Task :smarttubetv:javaPreCompileStmobileDebug UP-TO-DATE
+> Task :appupdatechecker2:compileStstableDebugLibraryResources UP-TO-DATE
+> Task :chatkit:compileDebugLibraryResources UP-TO-DATE
+> Task :common:compileStmobileDebugLibraryResources UP-TO-DATE
+> Task :commons-io-2.8.0:compileDebugLibraryResources UP-TO-DATE
+> Task :doubletapplayerview:compileDebugLibraryResources UP-TO-DATE
+> Task :exoplayer-extension-cronet:compileStstableDebugLibraryResources UP-TO-DATE
+> Task :exoplayer-extension-leanback:compileDebugLibraryResources UP-TO-DATE
+> Task :exoplayer-extension-mediasession:compileDebugLibraryResources UP-TO-DATE
+> Task :exoplayer-extension-okhttp:compileDebugLibraryResources UP-TO-DATE
+> Task :exoplayer-library:compileStstableDebugLibraryResources UP-TO-DATE
+> Task :exoplayer-library-core:compileDebugLibraryResources UP-TO-DATE
+> Task :exoplayer-library-dash:compileStstableDebugLibraryResources UP-TO-DATE
+> Task :exoplayer-library-hls:compileDebugLibraryResources UP-TO-DATE
+> Task :exoplayer-library-sabr:compileStstableDebugLibraryResources UP-TO-DATE
+> Task :exoplayer-library-smoothstreaming:compileDebugLibraryResources UP-TO-DATE
+> Task :exoplayer-library-ui:compileDebugLibraryResources UP-TO-DATE
+> Task :filepicker-lib:compileDebugLibraryResources UP-TO-DATE
+> Task :fragment-1.1.0:compileDebugLibraryResources UP-TO-DATE
+> Task :j2v8:compileDebugLibraryResources UP-TO-DATE
+> Task :leanback-1.0.0:compileDebugLibraryResources UP-TO-DATE
+> Task :leanbackassistant:compileStstableDebugLibraryResources UP-TO-DATE
+> Task :mediaserviceinterfaces:compileDebugLibraryResources UP-TO-DATE
+> Task :sharedutils:compileDebugLibraryResources UP-TO-DATE
+> Task :slidableactivity:compileDebugLibraryResources UP-TO-DATE
+> Task :appupdatechecker2:writeStstableDebugAarMetadata UP-TO-DATE
+> Task :chatkit:writeDebugAarMetadata UP-TO-DATE
+> Task :common:writeStmobileDebugAarMetadata UP-TO-DATE
+> Task :commons-io-2.8.0:writeDebugAarMetadata UP-TO-DATE
+> Task :doubletapplayerview:writeDebugAarMetadata UP-TO-DATE
+> Task :exoplayer-extension-cronet:writeStstableDebugAarMetadata UP-TO-DATE
+> Task :exoplayer-extension-leanback:writeDebugAarMetadata UP-TO-DATE
+> Task :exoplayer-extension-mediasession:writeDebugAarMetadata UP-TO-DATE
+> Task :exoplayer-extension-okhttp:writeDebugAarMetadata UP-TO-DATE
+> Task :exoplayer-library:writeStstableDebugAarMetadata UP-TO-DATE
+> Task :exoplayer-library-core:writeDebugAarMetadata UP-TO-DATE
+> Task :exoplayer-library-dash:writeStstableDebugAarMetadata UP-TO-DATE
+> Task :exoplayer-library-hls:writeDebugAarMetadata UP-TO-DATE
+> Task :exoplayer-library-sabr:writeStstableDebugAarMetadata UP-TO-DATE
+> Task :exoplayer-library-smoothstreaming:writeDebugAarMetadata UP-TO-DATE
+> Task :exoplayer-library-ui:writeDebugAarMetadata UP-TO-DATE
+> Task :filepicker-lib:writeDebugAarMetadata UP-TO-DATE
+> Task :fragment-1.1.0:writeDebugAarMetadata UP-TO-DATE
+> Task :j2v8:writeDebugAarMetadata UP-TO-DATE
+> Task :leanback-1.0.0:writeDebugAarMetadata UP-TO-DATE
+> Task :leanbackassistant:writeStstableDebugAarMetadata UP-TO-DATE
+> Task :mediaserviceinterfaces:writeDebugAarMetadata UP-TO-DATE
+> Task :sharedutils:writeDebugAarMetadata UP-TO-DATE
+> Task :slidableactivity:writeDebugAarMetadata UP-TO-DATE
+> Task :youtubeapi:writeStstableDebugAarMetadata UP-TO-DATE
+> Task :smarttubetv:checkStmobileDebugAarMetadata UP-TO-DATE
+> Task :smarttubetv:generateStmobileDebugResValues UP-TO-DATE
+> Task :smarttubetv:mapStmobileDebugSourceSetPaths UP-TO-DATE
+> Task :smarttubetv:generateStmobileDebugResources UP-TO-DATE
+> Task :smarttubetv:mergeStmobileDebugResources UP-TO-DATE
+> Task :smarttubetv:createStmobileDebugCompatibleScreenManifests UP-TO-DATE
+> Task :appupdatechecker2:extractDeepLinksStstableDebug UP-TO-DATE
+> Task :chatkit:extractDeepLinksDebug UP-TO-DATE
+> Task :common:extractDeepLinksStmobileDebug UP-TO-DATE
+> Task :commons-io-2.8.0:extractDeepLinksDebug UP-TO-DATE
+> Task :doubletapplayerview:extractDeepLinksDebug UP-TO-DATE
+> Task :exoplayer-extension-cronet:extractDeepLinksStstableDebug UP-TO-DATE
+> Task :exoplayer-extension-leanback:extractDeepLinksDebug UP-TO-DATE
+> Task :exoplayer-extension-mediasession:extractDeepLinksDebug UP-TO-DATE
+> Task :exoplayer-extension-okhttp:extractDeepLinksDebug UP-TO-DATE
+> Task :exoplayer-library:extractDeepLinksStstableDebug UP-TO-DATE
+> Task :exoplayer-library-core:extractDeepLinksDebug UP-TO-DATE
+> Task :exoplayer-library-dash:extractDeepLinksStstableDebug UP-TO-DATE
+> Task :exoplayer-library-hls:extractDeepLinksDebug UP-TO-DATE
+> Task :exoplayer-library-sabr:extractDeepLinksStstableDebug UP-TO-DATE
+> Task :exoplayer-library-smoothstreaming:extractDeepLinksDebug UP-TO-DATE
+> Task :exoplayer-library-ui:extractDeepLinksDebug UP-TO-DATE
+> Task :filepicker-lib:extractDeepLinksDebug UP-TO-DATE
+> Task :fragment-1.1.0:extractDeepLinksDebug UP-TO-DATE
+> Task :j2v8:extractDeepLinksDebug UP-TO-DATE
+> Task :leanback-1.0.0:extractDeepLinksDebug UP-TO-DATE
+> Task :leanbackassistant:extractDeepLinksStstableDebug UP-TO-DATE
+> Task :mediaserviceinterfaces:extractDeepLinksDebug UP-TO-DATE
+> Task :sharedutils:extractDeepLinksDebug UP-TO-DATE
+> Task :slidableactivity:extractDeepLinksDebug UP-TO-DATE
+> Task :smarttubetv:extractDeepLinksStmobileDebug UP-TO-DATE
+> Task :youtubeapi:extractDeepLinksStstableDebug UP-TO-DATE
+> Task :smarttubetv:processStmobileDebugMainManifest UP-TO-DATE
+> Task :smarttubetv:processStmobileDebugManifest UP-TO-DATE
+> Task :smarttubetv:processStmobileDebugManifestForPackage UP-TO-DATE
+> Task :youtubeapi:compileStstableDebugLibraryResources UP-TO-DATE
+> Task :smarttubetv:processStmobileDebugResources UP-TO-DATE
+Note: [1] Wrote GeneratedAppGlideModule with: [com.bumptech.glide.integration.webp.WebpGlideLibraryModule]
+
+> Task :smarttubetv:compileStmobileDebugJavaWithJavac
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+
+> Task :appupdatechecker2:mergeStstableDebugShaders UP-TO-DATE
+> Task :appupdatechecker2:compileStstableDebugShaders NO-SOURCE
+> Task :appupdatechecker2:generateStstableDebugAssets UP-TO-DATE
+> Task :appupdatechecker2:packageStstableDebugAssets UP-TO-DATE
+> Task :chatkit:mergeDebugShaders UP-TO-DATE
+> Task :chatkit:compileDebugShaders NO-SOURCE
+> Task :chatkit:generateDebugAssets UP-TO-DATE
+> Task :chatkit:packageDebugAssets UP-TO-DATE
+> Task :common:mergeStmobileDebugShaders UP-TO-DATE
+> Task :common:compileStmobileDebugShaders NO-SOURCE
+> Task :common:generateStmobileDebugAssets UP-TO-DATE
+> Task :common:packageStmobileDebugAssets UP-TO-DATE
+> Task :commons-io-2.8.0:mergeDebugShaders UP-TO-DATE
+> Task :commons-io-2.8.0:compileDebugShaders NO-SOURCE
+> Task :commons-io-2.8.0:generateDebugAssets UP-TO-DATE
+> Task :commons-io-2.8.0:packageDebugAssets UP-TO-DATE
+> Task :doubletapplayerview:mergeDebugShaders UP-TO-DATE
+> Task :doubletapplayerview:compileDebugShaders NO-SOURCE
+> Task :doubletapplayerview:generateDebugAssets UP-TO-DATE
+> Task :doubletapplayerview:packageDebugAssets UP-TO-DATE
+> Task :exoplayer-extension-cronet:mergeStstableDebugShaders UP-TO-DATE
+> Task :exoplayer-extension-cronet:compileStstableDebugShaders NO-SOURCE
+> Task :exoplayer-extension-cronet:generateStstableDebugAssets UP-TO-DATE
+> Task :exoplayer-extension-cronet:packageStstableDebugAssets UP-TO-DATE
+> Task :exoplayer-extension-leanback:mergeDebugShaders UP-TO-DATE
+> Task :exoplayer-extension-leanback:compileDebugShaders NO-SOURCE
+> Task :exoplayer-extension-leanback:generateDebugAssets UP-TO-DATE
+> Task :exoplayer-extension-leanback:packageDebugAssets UP-TO-DATE
+> Task :exoplayer-extension-mediasession:mergeDebugShaders UP-TO-DATE
+> Task :exoplayer-extension-mediasession:compileDebugShaders NO-SOURCE
+> Task :exoplayer-extension-mediasession:generateDebugAssets UP-TO-DATE
+> Task :exoplayer-extension-mediasession:packageDebugAssets UP-TO-DATE
+> Task :exoplayer-extension-okhttp:mergeDebugShaders UP-TO-DATE
+> Task :exoplayer-extension-okhttp:compileDebugShaders NO-SOURCE
+> Task :exoplayer-extension-okhttp:generateDebugAssets UP-TO-DATE
+> Task :exoplayer-extension-okhttp:packageDebugAssets UP-TO-DATE
+> Task :exoplayer-library:mergeStstableDebugShaders UP-TO-DATE
+> Task :exoplayer-library:compileStstableDebugShaders NO-SOURCE
+> Task :exoplayer-library:generateStstableDebugAssets UP-TO-DATE
+> Task :exoplayer-library:packageStstableDebugAssets UP-TO-DATE
+> Task :exoplayer-library-core:mergeDebugShaders UP-TO-DATE
+> Task :exoplayer-library-core:compileDebugShaders NO-SOURCE
+> Task :exoplayer-library-core:generateDebugAssets UP-TO-DATE
+> Task :exoplayer-library-core:packageDebugAssets UP-TO-DATE
+> Task :exoplayer-library-dash:mergeStstableDebugShaders UP-TO-DATE
+> Task :exoplayer-library-dash:compileStstableDebugShaders NO-SOURCE
+> Task :exoplayer-library-dash:generateStstableDebugAssets UP-TO-DATE
+> Task :exoplayer-library-dash:packageStstableDebugAssets UP-TO-DATE
+> Task :exoplayer-library-hls:mergeDebugShaders UP-TO-DATE
+> Task :exoplayer-library-hls:compileDebugShaders NO-SOURCE
+> Task :exoplayer-library-hls:generateDebugAssets UP-TO-DATE
+> Task :exoplayer-library-hls:packageDebugAssets UP-TO-DATE
+> Task :exoplayer-library-sabr:mergeStstableDebugShaders UP-TO-DATE
+> Task :exoplayer-library-sabr:compileStstableDebugShaders NO-SOURCE
+> Task :exoplayer-library-sabr:generateStstableDebugAssets UP-TO-DATE
+> Task :exoplayer-library-sabr:packageStstableDebugAssets UP-TO-DATE
+> Task :exoplayer-library-smoothstreaming:mergeDebugShaders UP-TO-DATE
+> Task :exoplayer-library-smoothstreaming:compileDebugShaders NO-SOURCE
+> Task :exoplayer-library-smoothstreaming:generateDebugAssets UP-TO-DATE
+> Task :exoplayer-library-smoothstreaming:packageDebugAssets UP-TO-DATE
+> Task :exoplayer-library-ui:mergeDebugShaders UP-TO-DATE
+> Task :exoplayer-library-ui:compileDebugShaders NO-SOURCE
+> Task :exoplayer-library-ui:generateDebugAssets UP-TO-DATE
+> Task :exoplayer-library-ui:packageDebugAssets UP-TO-DATE
+> Task :filepicker-lib:mergeDebugShaders UP-TO-DATE
+> Task :filepicker-lib:compileDebugShaders NO-SOURCE
+> Task :filepicker-lib:generateDebugAssets UP-TO-DATE
+> Task :filepicker-lib:packageDebugAssets UP-TO-DATE
+> Task :fragment-1.1.0:mergeDebugShaders UP-TO-DATE
+> Task :fragment-1.1.0:compileDebugShaders NO-SOURCE
+> Task :fragment-1.1.0:generateDebugAssets UP-TO-DATE
+> Task :fragment-1.1.0:packageDebugAssets UP-TO-DATE
+> Task :j2v8:mergeDebugShaders UP-TO-DATE
+> Task :j2v8:compileDebugShaders NO-SOURCE
+> Task :j2v8:generateDebugAssets UP-TO-DATE
+> Task :j2v8:packageDebugAssets UP-TO-DATE
+> Task :leanback-1.0.0:mergeDebugShaders UP-TO-DATE
+> Task :leanback-1.0.0:compileDebugShaders NO-SOURCE
+> Task :leanback-1.0.0:generateDebugAssets UP-TO-DATE
+> Task :leanback-1.0.0:packageDebugAssets UP-TO-DATE
+> Task :leanbackassistant:mergeStstableDebugShaders UP-TO-DATE
+> Task :leanbackassistant:compileStstableDebugShaders NO-SOURCE
+> Task :leanbackassistant:generateStstableDebugAssets UP-TO-DATE
+> Task :leanbackassistant:packageStstableDebugAssets UP-TO-DATE
+> Task :mediaserviceinterfaces:mergeDebugShaders UP-TO-DATE
+> Task :mediaserviceinterfaces:compileDebugShaders NO-SOURCE
+> Task :mediaserviceinterfaces:generateDebugAssets UP-TO-DATE
+> Task :mediaserviceinterfaces:packageDebugAssets UP-TO-DATE
+> Task :sharedutils:mergeDebugShaders UP-TO-DATE
+> Task :sharedutils:compileDebugShaders NO-SOURCE
+> Task :sharedutils:generateDebugAssets UP-TO-DATE
+> Task :sharedutils:packageDebugAssets UP-TO-DATE
+> Task :slidableactivity:mergeDebugShaders UP-TO-DATE
+> Task :slidableactivity:compileDebugShaders NO-SOURCE
+> Task :slidableactivity:generateDebugAssets UP-TO-DATE
+> Task :slidableactivity:packageDebugAssets UP-TO-DATE
+> Task :smarttubetv:mergeStmobileDebugShaders UP-TO-DATE
+> Task :smarttubetv:compileStmobileDebugShaders NO-SOURCE
+> Task :smarttubetv:generateStmobileDebugAssets UP-TO-DATE
+> Task :youtubeapi:mergeStstableDebugShaders UP-TO-DATE
+> Task :youtubeapi:compileStstableDebugShaders NO-SOURCE
+> Task :youtubeapi:generateStstableDebugAssets UP-TO-DATE
+> Task :youtubeapi:packageStstableDebugAssets UP-TO-DATE
+> Task :smarttubetv:mergeStmobileDebugAssets UP-TO-DATE
+> Task :smarttubetv:compressStmobileDebugAssets UP-TO-DATE
+> Task :smarttubetv:checkStmobileDebugDuplicateClasses UP-TO-DATE
+> Task :smarttubetv:desugarStmobileDebugFileDependencies UP-TO-DATE
+> Task :doubletapplayerview:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :commons-io-2.8.0:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :exoplayer-library-ui:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :common:bundleLibRuntimeToJarStmobileDebug UP-TO-DATE
+> Task :appupdatechecker2:bundleLibRuntimeToJarStstableDebug UP-TO-DATE
+> Task :exoplayer-extension-cronet:bundleLibRuntimeToJarStstableDebug UP-TO-DATE
+> Task :exoplayer-extension-okhttp:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :exoplayer-library:bundleLibRuntimeToJarStstableDebug UP-TO-DATE
+> Task :exoplayer-library-dash:bundleLibRuntimeToJarStstableDebug UP-TO-DATE
+> Task :exoplayer-library-hls:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :exoplayer-library-sabr:bundleLibRuntimeToJarStstableDebug UP-TO-DATE
+> Task :exoplayer-library-smoothstreaming:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :filepicker-lib:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :fragment-1.1.0:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :j2v8:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :leanback-1.0.0:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :leanbackassistant:bundleLibRuntimeToJarStstableDebug UP-TO-DATE
+> Task :slidableactivity:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :exoplayer-extension-leanback:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :exoplayer-extension-mediasession:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :chatkit:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :smarttubetv:dexBuilderStmobileDebug
+> Task :appupdatechecker2:processStstableDebugJavaRes NO-SOURCE
+> Task :appupdatechecker2:bundleLibResStstableDebug NO-SOURCE
+> Task :chatkit:processDebugJavaRes NO-SOURCE
+> Task :chatkit:bundleLibResDebug NO-SOURCE
+> Task :common:processStmobileDebugJavaRes NO-SOURCE
+> Task :common:bundleLibResStmobileDebug UP-TO-DATE
+> Task :commons-io-2.8.0:processDebugJavaRes NO-SOURCE
+> Task :commons-io-2.8.0:bundleLibResDebug NO-SOURCE
+> Task :doubletapplayerview:processDebugJavaRes NO-SOURCE
+> Task :doubletapplayerview:bundleLibResDebug UP-TO-DATE
+> Task :exoplayer-extension-cronet:processStstableDebugJavaRes NO-SOURCE
+> Task :exoplayer-extension-cronet:bundleLibResStstableDebug NO-SOURCE
+> Task :exoplayer-extension-leanback:processDebugJavaRes NO-SOURCE
+> Task :exoplayer-extension-leanback:bundleLibResDebug NO-SOURCE
+> Task :exoplayer-extension-mediasession:processDebugJavaRes NO-SOURCE
+> Task :exoplayer-extension-mediasession:bundleLibResDebug NO-SOURCE
+> Task :exoplayer-extension-okhttp:processDebugJavaRes NO-SOURCE
+> Task :exoplayer-extension-okhttp:bundleLibResDebug NO-SOURCE
+> Task :exoplayer-library:processStstableDebugJavaRes NO-SOURCE
+> Task :exoplayer-library:bundleLibResStstableDebug NO-SOURCE
+> Task :exoplayer-library-dash:processStstableDebugJavaRes NO-SOURCE
+> Task :exoplayer-library-dash:bundleLibResStstableDebug NO-SOURCE
+> Task :exoplayer-library-hls:processDebugJavaRes NO-SOURCE
+> Task :exoplayer-library-hls:bundleLibResDebug NO-SOURCE
+> Task :exoplayer-library-sabr:processStstableDebugJavaRes UP-TO-DATE
+> Task :exoplayer-library-sabr:bundleLibResStstableDebug UP-TO-DATE
+> Task :exoplayer-library-smoothstreaming:processDebugJavaRes NO-SOURCE
+> Task :exoplayer-library-smoothstreaming:bundleLibResDebug NO-SOURCE
+> Task :exoplayer-library-ui:processDebugJavaRes NO-SOURCE
+> Task :exoplayer-library-ui:bundleLibResDebug NO-SOURCE
+> Task :filepicker-lib:processDebugJavaRes NO-SOURCE
+> Task :filepicker-lib:bundleLibResDebug NO-SOURCE
+> Task :fragment-1.1.0:processDebugJavaRes NO-SOURCE
+> Task :fragment-1.1.0:bundleLibResDebug NO-SOURCE
+> Task :j2v8:processDebugJavaRes UP-TO-DATE
+> Task :j2v8:bundleLibResDebug UP-TO-DATE
+> Task :leanback-1.0.0:processDebugJavaRes NO-SOURCE
+> Task :leanback-1.0.0:bundleLibResDebug NO-SOURCE
+> Task :leanbackassistant:processStstableDebugJavaRes NO-SOURCE
+> Task :leanbackassistant:bundleLibResStstableDebug NO-SOURCE
+> Task :slidableactivity:processDebugJavaRes NO-SOURCE
+> Task :slidableactivity:bundleLibResDebug NO-SOURCE
+> Task :smarttubetv:processStmobileDebugJavaRes NO-SOURCE
+> Task :smarttubetv:mergeStmobileDebugJavaResource UP-TO-DATE
+> Task :appupdatechecker2:mergeStstableDebugJniLibFolders UP-TO-DATE
+> Task :appupdatechecker2:mergeStstableDebugNativeLibs NO-SOURCE
+> Task :appupdatechecker2:copyStstableDebugJniLibsProjectOnly UP-TO-DATE
+> Task :chatkit:mergeDebugJniLibFolders UP-TO-DATE
+> Task :chatkit:mergeDebugNativeLibs NO-SOURCE
+> Task :chatkit:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :common:mergeStmobileDebugJniLibFolders UP-TO-DATE
+> Task :common:mergeStmobileDebugNativeLibs NO-SOURCE
+> Task :common:copyStmobileDebugJniLibsProjectOnly UP-TO-DATE
+> Task :commons-io-2.8.0:mergeDebugJniLibFolders UP-TO-DATE
+> Task :commons-io-2.8.0:mergeDebugNativeLibs NO-SOURCE
+> Task :commons-io-2.8.0:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :doubletapplayerview:mergeDebugJniLibFolders UP-TO-DATE
+> Task :doubletapplayerview:mergeDebugNativeLibs NO-SOURCE
+> Task :doubletapplayerview:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :exoplayer-extension-cronet:mergeStstableDebugJniLibFolders UP-TO-DATE
+> Task :exoplayer-extension-cronet:mergeStstableDebugNativeLibs NO-SOURCE
+> Task :exoplayer-extension-cronet:copyStstableDebugJniLibsProjectOnly UP-TO-DATE
+> Task :exoplayer-extension-leanback:mergeDebugJniLibFolders UP-TO-DATE
+> Task :exoplayer-extension-leanback:mergeDebugNativeLibs NO-SOURCE
+> Task :exoplayer-extension-leanback:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :exoplayer-extension-mediasession:mergeDebugJniLibFolders UP-TO-DATE
+> Task :exoplayer-extension-mediasession:mergeDebugNativeLibs NO-SOURCE
+> Task :exoplayer-extension-mediasession:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :exoplayer-extension-okhttp:mergeDebugJniLibFolders UP-TO-DATE
+> Task :exoplayer-extension-okhttp:mergeDebugNativeLibs NO-SOURCE
+> Task :exoplayer-extension-okhttp:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :exoplayer-library:mergeStstableDebugJniLibFolders UP-TO-DATE
+> Task :exoplayer-library:mergeStstableDebugNativeLibs NO-SOURCE
+> Task :exoplayer-library:copyStstableDebugJniLibsProjectOnly UP-TO-DATE
+> Task :exoplayer-library-core:mergeDebugJniLibFolders UP-TO-DATE
+> Task :exoplayer-library-core:mergeDebugNativeLibs NO-SOURCE
+> Task :exoplayer-library-core:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :exoplayer-library-dash:mergeStstableDebugJniLibFolders UP-TO-DATE
+> Task :exoplayer-library-dash:mergeStstableDebugNativeLibs NO-SOURCE
+> Task :exoplayer-library-dash:copyStstableDebugJniLibsProjectOnly UP-TO-DATE
+> Task :exoplayer-library-hls:mergeDebugJniLibFolders UP-TO-DATE
+> Task :exoplayer-library-hls:mergeDebugNativeLibs NO-SOURCE
+> Task :exoplayer-library-hls:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :exoplayer-library-sabr:mergeStstableDebugJniLibFolders UP-TO-DATE
+> Task :exoplayer-library-sabr:mergeStstableDebugNativeLibs NO-SOURCE
+> Task :exoplayer-library-sabr:copyStstableDebugJniLibsProjectOnly UP-TO-DATE
+> Task :exoplayer-library-smoothstreaming:mergeDebugJniLibFolders UP-TO-DATE
+> Task :exoplayer-library-smoothstreaming:mergeDebugNativeLibs NO-SOURCE
+> Task :exoplayer-library-smoothstreaming:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :exoplayer-library-ui:mergeDebugJniLibFolders UP-TO-DATE
+> Task :exoplayer-library-ui:mergeDebugNativeLibs NO-SOURCE
+> Task :exoplayer-library-ui:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :filepicker-lib:mergeDebugJniLibFolders UP-TO-DATE
+> Task :filepicker-lib:mergeDebugNativeLibs NO-SOURCE
+> Task :filepicker-lib:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :fragment-1.1.0:mergeDebugJniLibFolders UP-TO-DATE
+> Task :fragment-1.1.0:mergeDebugNativeLibs NO-SOURCE
+> Task :fragment-1.1.0:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :j2v8:mergeDebugJniLibFolders UP-TO-DATE
+> Task :j2v8:mergeDebugNativeLibs UP-TO-DATE
+> Task :j2v8:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :leanback-1.0.0:mergeDebugJniLibFolders UP-TO-DATE
+> Task :leanback-1.0.0:mergeDebugNativeLibs NO-SOURCE
+> Task :leanback-1.0.0:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :leanbackassistant:mergeStstableDebugJniLibFolders UP-TO-DATE
+> Task :leanbackassistant:mergeStstableDebugNativeLibs NO-SOURCE
+> Task :leanbackassistant:copyStstableDebugJniLibsProjectOnly UP-TO-DATE
+> Task :mediaserviceinterfaces:mergeDebugJniLibFolders UP-TO-DATE
+> Task :mediaserviceinterfaces:mergeDebugNativeLibs NO-SOURCE
+> Task :mediaserviceinterfaces:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :sharedutils:mergeDebugJniLibFolders UP-TO-DATE
+> Task :sharedutils:mergeDebugNativeLibs NO-SOURCE
+> Task :sharedutils:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :slidableactivity:mergeDebugJniLibFolders UP-TO-DATE
+> Task :slidableactivity:mergeDebugNativeLibs NO-SOURCE
+> Task :slidableactivity:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :smarttubetv:mergeStmobileDebugJniLibFolders UP-TO-DATE
+> Task :youtubeapi:mergeStstableDebugJniLibFolders UP-TO-DATE
+> Task :youtubeapi:mergeStstableDebugNativeLibs NO-SOURCE
+> Task :youtubeapi:copyStstableDebugJniLibsProjectOnly UP-TO-DATE
+> Task :smarttubetv:mergeStmobileDebugNativeLibs UP-TO-DATE
+> Task :smarttubetv:stripStmobileDebugDebugSymbols UP-TO-DATE
+> Task :smarttubetv:validateSigningStmobileDebug UP-TO-DATE
+> Task :smarttubetv:writeStmobileDebugAppMetadata UP-TO-DATE
+> Task :smarttubetv:writeStmobileDebugSigningConfigVersions UP-TO-DATE
+> Task :smarttubetv:preStmobileDebugUnitTestBuild UP-TO-DATE
+> Task :smarttubetv:javaPreCompileStmobileDebugUnitTest UP-TO-DATE
+> Task :smarttubetv:packageStmobileDebugUnitTestForUnitTest UP-TO-DATE
+> Task :smarttubetv:generateStmobileDebugUnitTestConfig UP-TO-DATE
+> Task :smarttubetv:processStmobileDebugUnitTestJavaRes NO-SOURCE
+> Task :common:preStmobileDebugUnitTestBuild UP-TO-DATE
+> Task :smarttubetv:bundleStmobileDebugClassesToCompileJar
+> Task :smarttubetv:bundleStmobileDebugClassesToRuntimeJar
+> Task :common:checkStmobileDebugUnitTestAarMetadata
+> Task :smarttubetv:compileStmobileDebugUnitTestJavaWithJavac UP-TO-DATE
+> Task :smarttubetv:testStmobileDebugUnitTest
+> Task :common:generateStmobileDebugUnitTestResValues
+> Task :common:mapStmobileDebugUnitTestSourceSetPaths
+> Task :common:generateStmobileDebugUnitTestResources
+> Task :smarttubetv:mergeDexStmobileDebug
+
+> Task :common:mergeStmobileDebugUnitTestResources
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-hr\values-hr.xml:54:4: Multiple substitutions specified in non-positional format of string resource string/auto_frame_rate_applying. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-hi\values-hi.xml:56:4: Multiple substitutions specified in non-positional format of string resource string/auto_frame_rate_applying. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-hu\values-hu.xml:78:4: Multiple substitutions specified in non-positional format of string resource string/auto_frame_rate_applying. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-hr\values-hr.xml:333:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_error. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-hr\values-hr.xml:334:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_start. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-hr\values-hr.xml:335:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_status. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-hi\values-hi.xml:382:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_error. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-hi\values-hi.xml:383:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_start. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-hi\values-hi.xml:384:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_status. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-hu\values-hu.xml:531:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_error. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-hu\values-hu.xml:532:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_start. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-hu\values-hu.xml:533:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_status. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-it\values-it.xml:78:4: Multiple substitutions specified in non-positional format of string resource string/auto_frame_rate_applying. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-in\values-in.xml:76:4: Multiple substitutions specified in non-positional format of string resource string/auto_frame_rate_applying. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values\values.xml:327:4: Multiple substitutions specified in non-positional format of string resource string/auto_frame_rate_applying. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-az\values-az.xml:78:4: Multiple substitutions specified in non-positional format of string resource string/auto_frame_rate_applying. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-in\values-in.xml:529:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_error. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-in\values-in.xml:530:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_start. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-in\values-in.xml:531:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_status. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-ar\values-ar.xml:78:4: Multiple substitutions specified in non-positional format of string resource string/auto_frame_rate_applying. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-az\values-az.xml:531:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_error. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-az\values-az.xml:532:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_start. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-az\values-az.xml:533:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_status. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-it\values-it.xml:531:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_error. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-it\values-it.xml:532:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_start. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-it\values-it.xml:533:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_status. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values\values.xml:786:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_error. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values\values.xml:787:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_start. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values\values.xml:788:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_status. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-ja\values-ja.xml:76:4: Multiple substitutions specified in non-positional format of string resource string/auto_frame_rate_applying. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-ko\values-ko.xml:76:4: Multiple substitutions specified in non-positional format of string resource string/auto_frame_rate_applying. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-th\values-th.xml:37:4: Multiple substitutions specified in non-positional format of string resource string/auto_frame_rate_applying. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-sl\values-sl.xml:37:4: Multiple substitutions specified in non-positional format of string resource string/auto_frame_rate_applying. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-sr\values-sr.xml:80:4: Multiple substitutions specified in non-positional format of string resource string/auto_frame_rate_applying. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-ar\values-ar.xml:531:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_error. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-ar\values-ar.xml:532:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_start. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-ar\values-ar.xml:533:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_status. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-ja\values-ja.xml:529:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_error. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-ja\values-ja.xml:530:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_start. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-ja\values-ja.xml:531:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_status. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-ko\values-ko.xml:529:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_error. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-ko\values-ko.xml:530:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_start. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-ko\values-ko.xml:531:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_status. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-sr\values-sr.xml:533:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_error. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-sr\values-sr.xml:534:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_start. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-sr\values-sr.xml:535:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_status. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-el\values-el.xml:78:4: Multiple substitutions specified in non-positional format of string resource string/auto_frame_rate_applying. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-ru\values-ru.xml:82:4: Multiple substitutions specified in non-positional format of string resource string/auto_frame_rate_applying. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-ro\values-ro.xml:80:4: Multiple substitutions specified in non-positional format of string resource string/auto_frame_rate_applying. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-te\values-te.xml:13:4: Multiple substitutions specified in non-positional format of string resource string/auto_frame_rate_applying. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-ca\values-ca.xml:54:4: Multiple substitutions specified in non-positional format of string resource string/auto_frame_rate_applying. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-el\values-el.xml:531:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_error. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-el\values-el.xml:532:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_start. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-el\values-el.xml:533:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_status. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-ru\values-ru.xml:535:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_error. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-ru\values-ru.xml:536:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_start. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-ru\values-ru.xml:537:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_status. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-ro\values-ro.xml:533:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_error. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-ro\values-ro.xml:534:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_start. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-ro\values-ro.xml:535:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_status. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-gl-rES\values-gl-rES.xml:78:4: Multiple substitutions specified in non-positional format of string resource string/auto_frame_rate_applying. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-ca\values-ca.xml:343:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_error. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-ca\values-ca.xml:344:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_start. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-ca\values-ca.xml:345:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_status. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-gl-rES\values-gl-rES.xml:531:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_error. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-gl-rES\values-gl-rES.xml:532:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_start. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-gl-rES\values-gl-rES.xml:533:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_status. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-sk\values-sk.xml:82:4: Multiple substitutions specified in non-positional format of string resource string/auto_frame_rate_applying. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-lt\values-lt.xml:49:4: Multiple substitutions specified in non-positional format of string resource string/auto_frame_rate_applying. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-iw\values-iw.xml:78:4: Multiple substitutions specified in non-positional format of string resource string/auto_frame_rate_applying. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-fr\values-fr.xml:78:4: Multiple substitutions specified in non-positional format of string resource string/auto_frame_rate_applying. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-sv\values-sv.xml:78:4: Multiple substitutions specified in non-positional format of string resource string/auto_frame_rate_applying. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-lt\values-lt.xml:282:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_error. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-lt\values-lt.xml:283:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_start. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-lt\values-lt.xml:284:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_status. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-sk\values-sk.xml:535:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_error. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-sk\values-sk.xml:536:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_start. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-sk\values-sk.xml:537:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_status. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-fa-rIR\values-fa-rIR.xml:78:4: Multiple substitutions specified in non-positional format of string resource string/auto_frame_rate_applying. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-fa-rIR\values-fa-rIR.xml:531:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_error. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-iw\values-iw.xml:531:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_error. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-fa-rIR\values-fa-rIR.xml:532:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_start. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-iw\values-iw.xml:532:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_start. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-fa-rIR\values-fa-rIR.xml:533:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_status. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-iw\values-iw.xml:533:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_status. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-fr\values-fr.xml:531:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_error. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-fr\values-fr.xml:532:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_start. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-fr\values-fr.xml:533:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_status. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-da\values-da.xml:78:4: Multiple substitutions specified in non-positional format of string resource string/auto_frame_rate_applying. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-sv\values-sv.xml:531:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_error. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-sv\values-sv.xml:532:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_start. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-sv\values-sv.xml:533:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_status. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-da\values-da.xml:531:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_error. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-da\values-da.xml:532:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_start. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-da\values-da.xml:533:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_status. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-tr\values-tr.xml:78:4: Multiple substitutions specified in non-positional format of string resource string/auto_frame_rate_applying. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-bg\values-bg.xml:58:4: Multiple substitutions specified in non-positional format of string resource string/auto_frame_rate_applying. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-uk\values-uk.xml:82:4: Multiple substitutions specified in non-positional format of string resource string/auto_frame_rate_applying. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-tr\values-tr.xml:531:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_error. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-tr\values-tr.xml:532:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_start. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-tr\values-tr.xml:533:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_status. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-bg\values-bg.xml:399:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_error. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-bg\values-bg.xml:400:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_start. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-bg\values-bg.xml:401:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_status. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-ka-rGE\values-ka-rGE.xml:78:4: Multiple substitutions specified in non-positional format of string resource string/auto_frame_rate_applying. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-es\values-es.xml:78:4: Multiple substitutions specified in non-positional format of string resource string/auto_frame_rate_applying. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-uk\values-uk.xml:535:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_error. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-uk\values-uk.xml:536:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_start. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-uk\values-uk.xml:537:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_status. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-ka-rGE\values-ka-rGE.xml:531:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_error. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-ka-rGE\values-ka-rGE.xml:532:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_start. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-ka-rGE\values-ka-rGE.xml:533:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_status. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-es\values-es.xml:531:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_error. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-es\values-es.xml:532:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_start. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-es\values-es.xml:533:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_status. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-pt-rBR\values-pt-rBR.xml:78:4: Multiple substitutions specified in non-positional format of string resource string/auto_frame_rate_applying. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-et\values-et.xml:59:4: Multiple substitutions specified in non-positional format of string resource string/auto_frame_rate_applying. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-zh-rTW\values-zh-rTW.xml:76:4: Multiple substitutions specified in non-positional format of string resource string/auto_frame_rate_applying. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-pt-rBR\values-pt-rBR.xml:531:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_error. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-pt-rBR\values-pt-rBR.xml:532:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_start. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-pt-rBR\values-pt-rBR.xml:533:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_status. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-fi\values-fi.xml:78:4: Multiple substitutions specified in non-positional format of string resource string/auto_frame_rate_applying. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-et\values-et.xml:420:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_error. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-et\values-et.xml:421:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_start. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-et\values-et.xml:422:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_status. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-zh-rTW\values-zh-rTW.xml:529:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_error. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-zh-rTW\values-zh-rTW.xml:530:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_start. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-zh-rTW\values-zh-rTW.xml:531:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_status. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-fi\values-fi.xml:531:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_error. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-fi\values-fi.xml:532:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_start. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-fi\values-fi.xml:533:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_status. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-de\values-de.xml:78:4: Multiple substitutions specified in non-positional format of string resource string/auto_frame_rate_applying. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-nl\values-nl.xml:78:4: Multiple substitutions specified in non-positional format of string resource string/auto_frame_rate_applying. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-de\values-de.xml:531:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_error. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-de\values-de.xml:532:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_start. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-de\values-de.xml:533:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_status. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-nl\values-nl.xml:531:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_error. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-nl\values-nl.xml:532:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_start. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-nl\values-nl.xml:533:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_status. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-vi\values-vi.xml:76:4: Multiple substitutions specified in non-positional format of string resource string/auto_frame_rate_applying. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-vi\values-vi.xml:529:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_error. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-vi\values-vi.xml:530:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_start. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-vi\values-vi.xml:531:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_status. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-pl\values-pl.xml:82:4: Multiple substitutions specified in non-positional format of string resource string/auto_frame_rate_applying. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-pl\values-pl.xml:535:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_error. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-pl\values-pl.xml:536:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_start. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-pl\values-pl.xml:537:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_status. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-zh\values-zh.xml:76:4: Multiple substitutions specified in non-positional format of string resource string/auto_frame_rate_applying. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-zh\values-zh.xml:529:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_error. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-zh\values-zh.xml:530:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_start. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-zh\values-zh.xml:531:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_status. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-pt-rPT\values-pt-rPT.xml:78:4: Multiple substitutions specified in non-positional format of string resource string/auto_frame_rate_applying. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-pt-rPT\values-pt-rPT.xml:531:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_error. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-pt-rPT\values-pt-rPT.xml:532:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_start. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-pt-rPT\values-pt-rPT.xml:533:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_status. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-sq\values-sq.xml:78:4: Multiple substitutions specified in non-positional format of string resource string/auto_frame_rate_applying. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-sq\values-sq.xml:531:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_error. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-sq\values-sq.xml:532:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_start. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-sq\values-sq.xml:533:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_status. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-cs\values-cs.xml:78:4: Multiple substitutions specified in non-positional format of string resource string/auto_frame_rate_applying. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-cs\values-cs.xml:531:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_error. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-cs\values-cs.xml:532:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_start. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-cs\values-cs.xml:533:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_status. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-nb\values-nb.xml:78:4: Multiple substitutions specified in non-positional format of string resource string/auto_frame_rate_applying. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-nb\values-nb.xml:531:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_error. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-nb\values-nb.xml:532:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_start. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-nb\values-nb.xml:533:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_status. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-he\values-he.xml:78:4: Multiple substitutions specified in non-positional format of string resource string/auto_frame_rate_applying. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-he\values-he.xml:531:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_error. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-he\values-he.xml:532:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_start. Did you mean to add the formatted="false" attribute?
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\packaged_res\stmobileDebug\values-he\values-he.xml:533:4: Multiple substitutions specified in non-positional format of string resource string/proxy_test_status. Did you mean to add the formatted="false" attribute?
+
+> Task :common:processStmobileDebugUnitTestManifest
+[org.chromium.net:cronet-embedded:105.5195.68] C:\Users\360he\.gradle\caches\transforms-3\b26fe7872578b3465835cb7021285bac\transformed\jetified-cronet-embedded-105.5195.68\AndroidManifest.xml Warning:
+	Namespace 'org.chromium.net' used in: org.chromium.net:cronet-embedded:105.5195.68, org.chromium.net:cronet-common:105.5195.68, org.chromium.net:cronet-api:105.5195.68.
+C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\build\intermediates\tmp\manifest\test\stmobile\debug\tempFile1ProcessTestManifest5005848304530424100.xml:33:9-39:36 Warning:
+	provider#com.liskovsoft.leanbackassistant.search.VideoContentProvider was tagged at tempFile1ProcessTestManifest5005848304530424100.xml:33 to replace another declaration but no other declaration present
+
+> Task :common:javaPreCompileStmobileDebugUnitTest
+> Task :common:mergeStmobileDebugAssets
+> Task :common:generateStmobileDebugUnitTestAssets UP-TO-DATE
+> Task :common:mergeStmobileDebugUnitTestAssets
+> Task :common:processStmobileDebugUnitTestJavaRes NO-SOURCE
+> Task :smarttubetv:preStmobileDebugAndroidTestBuild SKIPPED
+> Task :smarttubetv:compileStmobileDebugAndroidTestAidl NO-SOURCE
+> Task :smarttubetv:processStmobileDebugAndroidTestManifest
+> Task :smarttubetv:compileStmobileDebugAndroidTestRenderscript NO-SOURCE
+> Task :smarttubetv:generateStmobileDebugAndroidTestBuildConfig
+> Task :smarttubetv:javaPreCompileStmobileDebugAndroidTest UP-TO-DATE
+> Task :smarttubetv:checkStmobileDebugAndroidTestAarMetadata UP-TO-DATE
+> Task :smarttubetv:generateStmobileDebugAndroidTestResValues UP-TO-DATE
+> Task :smarttubetv:mapStmobileDebugAndroidTestSourceSetPaths
+> Task :smarttubetv:generateStmobileDebugAndroidTestResources UP-TO-DATE
+> Task :smarttubetv:mergeStmobileDebugAndroidTestShaders UP-TO-DATE
+> Task :smarttubetv:compileStmobileDebugAndroidTestShaders NO-SOURCE
+> Task :smarttubetv:generateStmobileDebugAndroidTestAssets UP-TO-DATE
+> Task :smarttubetv:mergeStmobileDebugAndroidTestResources
+> Task :smarttubetv:mergeStmobileDebugAndroidTestAssets UP-TO-DATE
+> Task :smarttubetv:packageStmobileDebug
+> Task :smarttubetv:createStmobileDebugApkListingFileRedirect UP-TO-DATE
+> Task :smarttubetv:processStmobileDebugAndroidTestResources
+> Task :smarttubetv:assembleStmobileDebug
+> Task :common:processStmobileDebugUnitTestResources
+> Task :smarttubetv:compileStmobileDebugAndroidTestJavaWithJavac
+> Task :common:compileStmobileDebugUnitTestKotlin NO-SOURCE
+
+> Task :common:compileStmobileDebugUnitTestJavaWithJavac
+Note: C:\Users\360he\OneDrive\Documents\ChatGPT\Smart Tube mobile\SmarterTube\common\src\test\java\com\liskovsoft\smartyoutubetv2\common\misc\MotherActivityLocaleOverrideTest.java uses or overrides a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+
+> Task :common:packageStmobileDebugUnitTestForUnitTest
+> Task :smarttubetv:compressStmobileDebugAndroidTestAssets UP-TO-DATE
+> Task :common:generateStmobileDebugUnitTestConfig
+> Task :smarttubetv:checkStmobileDebugAndroidTestDuplicateClasses
+> Task :common:testStmobileDebugUnitTest
+> Task :smarttubetv:desugarStmobileDebugAndroidTestFileDependencies
+> Task :smarttubetv:dexBuilderStmobileDebugAndroidTest
+> Task :smarttubetv:processStmobileDebugAndroidTestJavaRes NO-SOURCE
+> Task :smarttubetv:mergeStmobileDebugAndroidTestJniLibFolders UP-TO-DATE
+> Task :smarttubetv:mergeStmobileDebugAndroidTestNativeLibs NO-SOURCE
+> Task :smarttubetv:validateSigningStmobileDebugAndroidTest UP-TO-DATE
+> Task :smarttubetv:writeStmobileDebugAndroidTestSigningConfigVersions UP-TO-DATE
+> Task :smarttubetv:mergeStmobileDebugAndroidTestJavaResource
+> Task :smarttubetv:mergeDexStmobileDebugAndroidTest
+> Task :smarttubetv:packageStmobileDebugAndroidTest
+> Task :smarttubetv:createStmobileDebugAndroidTestApkListingFileRedirect
+> Task :smarttubetv:assembleStmobileDebugAndroidTest
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 8.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+See https://docs.gradle.org/7.5/userguide/command_line_interface.html#sec:command_line_warnings
+
+BUILD SUCCESSFUL in 1m 40s
+519 actionable tasks: 34 executed, 485 up-to-date

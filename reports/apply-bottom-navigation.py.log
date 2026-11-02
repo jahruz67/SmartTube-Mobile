@@ -1,0 +1,5 @@
+UNCHANGED: smarttubetv\src\stmobile\java\com\liskovsoft\smartyoutubetv2\mobile\ui\browse\MobileBrowseFragment.java
+UNCHANGED: smarttubetv\src\stmobile\res\layout\mobile_browse_fragment.xml
+UNCHANGED: smarttubetv\src\stmobile\res\values\mobile_bottom_nav_strings.xml
+Java SHA256: 36525f2619ef09694ed7c40d996d3622b44dea4d5718fde8126f23e90e0a8bcb
+Integration applied. Compilation and device behavior NOT yet verified.

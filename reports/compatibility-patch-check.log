@@ -1,0 +1,7 @@
+PATCH: C:\Users\360he\AppData\Local\Temp\tmpl09_kmul\common\build.gradle
+PATCH: C:\Users\360he\AppData\Local\Temp\tmpl09_kmul\smarttubetv\build.gradle
+PATCH: C:\Users\360he\AppData\Local\Temp\tmpl09_kmul\gradlew.bat
+UNCHANGED: C:\Users\360he\AppData\Local\Temp\tmpl09_kmul\common\build.gradle
+UNCHANGED: C:\Users\360he\AppData\Local\Temp\tmpl09_kmul\smarttubetv\build.gradle
+UNCHANGED: C:\Users\360he\AppData\Local\Temp\tmpl09_kmul\gradlew.bat
+PASS: compatibility patches apply to pinned source and are idempotent

@@ -1,0 +1,673 @@
+package com.liskovsoft.smartyoutubetv2.mobile.ui.browse;
+
+import android.content.Intent;
+import android.content.res.ColorStateList;
+import android.content.res.Configuration;
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.ViewConfiguration;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.ProgressBar;
+import android.widget.PopupMenu;
+import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+
+import com.bumptech.glide.Glide;
+import com.liskovsoft.mediaserviceinterfaces.oauth.Account;
+import com.liskovsoft.mediaserviceinterfaces.data.MediaGroup;
+import com.liskovsoft.smartyoutubetv2.common.app.models.data.BrowseSection;
+import com.liskovsoft.smartyoutubetv2.common.app.models.data.SettingsGroup;
+import com.liskovsoft.smartyoutubetv2.common.app.models.data.Video;
+import com.liskovsoft.smartyoutubetv2.common.app.models.data.VideoGroup;
+import com.liskovsoft.smartyoutubetv2.common.app.models.errors.ErrorFragmentData;
+import com.liskovsoft.smartyoutubetv2.common.app.presenters.BrowsePresenter;
+import com.liskovsoft.smartyoutubetv2.common.app.presenters.SearchPresenter;
+import com.liskovsoft.smartyoutubetv2.common.app.presenters.dialogs.AccountSelectionPresenter;
+import com.liskovsoft.smartyoutubetv2.common.app.presenters.settings.AccountSettingsPresenter;
+import com.liskovsoft.smartyoutubetv2.common.app.views.BrowseView;
+import com.liskovsoft.smartyoutubetv2.common.misc.MediaServiceManager;
+import com.liskovsoft.smartyoutubetv2.mobile.ui.about.MobileAboutActivity;
+import com.liskovsoft.smartyoutubetv2.tv.R;
+
+import java.util.List;
+
+/**
+ * Native portrait Home screen. Implements {@link BrowseView} and is driven by the
+ * existing {@link BrowsePresenter} unchanged — all section/video-group loading logic is
+ * reused from the TV code; only the view layer is new.
+ *
+ * ROW sections (Home, Trending, Music) render as stacked horizontal shelves; GRID
+ * sections (Subscriptions, History, ...) render as a 2-column grid. The drawer menu
+ * opens with an edge-swipe or the toolbar button.
+ */
+public class MobileBrowseFragment extends Fragment implements BrowseView, MediaServiceManager.AccountChangeListener {
+    private BrowsePresenter mPresenter;
+    private DrawerLayout mDrawer;
+    private SwipeRefreshLayout mSwipeRefresh;
+    private RecyclerView mContentList;
+    private ProgressBar mProgressBar;
+    private TextView mEmptyMessage;
+    private View mEmptyContainer;
+    private Button mEmptyButton;
+    private TextView mToolbarTitle;
+    private ImageView mAccountView;
+    private SectionAdapter mSectionAdapter;
+    /** Browse navigation only; all content continues through the upstream BrowsePresenter. */
+    @Nullable
+    private View[] mBottomTabs;
+    private VideoCardAdapter mGridAdapter;
+    private ShelfAdapter mShelfAdapter;
+    private SettingsItemAdapter mSettingsAdapter;
+    private boolean mProgressShowing;
+    private boolean mSwipeRefreshing;
+    private boolean mSectionSelected;
+    private int mGridCardWidth;
+    private int mGridSpan;
+    private int mShelfCardWidth;
+
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.mobile_browse_fragment, container, false);
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        mDrawer = view.findViewById(R.id.drawer_layout);
+        mContentList = view.findViewById(R.id.content_list);
+        mSwipeRefresh = view.findViewById(R.id.swipe_refresh);
+        mProgressBar = view.findViewById(R.id.progress_bar);
+        mEmptyMessage = view.findViewById(R.id.empty_message);
+        mEmptyContainer = view.findViewById(R.id.empty_container);
+        mEmptyButton = view.findViewById(R.id.empty_button);
+        mToolbarTitle = view.findViewById(R.id.toolbar_title);
+
+        view.findViewById(R.id.btn_menu).setOnClickListener(v -> {
+            if (mDrawer.isDrawerOpen(GravityCompat.START)) {
+                mDrawer.closeDrawer(GravityCompat.START);
+            } else {
+                mDrawer.openDrawer(GravityCompat.START);
+            }
+        });
+
+        view.findViewById(R.id.btn_search).setOnClickListener(v ->
+                SearchPresenter.instance(getContext()).startSearch(null));
+
+        // Account switcher — mirrors SmartTube TV's title-bar orb (NavigateTitleView):
+        // tap cycles to the next account, long-press opens account management.
+        mAccountView = view.findViewById(R.id.btn_account);
+        mAccountView.setOnClickListener(v ->
+                AccountSelectionPresenter.instance(getContext()).nextAccountOrDialog());
+        mAccountView.setOnLongClickListener(v -> {
+            AccountSettingsPresenter.instance(getContext()).show();
+            return true;
+        });
+        MediaServiceManager.instance().addAccountListener(this);
+        updateAccountIcon();
+
+        view.findViewById(R.id.drawer_about).setOnClickListener(v -> {
+            if (mDrawer != null) {
+                mDrawer.closeDrawer(GravityCompat.START);
+            }
+            startActivity(new Intent(getContext(), MobileAboutActivity.class));
+        });
+
+        int screenWidth = getResources().getDisplayMetrics().widthPixels;
+        mGridSpan = getResources().getInteger(R.integer.mobile_grid_span);
+        mGridCardWidth = screenWidth / mGridSpan;
+        mShelfCardWidth = (int) (screenWidth * 0.42f);
+
+        mSectionAdapter = new SectionAdapter(this::onSectionPicked);
+        // The bottom bar links to the exact same section instances used by the drawer.
+        // Do not create parallel content loaders or a second navigation back stack.
+        mBottomTabs = new View[] {
+                view.findViewById(R.id.bottom_home),
+                view.findViewById(R.id.bottom_shorts),
+                view.findViewById(R.id.bottom_subscriptions),
+                view.findViewById(R.id.bottom_library),
+                view.findViewById(R.id.bottom_search)
+        };
+        mBottomTabs[0].setOnClickListener(v -> selectBottomSection(MediaGroup.TYPE_HOME));
+        mBottomTabs[1].setOnClickListener(v -> selectBottomSection(MediaGroup.TYPE_SHORTS));
+        mBottomTabs[2].setOnClickListener(v -> selectBottomSection(MediaGroup.TYPE_SUBSCRIPTIONS));
+        mBottomTabs[3].setOnClickListener(this::showLibraryMenu);
+        mBottomTabs[4].setOnClickListener(v ->
+                SearchPresenter.instance(requireContext()).startSearch(null));
+        RecyclerView sectionList = view.findViewById(R.id.section_list);
+        sectionList.setLayoutManager(new LinearLayoutManager(getContext()));
+        sectionList.setAdapter(mSectionAdapter);
+
+        // Open the menu with an on-screen right-swipe — the left screen edge belongs to
+        // the system Back gesture and must not be used for this. See mSwipeToOpenMenu.
+        mContentList.addOnItemTouchListener(mSwipeToOpenMenu);
+
+        mSwipeRefresh.setColorSchemeResources(R.color.brand_accent);
+        mSwipeRefresh.setProgressBackgroundColorSchemeResource(R.color.mobile_surface);
+        mSwipeRefresh.setOnRefreshListener(() -> {
+            // Settings section has nothing to reload; otherwise re-fetch the current section.
+            if (mPresenter == null || mSettingsAdapter != null) {
+                stopSwipeRefresh();
+                return;
+            }
+            mSwipeRefreshing = true;
+            mPresenter.refresh(false);
+        });
+
+        mPresenter = BrowsePresenter.instance(getContext());
+        mPresenter.setView(this);
+        mPresenter.onViewInitialized();
+    }
+
+    private void onSectionPicked(BrowseSection section) {
+        if (mDrawer != null) {
+            mDrawer.closeDrawer(GravityCompat.START);
+        }
+        if (section.getType() == BrowseSection.TYPE_SETTINGS_GRID && getContext() != null) {
+            // Settings is its own screen on top of this one, not a section: Back returns to the
+            // section the user was on, untouched (no reload, scroll position kept).
+            MobileSettingsActivity.start(getContext(), false);
+            return;
+        }
+        selectSection(mSectionAdapter.indexOf(section), true);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (mPresenter != null) {
+            mPresenter.onViewResumed();
+        }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        if (mPresenter != null) {
+            mPresenter.onViewPaused();
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        MediaServiceManager.instance().removeAccountListener(this);
+        if (mPresenter != null) {
+            mPresenter.onViewDestroyed();
+        }
+    }
+
+    @Override
+    public void onAccountChanged(Account account) {
+        updateAccountIcon();
+    }
+
+    /**
+     * Load the signed-in account's circular avatar into the toolbar button — the touch-UI
+     * counterpart of {@code NavigateTitleView.updateAccountIcon()}. Falls back to the default
+     * account placeholder when no account is selected (or it has no avatar).
+     */
+    private void updateAccountIcon() {
+        if (mAccountView == null) {
+            return;
+        }
+
+        Account current = MediaServiceManager.instance().getSelectedAccount();
+
+        if (current != null && current.getAvatarImageUrl() != null) {
+            // A real photo: drop the placeholder's monochrome tint so it shows in full colour.
+            mAccountView.setImageTintList(null);
+            Glide.with(this)
+                    .load(current.getAvatarImageUrl())
+                    .placeholder(R.drawable.browse_title_account)
+                    .circleCrop()
+                    .into(mAccountView);
+        } else {
+            Glide.with(this).clear(mAccountView);
+            // Re-apply the toolbar tint so the placeholder matches the other toolbar icons.
+            mAccountView.setImageTintList(ColorStateList.valueOf(
+                    ContextCompat.getColor(mAccountView.getContext(), R.color.mobile_text_primary)));
+            mAccountView.setImageResource(R.drawable.browse_title_account);
+        }
+    }
+
+    // ----- BrowseView -----
+
+    @Override
+    public void addSection(int index, BrowseSection section) {
+        if (mSectionAdapter != null && section != null) {
+            mSectionAdapter.add(index, section);
+            // Auto-open a default section so the user lands on videos rather than an empty
+            // "pick a section" Home — notably after sign-in, where the section list is
+            // rebuilt. Deferred via post() so a presenter-driven selection during the same
+            // load wins (it sets mSectionSelected first); otherwise we open the first
+            // section (the Home feed). Re-arms on removeAllSections (a full refresh).
+            if (!mSectionSelected && mContentList != null) {
+                mContentList.post(this::autoSelectDefaultSection);
+            }
+        }
+    }
+
+    private void autoSelectDefaultSection() {
+        if (mSectionSelected || mSectionAdapter == null || mSectionAdapter.getItemCount() == 0) {
+            return;
+        }
+        selectSection(0, false);
+    }
+
+    @Override
+    public void removeSection(BrowseSection section) {
+        if (mSectionAdapter != null) {
+            mSectionAdapter.remove(section);
+        }
+    }
+
+    @Override
+    public void removeAllSections() {
+        if (mSectionAdapter != null) {
+            mSectionAdapter.clear();
+        }
+        // Section list is being rebuilt — re-arm the default-section auto-open.
+        mSectionSelected = false;
+    }
+
+    @Override
+    public void selectSection(int index, boolean focusOnContent) {
+        if (mSectionAdapter == null || index < 0 || index >= mSectionAdapter.getItemCount()) {
+            return;
+        }
+        BrowseSection section = mSectionAdapter.getItem(index);
+        mSectionSelected = true;
+        mSectionAdapter.setSelected(section);
+        updateBottomSelection(section.getId());
+        if (mToolbarTitle != null) {
+            mToolbarTitle.setText(section.getTitle());
+        }
+        setupContentForType(section.getType());
+        if (mPresenter != null) {
+            mPresenter.onSectionFocused(section.getId());
+        }
+    }
+
+    @Override
+    public void updateSection(VideoGroup group) {
+        if (group == null || mContentList == null) {
+            return;
+        }
+        switch (group.getAction()) {
+            case VideoGroup.ACTION_REPLACE:
+                if (mShelfAdapter != null) mShelfAdapter.clear();
+                if (mGridAdapter != null) mGridAdapter.clear();
+                hideEmptyMessage();
+                // Local grids (Notifications, Playback queue, Blocked channels) deliver their whole
+                // list as one REPLACE group, not clear-then-append.
+                if (!group.isEmpty() && mGridAdapter != null) {
+                    mGridAdapter.setVideos(group.getVideos());
+                }
+                break;
+            case VideoGroup.ACTION_REMOVE:
+            case VideoGroup.ACTION_REMOVE_AUTHOR:
+                if (mGridAdapter != null) mGridAdapter.remove(group.getVideos());
+                if (mShelfAdapter != null) mShelfAdapter.removeVideos(group.getVideos());
+                break;
+            case VideoGroup.ACTION_SYNC:
+                // Percent-watched refresh (e.g. back from the player): redraw the watched bars.
+                if (mGridAdapter != null) mGridAdapter.sync(group.getVideos());
+                if (mShelfAdapter != null) mShelfAdapter.syncVideos(group.getVideos());
+                break;
+            default: // ACTION_APPEND / ACTION_PREPEND
+                if (group.isEmpty()) {
+                    break;
+                }
+                hideEmptyMessage();
+                if (mShelfAdapter != null) {
+                    mShelfAdapter.appendGroup(group);
+                } else if (mGridAdapter != null) {
+                    // A continuation carries the full cumulative list, so replace.
+                    mGridAdapter.setVideos(group.getVideos());
+                }
+                break;
+        }
+    }
+
+    @Override
+    public void updateSection(SettingsGroup group) {
+        if (group == null || mContentList == null) {
+            return;
+        }
+        hideEmptyMessage();
+        mShelfAdapter = null;
+        mGridAdapter = null;
+        mSettingsAdapter = new SettingsItemAdapter(MobileSettingsRows.build(getActivity(), group.getItems()));
+        mContentList.setLayoutManager(new LinearLayoutManager(getContext()));
+        mContentList.setAdapter(mSettingsAdapter);
+    }
+
+    @Override
+    public void clearSection(BrowseSection section) {
+        if (mShelfAdapter != null) mShelfAdapter.clear();
+        if (mGridAdapter != null) mGridAdapter.clear();
+    }
+
+    @Override
+    public void selectSectionItem(int index) {
+        // Touch UI: no D-pad selection to restore.
+    }
+
+    @Override
+    public void selectSectionItem(Video item) {
+        // Touch UI: no D-pad selection to restore.
+    }
+
+    @Override
+    public void showError(ErrorFragmentData data) {
+        if (mEmptyContainer == null) {
+            return;
+        }
+        mEmptyMessage.setText(data != null ? data.getMessage() : "");
+        if (data != null && data.getActionText() != null) {
+            mEmptyButton.setText(data.getActionText());
+            mEmptyButton.setOnClickListener(v -> data.onAction());
+            mEmptyButton.setVisibility(View.VISIBLE);
+        } else {
+            mEmptyButton.setVisibility(View.GONE);
+        }
+        mEmptyContainer.setVisibility(View.VISIBLE);
+    }
+
+    @Override
+    public void showProgressBar(boolean show) {
+        mProgressShowing = show;
+        // While pull-to-refresh is active the SwipeRefreshLayout spinner stands in for
+        // the centre bar; don't show both.
+        if (mProgressBar != null) {
+            mProgressBar.setVisibility(show && !mSwipeRefreshing ? View.VISIBLE : View.GONE);
+        }
+        if (!show) {
+            stopSwipeRefresh();
+        }
+    }
+
+    private void stopSwipeRefresh() {
+        mSwipeRefreshing = false;
+        if (mSwipeRefresh != null) {
+            mSwipeRefresh.setRefreshing(false);
+        }
+    }
+
+    @Override
+    public boolean isProgressBarShowing() {
+        return mProgressShowing;
+    }
+
+    @Override
+    public void focusOnContent() {
+        // Touch UI: no focus to move.
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return (mGridAdapter == null || mGridAdapter.getItemCount() == 0)
+                && (mShelfAdapter == null || mShelfAdapter.getItemCount() == 0)
+                && (mSettingsAdapter == null || mSettingsAdapter.getItemCount() == 0);
+    }
+
+    @Override
+    public void updateBadge() {
+        // Keep the toolbar account avatar in sync (the phone counterpart of the TV account orb).
+        updateAccountIcon();
+    }
+
+    /** Navigate using the existing presenter and section adapter, preserving auth handling. */
+    private void selectBottomSection(int sectionId) {
+        if (mSectionAdapter == null) {
+            return;
+        }
+        for (int i = 0; i < mSectionAdapter.getItemCount(); i++) {
+            if (mSectionAdapter.getItem(i).getId() == sectionId) {
+                selectSection(i, true);
+                if (mContentList != null) {
+                    mContentList.scrollToPosition(0);
+                }
+                return;
+            }
+        }
+        // A user may have hidden a default section in SmartTube's sidebar settings.
+        // Do not display a fake screen or silently navigate to the wrong content.
+        if (mDrawer != null) {
+            mDrawer.openDrawer(GravityCompat.START);
+        }
+    }
+
+    /** Library is a real menu over existing History, Playlists and My videos sections. */
+    private void showLibraryMenu(View anchor) {
+        PopupMenu popup = new PopupMenu(requireContext(), anchor);
+        popup.getMenu().add(0, MediaGroup.TYPE_HISTORY, 0, R.string.mobile_nav_history);
+        popup.getMenu().add(0, MediaGroup.TYPE_USER_PLAYLISTS, 1, R.string.mobile_nav_playlists);
+        popup.getMenu().add(0, MediaGroup.TYPE_MY_VIDEOS, 2, R.string.mobile_nav_my_videos);
+        popup.setOnMenuItemClickListener(item -> {
+            selectBottomSection(item.getItemId());
+            return true;
+        });
+        popup.show();
+    }
+
+    /** Keep visual selection in sync when either the drawer or bottom bar navigates. */
+    private void updateBottomSelection(int sectionId) {
+        if (mBottomTabs == null) {
+            return;
+        }
+        int selected = -1;
+        if (sectionId == MediaGroup.TYPE_HOME) selected = 0;
+        else if (sectionId == MediaGroup.TYPE_SHORTS) selected = 1;
+        else if (sectionId == MediaGroup.TYPE_SUBSCRIPTIONS) selected = 2;
+        else if (sectionId == MediaGroup.TYPE_HISTORY ||
+                sectionId == MediaGroup.TYPE_USER_PLAYLISTS ||
+                sectionId == MediaGroup.TYPE_MY_VIDEOS) selected = 3;
+        for (int i = 0; i < mBottomTabs.length; i++) {
+            View tab = mBottomTabs[i];
+            boolean active = i == selected;
+            tab.setSelected(active);
+            int color = ContextCompat.getColor(requireContext(),
+                    active ? R.color.brand_accent : R.color.mobile_text_secondary);
+            ImageView icon = tab.findViewById(R.id.bottom_icon);
+            TextView label = tab.findViewById(R.id.bottom_label);
+            icon.setColorFilter(color);
+            label.setTextColor(color);
+        }
+    }
+
+    // ----- helpers -----
+
+    private void setupContentForType(int type) {
+        hideEmptyMessage();
+        mContentList.clearOnScrollListeners();
+        if (type == BrowseSection.TYPE_ROW) {
+            mShelfAdapter = new ShelfAdapter(mShelfCardWidth, mVideoClick, mVideoLongClick,
+                    mShelfScrollEnd);
+            mGridAdapter = null;
+            mSettingsAdapter = null;
+            mContentList.setLayoutManager(new LinearLayoutManager(getContext()));
+            mContentList.setAdapter(mShelfAdapter);
+        } else if (type == BrowseSection.TYPE_SETTINGS_GRID) {
+            // The adapter is supplied separately via updateSection(SettingsGroup).
+            mShelfAdapter = null;
+            mGridAdapter = null;
+        } else {
+            mGridAdapter = new VideoCardAdapter(mGridCardWidth, mVideoClick, mVideoLongClick);
+            mShelfAdapter = null;
+            mSettingsAdapter = null;
+            mContentList.setLayoutManager(new GridLayoutManager(getContext(), mGridSpan));
+            mContentList.setAdapter(mGridAdapter);
+            mContentList.addOnScrollListener(mGridScrollListener);
+        }
+    }
+
+    // Hosting activity declares configChanges="orientation|..." so it is NOT recreated on
+    // rotation; re-read the grid span (values-sw600dp-land widens it) and resize cards.
+    // Only the grid section uses a GridLayoutManager; shelves/settings are left as-is.
+    @Override
+    public void onConfigurationChanged(@NonNull Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        mGridSpan = getResources().getInteger(R.integer.mobile_grid_span);
+        mGridCardWidth = getResources().getDisplayMetrics().widthPixels / mGridSpan;
+        if (mContentList != null && mContentList.getLayoutManager() instanceof GridLayoutManager) {
+            ((GridLayoutManager) mContentList.getLayoutManager()).setSpanCount(mGridSpan);
+        }
+        if (mGridAdapter != null) {
+            mGridAdapter.setCardWidth(mGridCardWidth);
+        }
+    }
+
+    private final VideoCardAdapter.OnVideoAction mVideoClick = video -> {
+        if (mPresenter == null) {
+            return;
+        }
+        // On the "Channels" multi-grid section, onVideoItemSelected mirrors the TV
+        // two-pane behavior: it replaces the grid with the tapped channel's uploads
+        // (meant for the TV's right-hand pane). The phone has a single grid, so that
+        // silently overwrites the channel list — and it stays overwritten after returning
+        // from the channel page until a manual pull-to-refresh. Skip the selection step
+        // here; onVideoItemClicked still opens the channel page. Every other section keeps
+        // onVideoItemSelected so scroll-position memory works.
+        if (!mPresenter.isMultiGridChannelUploadsSection()) {
+            mPresenter.onVideoItemSelected(video);
+        }
+        mPresenter.onVideoItemClicked(video);
+    };
+
+    private final VideoCardAdapter.OnVideoAction mVideoLongClick = video -> {
+        if (mPresenter != null) {
+            mPresenter.onVideoItemLongClicked(video);
+        }
+    };
+
+    private final ShelfAdapter.OnShelfScrollEnd mShelfScrollEnd = last -> {
+        if (mPresenter != null && last != null) {
+            mPresenter.onScrollEnd(last);
+        }
+    };
+
+    private final RecyclerView.OnScrollListener mGridScrollListener = new RecyclerView.OnScrollListener() {
+        @Override
+        public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+            if (dy <= 0 || mProgressShowing || mGridAdapter == null) {
+                return;
+            }
+            RecyclerView.LayoutManager lm = recyclerView.getLayoutManager();
+            if (!(lm instanceof GridLayoutManager)) {
+                return;
+            }
+            int lastVisible = ((GridLayoutManager) lm).findLastVisibleItemPosition();
+            if (lastVisible >= mGridAdapter.getItemCount() - 4) {
+                Video last = mGridAdapter.getLast();
+                if (last != null && mPresenter != null) {
+                    mPresenter.onScrollEnd(last);
+                }
+            }
+        }
+    };
+
+    private void showEmptyMessage(String message) {
+        if (mEmptyContainer == null) {
+            return;
+        }
+        mEmptyMessage.setText(message);
+        mEmptyButton.setVisibility(View.GONE);
+        mEmptyContainer.setVisibility(View.VISIBLE);
+    }
+
+    private void hideEmptyMessage() {
+        if (mEmptyContainer != null) {
+            mEmptyContainer.setVisibility(View.GONE);
+        }
+    }
+
+    /**
+     * Opens the drawer on an on-screen right-swipe. Registered on the outer content
+     * RecyclerView, so it is consulted before the inner shelves: a shelf that can still
+     * scroll toward its start keeps the gesture; a shelf already at its start (or a grid
+     * section with no horizontal scroller) yields it to open the menu.
+     */
+    private final RecyclerView.OnItemTouchListener mSwipeToOpenMenu = new RecyclerView.OnItemTouchListener() {
+        private float mDownX;
+        private float mDownY;
+        private boolean mDecided;
+        private boolean mTriggered;
+
+        @Override
+        public boolean onInterceptTouchEvent(@NonNull RecyclerView rv, @NonNull MotionEvent e) {
+            switch (e.getActionMasked()) {
+                case MotionEvent.ACTION_DOWN:
+                    mDownX = e.getX();
+                    mDownY = e.getY();
+                    mDecided = false;
+                    mTriggered = false;
+                    return false;
+                case MotionEvent.ACTION_MOVE:
+                    if (mDecided) {
+                        return mTriggered;
+                    }
+                    float dx = e.getX() - mDownX;
+                    float dy = e.getY() - mDownY;
+                    int slop = ViewConfiguration.get(rv.getContext()).getScaledTouchSlop();
+                    if (Math.abs(dx) < slop * 2 && Math.abs(dy) < slop * 2) {
+                        return false; // wait for a clear direction
+                    }
+                    mDecided = true;
+                    if (dx > 0 && dx > Math.abs(dy) && shelfAtStart(rv, mDownX, mDownY)) {
+                        mTriggered = true;
+                        if (mDrawer != null) {
+                            mDrawer.openDrawer(GravityCompat.START);
+                        }
+                    }
+                    return mTriggered;
+                default:
+                    return false;
+            }
+        }
+
+        @Override
+        public void onTouchEvent(@NonNull RecyclerView rv, @NonNull MotionEvent e) {
+            // Gesture is fully handled in onInterceptTouchEvent.
+        }
+
+        @Override
+        public void onRequestDisallowInterceptTouchEvent(boolean disallowIntercept) {
+            // no-op
+        }
+    };
+
+    /**
+     * True if a right-swipe at (x, y) should open the menu: either there is no horizontal
+     * shelf under the finger (grid section or empty area), or the shelf there is already
+     * at its start and cannot scroll further toward it.
+     */
+    private boolean shelfAtStart(RecyclerView contentList, float x, float y) {
+        View child = contentList.findChildViewUnder(x, y);
+        if (child == null) {
+            return true;
+        }
+        View shelfList = child.findViewById(R.id.shelf_list);
+        if (shelfList == null) {
+            return true;
+        }
+        return !shelfList.canScrollHorizontally(-1);
+    }
+}

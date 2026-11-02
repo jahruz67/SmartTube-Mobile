@@ -1,0 +1,18 @@
+source=https://github.com/CodeSculptor/SmarterTube.git
+tag=v0.9.10-beta.1+st32.68
+commit=3b780e9a8ac62ba59c90d090fa46d87210c45525
+original_kit_sha256=DDFA47430675909ADBC25601299730FCD84B2C7A599835BD1F7E02860352B69B
+original_kit_checksums=all 27 listed payload hashes matched
+jdk=Microsoft OpenJDK 17.0.21.21-hotspot
+gradle=7.5
+compileSdk=34
+targetSdk=33
+buildTools=30.0.3
+emulator=NOT USED (user instruction)
+upstream_advisory=https://smarttubeapp.github.io/
+audit_scope=source/submodule pins, Gradle configuration, vendored binaries inventory, independent debug signing; not a comprehensive security audit
+submodules:
+ 05feeb7e7889ab0243e9d44cb06bc8a7d3f066b6 MediaServiceCore (remotes/origin/experiments-2658-g05feeb7e)
+ 799cfae8a2f5c609b99e87fc673fc62de1c0199a MediaServiceCore/SharedModules (799cfae)
+ 799cfae8a2f5c609b99e87fc673fc62de1c0199a SharedModules (799cfae)
+gradle_wrapper_sha256=E2B82129AB64751FD40437007BD2F7F2AFB3C6E41A9198E628650B22D5824A14

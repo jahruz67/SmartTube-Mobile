@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Phone (stmobile) default dimens. The navigation drawer width was hardcoded
+    as 280dp in mobile_browse_fragment.xml; extracted here so values-sw600dp
+    can widen it on tablets.
+-->
+<resources>
+    <dimen name="mobile_drawer_width">280dp</dimen>
+
+    <!--
+        Phone override: the TV default frames captions with 150sp of horizontal padding on
+        each side, which collapses the caption box to near-zero width on a ~360dp phone and
+        hides subtitles. Keep a small margin so captions span the screen width.
+    -->
+    <dimen name="subtitle_horizontal_padding">16dp</dimen>
+
+    <!--
+        Phone override of the Leanback dimen that floats the player controls block above the
+        bottom edge (TV overscan safety). On a phone the seek bar should hug the very bottom
+        of the video, YouTube-style.
+    -->
+    <dimen name="lb_playback_controls_padding_bottom">4dp</dimen>
+</resources>

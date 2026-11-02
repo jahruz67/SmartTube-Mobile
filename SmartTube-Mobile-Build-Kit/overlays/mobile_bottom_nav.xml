@@ -1,0 +1,103 @@
+        <!-- SmartTube Mobile: persistent browse navigation. The drawer remains available. -->
+        <LinearLayout
+            android:id="@+id/mobile_bottom_navigation"
+            android:layout_width="match_parent"
+            android:layout_height="64dp"
+            android:orientation="horizontal"
+            android:background="@color/mobile_surface"
+            android:gravity="center_vertical">
+            <LinearLayout
+                android:id="@+id/bottom_home"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:clickable="true"
+                android:focusable="true"
+                android:importantForAccessibility="yes"
+                android:contentDescription="@string/mobile_nav_home"
+                android:background="?android:attr/selectableItemBackground">
+                <ImageView android:id="@+id/bottom_icon" android:layout_width="24dp"
+                    android:layout_height="24dp" android:src="@drawable/icon_home"
+                    android:contentDescription="@null"
+                    android:importantForAccessibility="no" />
+                <TextView android:id="@+id/bottom_label" android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" android:layout_marginTop="3dp"
+                    android:text="@string/mobile_nav_home" android:textSize="12sp"
+                    android:textColor="@color/mobile_text_secondary"
+                    android:importantForAccessibility="no" />
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/bottom_shorts"
+                android:layout_width="0dp" android:layout_height="match_parent"
+                android:layout_weight="1" android:orientation="vertical"
+                android:gravity="center" android:clickable="true" android:focusable="true"
+                android:importantForAccessibility="yes"
+                android:contentDescription="@string/mobile_nav_shorts"
+                android:background="?android:attr/selectableItemBackground">
+                <ImageView android:id="@id/bottom_icon" android:layout_width="24dp"
+                    android:layout_height="24dp" android:src="@drawable/icon_shorts"
+                    android:contentDescription="@null"
+                    android:importantForAccessibility="no" />
+                <TextView android:id="@id/bottom_label" android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" android:layout_marginTop="3dp"
+                    android:text="@string/mobile_nav_shorts" android:textSize="12sp"
+                    android:textColor="@color/mobile_text_secondary"
+                    android:importantForAccessibility="no" />
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/bottom_subscriptions"
+                android:layout_width="0dp" android:layout_height="match_parent"
+                android:layout_weight="1" android:orientation="vertical"
+                android:gravity="center" android:clickable="true" android:focusable="true"
+                android:importantForAccessibility="yes"
+                android:contentDescription="@string/mobile_nav_subscriptions"
+                android:background="?android:attr/selectableItemBackground">
+                <ImageView android:id="@id/bottom_icon" android:layout_width="24dp"
+                    android:layout_height="24dp" android:src="@drawable/icon_subscriptions"
+                    android:contentDescription="@null"
+                    android:importantForAccessibility="no" />
+                <TextView android:id="@id/bottom_label" android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" android:layout_marginTop="3dp"
+                    android:text="@string/mobile_nav_subscriptions" android:textSize="12sp"
+                    android:textColor="@color/mobile_text_secondary"
+                    android:importantForAccessibility="no" />
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/bottom_library"
+                android:layout_width="0dp" android:layout_height="match_parent"
+                android:layout_weight="1" android:orientation="vertical"
+                android:gravity="center" android:clickable="true" android:focusable="true"
+                android:importantForAccessibility="yes"
+                android:contentDescription="@string/mobile_nav_library"
+                android:background="?android:attr/selectableItemBackground">
+                <ImageView android:id="@id/bottom_icon" android:layout_width="24dp"
+                    android:layout_height="24dp" android:src="@drawable/icon_playlist"
+                    android:contentDescription="@null"
+                    android:importantForAccessibility="no" />
+                <TextView android:id="@id/bottom_label" android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" android:layout_marginTop="3dp"
+                    android:text="@string/mobile_nav_library" android:textSize="12sp"
+                    android:textColor="@color/mobile_text_secondary"
+                    android:importantForAccessibility="no" />
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/bottom_search"
+                android:layout_width="0dp" android:layout_height="match_parent"
+                android:layout_weight="1" android:orientation="vertical"
+                android:gravity="center" android:clickable="true" android:focusable="true"
+                android:importantForAccessibility="yes"
+                android:contentDescription="@string/mobile_nav_search"
+                android:background="?android:attr/selectableItemBackground">
+                <ImageView android:id="@id/bottom_icon" android:layout_width="24dp"
+                    android:layout_height="24dp" android:src="@android:drawable/ic_menu_search"
+                    android:contentDescription="@null"
+                    android:importantForAccessibility="no" />
+                <TextView android:id="@id/bottom_label" android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" android:layout_marginTop="3dp"
+                    android:text="@string/mobile_nav_search" android:textSize="12sp"
+                    android:textColor="@color/mobile_text_secondary"
+                    android:importantForAccessibility="no" />
+            </LinearLayout>
+        </LinearLayout>

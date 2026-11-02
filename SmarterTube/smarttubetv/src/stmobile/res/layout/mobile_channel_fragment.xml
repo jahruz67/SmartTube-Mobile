@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Phone Channel screen. Toolbar with back + channel title, a channel-identity header,
+    then a Material tab strip whose tabs are the channel's content groups (Videos / Shorts /
+    Live / Playlists …) — each a swipeable ViewPager2 page showing that group as a grid.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/mobile_background">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="@color/mobile_primary">
+
+        <TextView
+            android:id="@+id/btn_back"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:gravity="center"
+            android:text="←"
+            android:textColor="@color/mobile_text_primary"
+            android:textSize="24sp"
+            android:background="?android:attr/selectableItemBackground" />
+
+        <TextView
+            android:id="@+id/channel_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:singleLine="true"
+            android:ellipsize="end"
+            android:textColor="@color/mobile_text_primary"
+            android:textSize="18sp" />
+
+        <!-- In-channel search (upstream ChannelPresenter.onSearchSubmit). Opens the search row. -->
+        <ImageView
+            android:id="@+id/btn_channel_search"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:padding="11dp"
+            android:scaleType="fitCenter"
+            android:src="@android:drawable/ic_menu_search"
+            android:tint="@color/mobile_text_primary"
+            android:contentDescription="@string/mobile_channel_search_hint"
+            android:background="?android:attr/selectableItemBackgroundBorderless" />
+
+        <TextView
+            android:id="@+id/btn_subscribe"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp"
+            android:background="@drawable/bg_subscribe_pill"
+            android:foreground="?android:attr/selectableItemBackground"
+            android:singleLine="true"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:textColor="@color/brand_accent_on"
+            android:visibility="gone" />
+
+        <ImageView
+            android:id="@+id/btn_bell"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="8dp"
+            android:padding="8dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/settings_notifications"
+            app:tint="@color/mobile_text_primary"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/notification_bell"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <!-- In-channel search field; shown by the toolbar search button. -->
+    <LinearLayout
+        android:id="@+id/channel_search_bar"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="16dp"
+        android:background="@color/mobile_primary"
+        android:visibility="gone">
+
+        <EditText
+            android:id="@+id/channel_search_input"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@null"
+            android:hint="@string/mobile_channel_search_hint"
+            android:textColorHint="@color/mobile_text_secondary"
+            android:textColor="@color/mobile_text_primary"
+            android:textSize="16sp"
+            android:singleLine="true"
+            android:imeOptions="actionSearch"
+            android:inputType="text"
+            android:importantForAutofill="no" />
+
+        <TextView
+            android:id="@+id/btn_channel_search_close"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:gravity="center"
+            android:text="✕"
+            android:textColor="@color/mobile_text_primary"
+            android:textSize="18sp"
+            android:contentDescription="@string/mobile_channel_search_close"
+            android:background="?android:attr/selectableItemBackgroundBorderless" />
+    </LinearLayout>
+
+    <!--
+        Channel identity header: circular avatar + subscriber count. Hidden until the first
+        upload's metadata resolves (see MobileChannelFragment.maybeResolveSubscribedState).
+    -->
+    <LinearLayout
+        android:id="@+id/channel_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="12dp"
+        android:paddingBottom="12dp"
+        android:visibility="gone">
+
+        <ImageView
+            android:id="@+id/channel_avatar"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:background="@drawable/avatar_circle_bg"
+            android:scaleType="centerCrop"
+            android:contentDescription="@string/channel_avatar" />
+
+        <TextView
+            android:id="@+id/channel_subs"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="16dp"
+            android:textColor="@color/mobile_text_secondary"
+            android:textSize="15sp" />
+    </LinearLayout>
+
+    <!--
+        Content-group tab strip. Populated dynamically as the presenter emits groups
+        (one tab per group, via TabLayoutMediator). Hidden until there's more than one
+        tab — a single-group channel needs no strip.
+    -->
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/channel_tabs"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/mobile_primary"
+        android:visibility="gone"
+        app:tabMode="scrollable"
+        app:tabGravity="start"
+        app:tabIndicatorColor="@color/brand_accent"
+        app:tabSelectedTextColor="@color/brand_accent"
+        app:tabTextColor="@color/mobile_text_secondary" />
+
+    <!--
+        Sort chips (Latest / Popular / Oldest) for the channel's Videos tab, from upstream
+        ContentService.getChannelSortingOptionsObserve. Shown only while that tab is selected.
+    -->
+    <HorizontalScrollView
+        android:id="@+id/channel_sort_scroll"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="none"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:id="@+id/channel_sort_chips"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="4dp" />
+    </HorizontalScrollView>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+            android:id="@+id/swipe_refresh"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <androidx.viewpager2.widget.ViewPager2
+                android:id="@+id/channel_pager"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+        </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+        <ProgressBar
+            android:id="@+id/progress_bar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="gone" />
+    </FrameLayout>
+</LinearLayout>

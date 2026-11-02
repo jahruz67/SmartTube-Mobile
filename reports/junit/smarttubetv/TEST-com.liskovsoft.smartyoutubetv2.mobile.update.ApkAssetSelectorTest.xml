@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.liskovsoft.smartyoutubetv2.mobile.update.ApkAssetSelectorTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-11-02T02:27:58" hostname="DESKTOP-EQUHKN9" time="0.003">
+  <properties/>
+  <testcase name="fallsBackToUniversalWhenNoExactAbi" classname="com.liskovsoft.smartyoutubetv2.mobile.update.ApkAssetSelectorTest" time="0.001"/>
+  <testcase name="x86_64DoesNotMatchX86" classname="com.liskovsoft.smartyoutubetv2.mobile.update.ApkAssetSelectorTest" time="0.001"/>
+  <testcase name="returnsNullWhenNoCompatibleAsset" classname="com.liskovsoft.smartyoutubetv2.mobile.update.ApkAssetSelectorTest" time="0.0"/>
+  <testcase name="ignoresNonApkEntries" classname="com.liskovsoft.smartyoutubetv2.mobile.update.ApkAssetSelectorTest" time="0.0"/>
+  <testcase name="prefersExactAbiOverUniversal" classname="com.liskovsoft.smartyoutubetv2.mobile.update.ApkAssetSelectorTest" time="0.0"/>
+  <testcase name="picksExactAbiWhenPresent" classname="com.liskovsoft.smartyoutubetv2.mobile.update.ApkAssetSelectorTest" time="0.0"/>
+  <testcase name="returnsNullForEmptyOrNullInput" classname="com.liskovsoft.smartyoutubetv2.mobile.update.ApkAssetSelectorTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

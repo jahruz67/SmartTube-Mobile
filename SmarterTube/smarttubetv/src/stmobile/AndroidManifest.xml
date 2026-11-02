@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Phone/portrait flavor manifest. Merged OVER src/main/AndroidManifest.xml.
+    Keep all overrides here so the TV manifest stays untouched and upstream merges stay clean.
+
+    launchMode note: the TV manifest declares every activity as singleInstance, which puts
+    each activity in its own isolated task. On a phone that breaks the back-stack — the
+    translucent AppDialogActivity has nothing behind it and the app drops out of recents.
+    The phone build overrides launchMode so all activities share one task: MobileBrowseActivity
+    is the singleTask root; MobileSearchActivity is also singleTask so the player can return
+    straight to it (clearing itself off the top); the rest are singleTop and stack within it.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          xmlns:tools="http://schemas.android.com/tools"
+          package="com.liskovsoft.smartyoutubetv2.tv">
+
+    <!-- Make the app installable on non-TV (phone/tablet) devices -->
+    <uses-feature
+        android:name="android.software.leanback"
+        android:required="false"
+        tools:replace="android:required" />
+    <uses-feature
+        android:name="android.hardware.touchscreen"
+        android:required="true"
+        tools:replace="android:required" />
+
+    <!-- Point the phone build at its own Application class (routing seam for later phases),
+         and swap in the phone-port branding (adaptive launcher icon, "SmarterTube" label
+         already overridden via @string/app_name in stmobile/values/strings.xml). -->
+    <application
+        android:name="com.liskovsoft.smartyoutubetv2.mobile.ui.main.MobileApplication"
+        android:icon="@mipmap/smarttube_mobile_dev_icon"
+        android:roundIcon="@mipmap/smarttube_mobile_dev_icon"
+        tools:replace="android:name,android:icon,android:roundIcon">
+
+        <!-- SplashActivity (launcher) is left as-is: it finishes itself right after
+             delegating, so its transient task is harmless. The splash THEME gives
+             a branded launch experience (Android-12 splash API on v31+, layered
+             window background pre-v31; see values-v31/themes.xml and values/themes.xml). -->
+        <activity
+            android:name="com.liskovsoft.smartyoutubetv2.tv.ui.main.SplashActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.SmarterTube.Splash"
+            tools:node="merge"
+            tools:replace="android:screenOrientation,android:theme" />
+        <activity
+            android:name="com.liskovsoft.smartyoutubetv2.tv.ui.browse.BrowseActivity"
+            android:screenOrientation="portrait"
+            tools:node="merge"
+            tools:replace="android:screenOrientation" />
+        <activity
+            android:name="com.liskovsoft.smartyoutubetv2.tv.ui.channel.ChannelActivity"
+            android:screenOrientation="portrait"
+            android:launchMode="singleTop"
+            tools:node="merge"
+            tools:replace="android:screenOrientation,android:launchMode" />
+        <activity
+            android:name="com.liskovsoft.smartyoutubetv2.tv.ui.channeluploads.ChannelUploadsActivity"
+            android:screenOrientation="portrait"
+            android:launchMode="singleTop"
+            tools:node="merge"
+            tools:replace="android:screenOrientation,android:launchMode" />
+        <activity
+            android:name="com.liskovsoft.smartyoutubetv2.tv.ui.signin.SignInActivity"
+            android:screenOrientation="portrait"
+            tools:node="merge"
+            tools:replace="android:screenOrientation" />
+        <activity
+            android:name="com.liskovsoft.smartyoutubetv2.tv.ui.adddevice.AddDeviceActivity"
+            android:screenOrientation="portrait"
+            android:launchMode="singleTop"
+            tools:node="merge"
+            tools:replace="android:screenOrientation,android:launchMode" />
+        <activity
+            android:name="com.liskovsoft.smartyoutubetv2.tv.ui.webbrowser.WebBrowserActivity"
+            android:screenOrientation="portrait"
+            android:launchMode="singleTop"
+            tools:node="merge"
+            tools:replace="android:screenOrientation,android:launchMode" />
+
+        <!-- Phone playback host. Extends the TV PlaybackActivity; screen orientation is
+             chosen at runtime by video type — portrait for Shorts, landscape otherwise.
+             screenOrientation="behind" makes it open in the caller's orientation (Home is
+             portrait) so a Short never flashes landscape before the runtime lock applies. -->
+        <activity
+            android:name="com.liskovsoft.smartyoutubetv2.mobile.ui.playback.MobilePlaybackActivity"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation|layoutDirection|keyboardHidden"
+            android:screenOrientation="behind"
+            android:supportsPictureInPicture="true"
+            android:resizeableActivity="true"
+            android:theme="@style/App.Theme.Leanback.Player" />
+
+        <!-- Native phone settings dialog (Phase 4 part 2). screenOrientation="behind" so
+             dialogs opened from the landscape player stay landscape and dialogs opened
+             from Home stay portrait. adjustResize so a software keyboard (e.g. a future
+             text-entry preference) pushes the list instead of covering it. -->
+        <activity
+            android:name="com.liskovsoft.smartyoutubetv2.mobile.ui.dialogs.MobileAppDialogActivity"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation|layoutDirection|keyboardHidden"
+            android:screenOrientation="behind"
+            android:windowSoftInputMode="adjustResize"
+            android:theme="@style/Theme.SmarterTube.Mobile.TranslucentPanel" />
+
+        <!-- Native phone Home screen (Phase 2). singleTask = the root of the app task. -->
+        <activity
+            android:name="com.liskovsoft.smartyoutubetv2.mobile.ui.browse.MobileBrowseActivity"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation|layoutDirection|keyboardHidden"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.SmarterTube.Mobile" />
+
+        <!-- Native phone sign-in screen -->
+        <activity
+            android:name="com.liskovsoft.smartyoutubetv2.mobile.ui.signin.MobileSignInActivity"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation|layoutDirection|keyboardHidden"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.SmarterTube.Mobile" />
+
+        <!-- Native phone Channel-uploads screen (Phase 6). Same task as the rest;
+             singleTop so revisiting from a video card reuses the existing instance. -->
+        <activity
+            android:name="com.liskovsoft.smartyoutubetv2.mobile.ui.channeluploads.MobileChannelUploadsActivity"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation|layoutDirection|keyboardHidden"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.SmarterTube.Mobile" />
+
+        <!-- Native phone Channel screen (Phase 5). singleTop so revisiting a channel from
+             a video card reuses the existing instance rather than stacking duplicates. -->
+        <activity
+            android:name="com.liskovsoft.smartyoutubetv2.mobile.ui.channel.MobileChannelActivity"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation|layoutDirection|keyboardHidden"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.SmarterTube.Mobile" />
+
+        <!-- Phone Settings screen. Opens over Home or the player; translucent window (theme set in
+             initTheme) so the screen underneath is paused, not stopped. "behind" keeps the
+             orientation of whatever it was opened from. -->
+        <activity
+            android:name="com.liskovsoft.smartyoutubetv2.mobile.ui.browse.MobileSettingsActivity"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation|layoutDirection|keyboardHidden"
+            android:screenOrientation="behind"
+            android:theme="@style/Theme.SmarterTube.Mobile.TranslucentPanel" />
+
+        <!-- Native phone About screen (fork-attribution surface). -->
+        <activity
+            android:name="com.liskovsoft.smartyoutubetv2.mobile.ui.about.MobileAboutActivity"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation|layoutDirection|keyboardHidden"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.SmarterTube.Mobile" />
+
+        <!-- Native phone Search screen. singleTask so when the player closes, relaunching
+             this activity routes to the existing instance and clears the player off the top
+             (singleTop would instead spawn a duplicate below the player). adjustResize so the
+             keyboard pushes the results/suggestions list instead of covering it. -->
+        <activity
+            android:name="com.liskovsoft.smartyoutubetv2.mobile.ui.search.MobileSearchActivity"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation|layoutDirection|keyboardHidden"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustResize"
+            android:theme="@style/Theme.SmarterTube.Mobile" />
+
+        <!-- Media notification for the player's MediaSession (shade, lockscreen, media
+             carousel); also keeps background audio alive. -->
+        <service
+            android:name="com.liskovsoft.smartyoutubetv2.mobile.notifications.MediaNotificationService"
+            android:exported="false" />
+
+    </application>
+
+</manifest>

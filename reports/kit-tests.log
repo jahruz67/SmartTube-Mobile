@@ -1,0 +1,72 @@
+test_rejects_missing_dex (test_apk_inspection.InspectApkTests.test_rejects_missing_dex) ... ok
+test_structurally_valid_zip (test_apk_inspection.InspectApkTests.test_structurally_valid_zip) ... ok
+test_changes_only_mobile_flavor (test_bottom_navigation_patch.BottomNavPatchTests.test_changes_only_mobile_flavor) ... ok
+test_java_is_idempotent (test_bottom_navigation_patch.BottomNavPatchTests.test_java_is_idempotent) ... ok
+test_layout_is_valid_and_idempotent (test_bottom_navigation_patch.BottomNavPatchTests.test_layout_is_valid_and_idempotent) ... ok
+test_layout_preserves_blank_line_before_drawer (test_bottom_navigation_patch.BottomNavPatchTests.test_layout_preserves_blank_line_before_drawer) ... ok
+test_unknown_java_fails_closed (test_bottom_navigation_patch.BottomNavPatchTests.test_unknown_java_fails_closed) ... ok
+test_unknown_layout_fails_closed (test_bottom_navigation_patch.BottomNavPatchTests.test_unknown_layout_fails_closed) ... ok
+test_fails_closed_on_drift (test_development_identity.DevelopmentIdentityTests.test_fails_closed_on_drift) ... ok
+test_gradle_mobile_flavor_only (test_development_identity.DevelopmentIdentityTests.test_gradle_mobile_flavor_only) ... ok
+test_launcher_identity (test_development_identity.DevelopmentIdentityTests.test_launcher_identity) ... ok
+test_strings_safe_and_attribution (test_development_identity.DevelopmentIdentityTests.test_strings_safe_and_attribution) ... ok
+test_transactional_preflight_and_dry_run (test_development_identity.DevelopmentIdentityTests.test_transactional_preflight_and_dry_run) ... ok
+test_updates_disabled (test_development_identity.DevelopmentIdentityTests.test_updates_disabled) ... ok
+test_installation_is_idempotent (test_instrumentation_source.InstrumentationSourceTests.test_installation_is_idempotent) ... ok
+test_overlay_has_five_accessible_tabs (test_instrumentation_source.InstrumentationSourceTests.test_overlay_has_five_accessible_tabs) ... ok
+
+----------------------------------------------------------------------
+Ran 16 tests in 0.061s
+
+OK
+NOTE: APK has no native .so entries; inspect ABI packaging if playback fails.
+NOTE: Android aapt unavailable; package identity not verified.
+NOTE: apksigner unavailable; APK certificate unverified.
+WOULD PATCH: smarttubetv\src\stmobile\java\com\liskovsoft\smartyoutubetv2\mobile\ui\browse\MobileBrowseFragment.java
+WOULD PATCH: smarttubetv\src\stmobile\res\layout\mobile_browse_fragment.xml
+WOULD PATCH: smarttubetv\src\stmobile\res\values\mobile_bottom_nav_strings.xml
+PATCH: smarttubetv\src\stmobile\java\com\liskovsoft\smartyoutubetv2\mobile\ui\browse\MobileBrowseFragment.java
+PATCH: smarttubetv\src\stmobile\res\layout\mobile_browse_fragment.xml
+PATCH: smarttubetv\src\stmobile\res\values\mobile_bottom_nav_strings.xml
+Java SHA256: 00b200114a38f59e5f9acf9c272aab76f0e6c278a9503147bcac8080a32c483a
+Integration applied. Compilation and device behavior NOT yet verified.
+UNCHANGED: smarttubetv\src\stmobile\java\com\liskovsoft\smartyoutubetv2\mobile\ui\browse\MobileBrowseFragment.java
+UNCHANGED: smarttubetv\src\stmobile\res\layout\mobile_browse_fragment.xml
+UNCHANGED: smarttubetv\src\stmobile\res\values\mobile_bottom_nav_strings.xml
+Java SHA256: 00b200114a38f59e5f9acf9c272aab76f0e6c278a9503147bcac8080a32c483a
+Integration applied. Compilation and device behavior NOT yet verified.
+WOULD PATCH: smarttubetv\build.gradle
+WOULD PATCH: smarttubetv\src\stmobile\res\values\strings.xml
+WOULD PATCH: smarttubetv\src\stmobile\java\com\liskovsoft\smartyoutubetv2\mobile\ui\browse\MobileBrowseActivity.java
+WOULD PATCH: smarttubetv\src\stmobile\java\com\liskovsoft\smartyoutubetv2\mobile\ui\about\MobileAboutActivity.java
+WOULD PATCH: smarttubetv\src\stmobile\AndroidManifest.xml
+WOULD INSTALL: smarttubetv\src\stmobile\res\mipmap-mdpi\smarttube_mobile_dev_icon.png
+WOULD INSTALL: smarttubetv\src\stmobile\res\mipmap-hdpi\smarttube_mobile_dev_icon.png
+WOULD INSTALL: smarttubetv\src\stmobile\res\mipmap-xhdpi\smarttube_mobile_dev_icon.png
+WOULD INSTALL: smarttubetv\src\stmobile\res\mipmap-xxhdpi\smarttube_mobile_dev_icon.png
+WOULD INSTALL: smarttubetv\src\stmobile\res\mipmap-xxxhdpi\smarttube_mobile_dev_icon.png
+Identity isolated; distinct launcher icon; inherited telemetry and incompatible updates disabled.
+PATCH: smarttubetv\build.gradle
+PATCH: smarttubetv\src\stmobile\res\values\strings.xml
+PATCH: smarttubetv\src\stmobile\java\com\liskovsoft\smartyoutubetv2\mobile\ui\browse\MobileBrowseActivity.java
+PATCH: smarttubetv\src\stmobile\java\com\liskovsoft\smartyoutubetv2\mobile\ui\about\MobileAboutActivity.java
+PATCH: smarttubetv\src\stmobile\AndroidManifest.xml
+INSTALL: smarttubetv\src\stmobile\res\mipmap-mdpi\smarttube_mobile_dev_icon.png
+INSTALL: smarttubetv\src\stmobile\res\mipmap-hdpi\smarttube_mobile_dev_icon.png
+INSTALL: smarttubetv\src\stmobile\res\mipmap-xhdpi\smarttube_mobile_dev_icon.png
+INSTALL: smarttubetv\src\stmobile\res\mipmap-xxhdpi\smarttube_mobile_dev_icon.png
+INSTALL: smarttubetv\src\stmobile\res\mipmap-xxxhdpi\smarttube_mobile_dev_icon.png
+Identity isolated; distinct launcher icon; inherited telemetry and incompatible updates disabled.
+UNCHANGED: smarttubetv\build.gradle
+UNCHANGED: smarttubetv\src\stmobile\res\values\strings.xml
+UNCHANGED: smarttubetv\src\stmobile\java\com\liskovsoft\smartyoutubetv2\mobile\ui\browse\MobileBrowseActivity.java
+UNCHANGED: smarttubetv\src\stmobile\java\com\liskovsoft\smartyoutubetv2\mobile\ui\about\MobileAboutActivity.java
+UNCHANGED: smarttubetv\src\stmobile\AndroidManifest.xml
+INSTALL: smarttubetv\src\stmobile\res\mipmap-mdpi\smarttube_mobile_dev_icon.png
+INSTALL: smarttubetv\src\stmobile\res\mipmap-hdpi\smarttube_mobile_dev_icon.png
+INSTALL: smarttubetv\src\stmobile\res\mipmap-xhdpi\smarttube_mobile_dev_icon.png
+INSTALL: smarttubetv\src\stmobile\res\mipmap-xxhdpi\smarttube_mobile_dev_icon.png
+INSTALL: smarttubetv\src\stmobile\res\mipmap-xxxhdpi\smarttube_mobile_dev_icon.png
+Identity isolated; distinct launcher icon; inherited telemetry and incompatible updates disabled.
+Installed instrumented resource smoke test: smarttubetv\src\androidTestStmobile\java\dev\smarttubemobile\tests\MobileBottomNavigationInstrumentationTest.java
+Installed instrumented resource smoke test: smarttubetv\src\androidTestStmobile\java\dev\smarttubemobile\tests\MobileBottomNavigationInstrumentationTest.java

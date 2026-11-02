@@ -1,0 +1,283 @@
+package com.liskovsoft.smartyoutubetv2.mobile.ui.playback;
+
+import android.content.Intent;
+import android.content.pm.ActivityInfo;
+import android.content.res.Configuration;
+import android.os.Bundle;
+import android.provider.Settings;
+import android.view.KeyEvent;
+import android.view.MotionEvent;
+import android.view.OrientationEventListener;
+
+import androidx.fragment.app.Fragment;
+import androidx.lifecycle.Lifecycle;
+
+import com.liskovsoft.smartyoutubetv2.common.app.models.data.Video;
+import com.liskovsoft.smartyoutubetv2.common.app.presenters.PlaybackPresenter;
+import com.liskovsoft.smartyoutubetv2.common.prefs.PlayerData;
+import com.liskovsoft.smartyoutubetv2.mobile.ui.base.ImmersiveBars;
+import com.liskovsoft.smartyoutubetv2.tv.R;
+import com.liskovsoft.smartyoutubetv2.tv.ui.playback.PlaybackActivity;
+
+/**
+ * Phone playback host for the stmobile flavor.
+ *
+ * Reuses the shared {@link PlaybackActivity} (the whole player — engine, controls, PIP —
+ * is kept intact) and adds the phone behaviors: screen orientation by video type (Shorts lock
+ * portrait, regular videos rotate freely for the upright strip layout) and touch-friendly
+ * overlay handling (a tap on the faded player only reveals the controls — see
+ * {@link MobilePlaybackFragment#interceptPlayerTouch}).
+ *
+ * Known limitation: orientation is decided when the activity is created / re-entered, so a
+ * single player session that crosses a Short/regular-video boundary (e.g. autoplay) keeps
+ * the first video's orientation until the activity is recreated.
+ */
+public class MobilePlaybackActivity extends PlaybackActivity {
+    private MobilePlaybackFragment mMobileFragment;
+    // Full-screen button (#46): the orientation it forced, and a sensor watch that hands rotation
+    // back to the device once the phone is physically turned to match.
+    private int mForcedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
+    private OrientationEventListener mOrientationWatch;
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        Fragment fragment =
+                getSupportFragmentManager().findFragmentByTag(getString(R.string.playback_tag));
+        if (fragment instanceof MobilePlaybackFragment) {
+            mMobileFragment = (MobilePlaybackFragment) fragment;
+        }
+
+        applyOrientationForCurrentVideo();
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        applyOrientationForCurrentVideo();
+    }
+
+    /**
+     * Phone Back UX (issue #23): pressing Back leaves the video for good.
+     *
+     * The shared {@link PlaybackActivity#finish()} keeps the player engine alive on Back when
+     * background audio is on (the phone default, {@code BACKGROUND_MODE_SOUND}) and navigates to
+     * the player's "parent view". That left audio playing after Back and parked a still-running
+     * player activity beneath the channel page — pressing Back on the channel then revealed the
+     * live player again, a channel↔player loop. Here we instead stop playback and finish the
+     * player ({@link #finishReally()}), so Back drops back to the previous screen with no lingering
+     * audio and nothing to loop into.
+     *
+     * Left to the base class:
+     * - PIP (either already in PIP, or the user picked {@code BACKGROUND_MODE_PIP}) — Back should
+     *   enter/keep PIP, an explicit opt-in feature, not be hijacked into a stop.
+     * - Home / lock-screen background audio — that runs through onUserLeaveHint/onStop, a different
+     *   path that this override doesn't touch, so listening with the screen off still works.
+     */
+    @Override
+    public void onBackPressed() {
+        if (isInPipMode() || getPlayerData().getBackgroundMode() == PlayerData.BACKGROUND_MODE_PIP) {
+            super.onBackPressed();
+            return;
+        }
+
+        finishReally();
+    }
+
+    /**
+     * PIP fix (#33): don't relaunch Home when the player drops into PIP.
+     *
+     * The shared base launches the parent activity here. On the phone, Home
+     * ({@code MobileBrowseActivity}) is {@code singleTask} and already sits at the root of this
+     * task, so it is revealed automatically the moment the player pins to a PIP window. Relaunching
+     * it races with that task-pinning transition and can clear the player out of the task — the
+     * player is destroyed, its engine released, and the pop-up shows Home instead of the video.
+     *
+     * We still do the one thing {@code startParentView} does that matters here: drop the player
+     * from the ViewManager stack, so returning from PIP resolves correctly.
+     */
+    @Override
+    protected void startParentViewOnPip() {
+        getViewManager().removeTop(this);
+    }
+
+    /**
+     * PIP audio-leak fix: stop playback when the PIP window is dismissed (the X).
+     *
+     * Entering PIP calls {@code blockEngine(true)} so the ExoPlayer survives the activity being
+     * stopped — that's what keeps the video playing in the pop-up ({@code maybeReleasePlayer()}
+     * deliberately no-ops while the engine is blocked). But closing the PIP window does NOT finish
+     * this activity: the overridden {@link PlaybackActivity#finish()} treats a blocked engine as
+     * "keep playing", so the activity just parks in the stopped state ({@code onStop} runs with
+     * {@code isFinishing() == false} and no {@code onDestroy}) and the blocked engine keeps
+     * playing audio behind the now-closed window.
+     *
+     * The reliable discriminator (verified on device) is the lifecycle state when PIP mode ends:
+     * dismissing the window delivers {@code onPictureInPictureModeChanged(false)} while the activity
+     * is only CREATED (stopped, not returning to the foreground); expanding PIP back to fullscreen
+     * delivers it at STARTED/RESUMED. So on the dismiss case we unblock the engine and finish for
+     * real ({@link #finishReally()} releases the now-unblocked player and tears the activity down).
+     * Screen-off / Home background audio in {@code BACKGROUND_MODE_SOUND} never enters PIP, so this
+     * path doesn't touch it.
+     */
+    @Override
+    public void onPictureInPictureModeChanged(boolean isInPictureInPictureMode) {
+        super.onPictureInPictureModeChanged(isInPictureInPictureMode);
+
+        if (!isInPictureInPictureMode
+                && !getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED)) {
+            if (mMobileFragment != null) {
+                mMobileFragment.blockEngine(false);
+            }
+            finishReally();
+        }
+    }
+
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        // Back closes an open Modern settings / More videos sheet (#46). Caught here, before the
+        // player's own key handling, which would otherwise treat Back as leaving the video.
+        if (event.getKeyCode() == KeyEvent.KEYCODE_BACK && mMobileFragment != null
+                && mMobileFragment.isModernSheetOpen()) {
+            if (event.getAction() == KeyEvent.ACTION_UP) {
+                mMobileFragment.closeModernSheet();
+            }
+            return true;
+        }
+        return super.dispatchKeyEvent(event);
+    }
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent event) {
+        // While the overlay is faded out its buttons are still hit-testable (Leanback hides by
+        // alpha, not visibility) — consume the tap so it only reveals the controls instead of
+        // pressing an invisible button.
+        if (mMobileFragment != null && mMobileFragment.interceptPlayerTouch(event)) {
+            return true;
+        }
+
+        return super.dispatchTouchEvent(event);
+    }
+
+    /**
+     * Full-screen button (#46, Modern player styles): force landscape from portrait, or portrait
+     * from landscape. Once the phone is physically turned to match, rotation goes back to the
+     * sensor (if auto-rotate is on), so turning the phone back later works as usual. With
+     * auto-rotate off, this button is the only way into landscape, and the forced orientation stays
+     * until it's pressed again.
+     */
+    public void toggleFullscreen() {
+        boolean portrait = getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT;
+        mForcedOrientation = portrait
+                ? ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+                : ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
+        setRequestedOrientation(mForcedOrientation);
+        watchForMatchingOrientation();
+    }
+
+    private void watchForMatchingOrientation() {
+        stopOrientationWatch();
+        if (!isAutoRotateOn()) {
+            return; // rotation lock: keep the forced orientation
+        }
+        mOrientationWatch = new OrientationEventListener(this) {
+            @Override
+            public void onOrientationChanged(int degrees) {
+                if (degrees == ORIENTATION_UNKNOWN) {
+                    return;
+                }
+                boolean physicalLandscape = (degrees >= 60 && degrees <= 120) || (degrees >= 240 && degrees <= 300);
+                boolean physicalPortrait = degrees <= 30 || degrees >= 330;
+                boolean matches = mForcedOrientation == ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+                        ? physicalLandscape : physicalPortrait;
+                if (matches) {
+                    releaseForcedOrientation();
+                }
+            }
+        };
+        if (mOrientationWatch.canDetectOrientation()) {
+            mOrientationWatch.enable();
+        } else {
+            mOrientationWatch = null;
+        }
+    }
+
+    private void releaseForcedOrientation() {
+        stopOrientationWatch();
+        mForcedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
+        applyOrientationForCurrentVideo();
+    }
+
+    private void stopOrientationWatch() {
+        if (mOrientationWatch != null) {
+            mOrientationWatch.disable();
+            mOrientationWatch = null;
+        }
+    }
+
+    private boolean isAutoRotateOn() {
+        return Settings.System.getInt(getContentResolver(), Settings.System.ACCELEROMETER_ROTATION, 0) == 1;
+    }
+
+    /**
+     * Hidden system bars over the player (#47): hide them again when focus comes back (shade or a
+     * dialog closed) and after a rotation, which doesn't recreate this activity. See
+     * {@link ImmersiveBars}. Not a MobileActivity, so this does what MobileActivity does there.
+     */
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (hasFocus) {
+            reapplyFullscreen();
+        }
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        reapplyFullscreen();
+        // Again once the rotation has been laid out: some ROMs re-show the bars as it settles.
+        getWindow().getDecorView().post(this::reapplyFullscreen);
+    }
+
+    private void reapplyFullscreen() {
+        if (!isInPipMode()) {
+            ImmersiveBars.apply(this);
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        stopOrientationWatch();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        reapplyFullscreen();
+        if (mForcedOrientation != ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED) {
+            watchForMatchingOrientation();
+        }
+    }
+
+    void applyOrientationForCurrentVideo() {
+        Video video = PlaybackPresenter.instance(this).getVideo();
+
+        if (video != null && video.isShorts) {
+            // Shorts are 9:16 — lock to portrait so they fill the screen.
+            stopOrientationWatch();
+            mForcedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        } else {
+            // Regular videos rotate freely: landscape = full-screen, upright = 16:9 strip with
+            // the up-next panel below (MobilePlaybackFragment.applyMobileLayout). The manifest
+            // lists "orientation" in configChanges, so rotation never recreates the activity
+            // (no rebuffer) — the fragment just re-applies constraints.
+            // A full-screen button press (#46) keeps its forced orientation across videos.
+            setRequestedOrientation(mForcedOrientation != ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+                    ? mForcedOrientation : ActivityInfo.SCREEN_ORIENTATION_FULL_USER);
+        }
+    }
+}

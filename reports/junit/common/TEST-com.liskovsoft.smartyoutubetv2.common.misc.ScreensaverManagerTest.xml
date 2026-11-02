@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.liskovsoft.smartyoutubetv2.common.misc.ScreensaverManagerTest" tests="10" skipped="0" failures="0" errors="0" timestamp="2026-11-02T02:28:58" hostname="DESKTOP-EQUHKN9" time="1.088">
+  <properties/>
+  <testcase name="pauseReleasesSuppressionAndKeepsItReleasedPastTimers" classname="com.liskovsoft.smartyoutubetv2.common.misc.ScreensaverManagerTest" time="0.589"/>
+  <testcase name="constructionTimeCallbacksAreCancelledOnPause" classname="com.liskovsoft.smartyoutubetv2.common.misc.ScreensaverManagerTest" time="0.041"/>
+  <testcase name="motherActivityPauseReleasesSuppression" classname="com.liskovsoft.smartyoutubetv2.common.misc.ScreensaverManagerTest" time="0.139"/>
+  <testcase name="resumeRestoresPlaybackAndDimmingPoliciesWithoutStaleCallbacks" classname="com.liskovsoft.smartyoutubetv2.common.misc.ScreensaverManagerTest" time="0.06"/>
+  <testcase name="rapidPauseResumeDoesNotLeaveStaleDimCallback" classname="com.liskovsoft.smartyoutubetv2.common.misc.ScreensaverManagerTest" time="0.033"/>
+  <testcase name="pausedInstanceDoesNotAffectActiveInstanceOrStrandRegistryLock" classname="com.liskovsoft.smartyoutubetv2.common.misc.ScreensaverManagerTest" time="0.052"/>
+  <testcase name="suspendReleasesSuppressionEvenWhenBlocked" classname="com.liskovsoft.smartyoutubetv2.common.misc.ScreensaverManagerTest" time="0.034"/>
+  <testcase name="motherActivityDestroyCleansUpEvenWhenBlocked" classname="com.liskovsoft.smartyoutubetv2.common.misc.ScreensaverManagerTest" time="0.028"/>
+  <testcase name="unlockCallbackStillRunsAfterSuspend" classname="com.liskovsoft.smartyoutubetv2.common.misc.ScreensaverManagerTest" time="0.05"/>
+  <testcase name="queuedCallbacksCannotReacquireSuppressionWhileSuspended" classname="com.liskovsoft.smartyoutubetv2.common.misc.ScreensaverManagerTest" time="0.062"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,299 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Phone Home screen. The DrawerLayout gives the edge-swipe drawer menu:
+    swipe in from the left edge to open, swipe back (or tap a section) to close.
+-->
+<androidx.drawerlayout.widget.DrawerLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/drawer_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- Content -->
+    <LinearLayout
+        android:id="@+id/content_root"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="@color/mobile_background">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="@color/mobile_primary">
+
+            <TextView
+                android:id="@+id/btn_menu"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:gravity="center"
+                android:text="☰"
+                android:textColor="@color/mobile_text_primary"
+                android:textSize="22sp"
+                android:background="?android:attr/selectableItemBackground" />
+
+            <TextView
+                android:id="@+id/toolbar_title"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="4dp"
+                android:singleLine="true"
+                android:textColor="@color/mobile_text_primary"
+                android:textSize="18sp" />
+
+            <ImageView
+                android:id="@+id/btn_search"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:padding="16dp"
+                android:scaleType="fitCenter"
+                android:src="@android:drawable/ic_menu_search"
+                android:tint="@color/mobile_text_primary"
+                android:contentDescription="@string/mobile_search_hint"
+                android:background="?android:attr/selectableItemBackground" />
+
+            <!--
+                Account switcher. Mirrors SmartTube TV's title-bar account orb: shows the
+                signed-in account's circular avatar; tap cycles accounts, long-press opens
+                account management. See MobileBrowseFragment.updateAccountIcon().
+            -->
+            <ImageView
+                android:id="@+id/btn_account"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:padding="12dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/browse_title_account"
+                android:tint="@color/mobile_text_primary"
+                android:contentDescription="@string/mobile_account_hint"
+                android:background="?android:attr/selectableItemBackground" />
+        </LinearLayout>
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+
+            <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+                android:id="@+id/swipe_refresh"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/content_list"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:clipToPadding="false"
+                    android:paddingBottom="8dp" />
+            </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+            <ProgressBar
+                android:id="@+id/progress_bar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:visibility="gone" />
+
+            <LinearLayout
+                android:id="@+id/empty_container"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:orientation="vertical"
+                android:gravity="center_horizontal"
+                android:padding="24dp"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/empty_message"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:textColor="@color/mobile_text_secondary"
+                    android:textSize="15sp" />
+
+                <Button
+                    android:id="@+id/empty_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:visibility="gone" />
+            </LinearLayout>
+        </FrameLayout>
+        <!-- SmartTube Mobile: persistent browse navigation. The drawer remains available. -->
+        <LinearLayout
+            android:id="@+id/mobile_bottom_navigation"
+            android:layout_width="match_parent"
+            android:layout_height="64dp"
+            android:orientation="horizontal"
+            android:background="@color/mobile_surface"
+            android:gravity="center_vertical">
+            <LinearLayout
+                android:id="@+id/bottom_home"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:clickable="true"
+                android:focusable="true"
+                android:importantForAccessibility="yes"
+                android:contentDescription="@string/mobile_nav_home"
+                android:background="?android:attr/selectableItemBackground">
+                <ImageView android:id="@+id/bottom_icon" android:layout_width="24dp"
+                    android:layout_height="24dp" android:src="@drawable/icon_home"
+                    android:contentDescription="@null"
+                    android:importantForAccessibility="no" />
+                <TextView android:id="@+id/bottom_label" android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" android:layout_marginTop="3dp"
+                    android:text="@string/mobile_nav_home" android:textSize="12sp"
+                    android:textColor="@color/mobile_text_secondary"
+                    android:importantForAccessibility="no" />
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/bottom_shorts"
+                android:layout_width="0dp" android:layout_height="match_parent"
+                android:layout_weight="1" android:orientation="vertical"
+                android:gravity="center" android:clickable="true" android:focusable="true"
+                android:importantForAccessibility="yes"
+                android:contentDescription="@string/mobile_nav_shorts"
+                android:background="?android:attr/selectableItemBackground">
+                <ImageView android:id="@id/bottom_icon" android:layout_width="24dp"
+                    android:layout_height="24dp" android:src="@drawable/icon_shorts"
+                    android:contentDescription="@null"
+                    android:importantForAccessibility="no" />
+                <TextView android:id="@id/bottom_label" android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" android:layout_marginTop="3dp"
+                    android:text="@string/mobile_nav_shorts" android:textSize="12sp"
+                    android:textColor="@color/mobile_text_secondary"
+                    android:importantForAccessibility="no" />
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/bottom_subscriptions"
+                android:layout_width="0dp" android:layout_height="match_parent"
+                android:layout_weight="1" android:orientation="vertical"
+                android:gravity="center" android:clickable="true" android:focusable="true"
+                android:importantForAccessibility="yes"
+                android:contentDescription="@string/mobile_nav_subscriptions"
+                android:background="?android:attr/selectableItemBackground">
+                <ImageView android:id="@id/bottom_icon" android:layout_width="24dp"
+                    android:layout_height="24dp" android:src="@drawable/icon_subscriptions"
+                    android:contentDescription="@null"
+                    android:importantForAccessibility="no" />
+                <TextView android:id="@id/bottom_label" android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" android:layout_marginTop="3dp"
+                    android:text="@string/mobile_nav_subscriptions" android:textSize="12sp"
+                    android:textColor="@color/mobile_text_secondary"
+                    android:importantForAccessibility="no" />
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/bottom_library"
+                android:layout_width="0dp" android:layout_height="match_parent"
+                android:layout_weight="1" android:orientation="vertical"
+                android:gravity="center" android:clickable="true" android:focusable="true"
+                android:importantForAccessibility="yes"
+                android:contentDescription="@string/mobile_nav_library"
+                android:background="?android:attr/selectableItemBackground">
+                <ImageView android:id="@id/bottom_icon" android:layout_width="24dp"
+                    android:layout_height="24dp" android:src="@drawable/icon_playlist"
+                    android:contentDescription="@null"
+                    android:importantForAccessibility="no" />
+                <TextView android:id="@id/bottom_label" android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" android:layout_marginTop="3dp"
+                    android:text="@string/mobile_nav_library" android:textSize="12sp"
+                    android:textColor="@color/mobile_text_secondary"
+                    android:importantForAccessibility="no" />
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/bottom_search"
+                android:layout_width="0dp" android:layout_height="match_parent"
+                android:layout_weight="1" android:orientation="vertical"
+                android:gravity="center" android:clickable="true" android:focusable="true"
+                android:importantForAccessibility="yes"
+                android:contentDescription="@string/mobile_nav_search"
+                android:background="?android:attr/selectableItemBackground">
+                <ImageView android:id="@id/bottom_icon" android:layout_width="24dp"
+                    android:layout_height="24dp" android:src="@android:drawable/ic_menu_search"
+                    android:contentDescription="@null"
+                    android:importantForAccessibility="no" />
+                <TextView android:id="@id/bottom_label" android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" android:layout_marginTop="3dp"
+                    android:text="@string/mobile_nav_search" android:textSize="12sp"
+                    android:textColor="@color/mobile_text_secondary"
+                    android:importantForAccessibility="no" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Drawer menu: scrollable section list + pinned About footer at the bottom. -->
+    <LinearLayout
+        android:layout_width="@dimen/mobile_drawer_width"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:orientation="vertical"
+        android:background="@color/mobile_surface"
+        android:clickable="true"
+        android:focusable="true">
+
+        <!-- Brand header: logo + wordmark, pinned above the scrollable section list. -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:paddingTop="16dp"
+            android:paddingBottom="16dp">
+
+            <ImageView
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/ic_brand_logo"
+                android:contentDescription="@string/app_name" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:text="@string/app_name"
+                android:textColor="@color/mobile_text_primary"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/mobile_divider" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/section_list"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:paddingTop="8dp" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/mobile_divider" />
+
+        <TextView
+            android:id="@+id/drawer_about"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:paddingTop="14dp"
+            android:paddingBottom="14dp"
+            android:text="@string/mobile_about_drawer_entry"
+            android:textColor="@color/mobile_text_primary"
+            android:textSize="15sp"
+            android:background="?android:attr/selectableItemBackground" />
+    </LinearLayout>
+
+</androidx.drawerlayout.widget.DrawerLayout>

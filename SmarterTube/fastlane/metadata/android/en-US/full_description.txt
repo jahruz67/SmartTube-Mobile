@@ -1,0 +1,22 @@
+SmarterTube is an ad-free YouTube client for Android phones and tablets, built on the SmartTube engine (yuliskov/SmartTube).
+
+It is a companion to SmartTube, not a replacement. SmartTube targets Android TV and set-top boxes; SmarterTube brings a native phone and tablet experience to the same engine. If you are on a TV or set-top device, install the original SmartTube instead.
+
+<b>What SmarterTube adds</b>
+• A native portrait UI for phones — Home, Search, Channel, and Settings open in touch-friendly mobile screens instead of a remote-driven TV layout.
+• Tablet support — an adaptive multi-column grid that adjusts to screen size and handles rotation.
+
+<b>Built on SmartTube, so you also get</b>
+• Ad-free playback, SponsorBlock, and Return YouTube Dislike.
+• Background play, picture-in-picture, voice search, and subscriptions.
+• No Google account required to browse; sign-in is optional.
+• No Google Play Services required.
+
+<b>Compatibility</b>
+Android 4.2 and newer, on phones and tablets with a touchscreen. Not available for iPhone or iPad, and not designed for Android TV or set-top boxes.
+
+<b>Permissions</b>
+Zero app-declared permissions. Voice search uses the system recognizer (it runs in Google's process, so this app requests no microphone permission).
+
+<b>Source &amp; attribution</b>
+Fork of yuliskov/SmartTube (MIT). The upstream SmartTube code is used unmodified; SmarterTube only adds the phone and tablet UI layer, re-merged from upstream on each release. See the release notes for the exact upstream version a given build is based on.
