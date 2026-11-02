@@ -207,7 +207,6 @@ public class MobilePlaybackFragment extends PlaybackFragment {
     // Swipe gestures in the landscape player (#48): volume right, brightness left.
     private SwipeGestures mSwipe;
     private SwipeToDismiss mSwipeToDismiss;
-    private boolean mReplayingDismissTouch;
     private boolean mSwipeEnabled;
     // Pinch to zoom in the landscape player (#85): fit <-> fill via the player's resize mode.
     private PinchZoom mPinch;
@@ -828,9 +827,9 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         View playerView = getView();
         if (playerView == null) return false;
 
-        if (mSwipeToDismiss != null && !mReplayingDismissTouch && !mReplayingTouch
-                && mSwipeToDismiss.isActive()) {
-            return mSwipeToDismiss.handle(event, this::replayDismissTouch);
+        if (mSwipeToDismiss != null && !mReplayingTouch && mSwipeToDismiss.isActive()
+                && mSwipeToDismiss.handle(event, this::cancelDismissTouch)) {
+            return true;
         }
 
         // Modern styles' settings / More videos sheet: the card takes its own touches, a tap outside closes it.
@@ -843,13 +842,15 @@ public class MobilePlaybackFragment extends PlaybackFragment {
             return handleShortsTouchEvent(event);
         }
 
-        if (mSwipeToDismiss != null && !mReplayingDismissTouch && !mReplayingTouch
+        if (mSwipeToDismiss != null && !mReplayingTouch
                 && event.getActionMasked() == MotionEvent.ACTION_DOWN && !isInPipMode()
                 && viewContainsRaw(playerView, event.getRawX(), event.getRawY())
                 && (mPinch == null || !mPinch.isZoomed())
+                // Keep volume/brightness on the landscape sides; the middle dismisses.
+                && !swipeCanStart(event, playerView)
                 && (!isOverlayShown() || !hitsPlayerControl(requireActivity().getWindow().getDecorView(),
                         event.getRawX(), event.getRawY(), playerView.getWidth() * playerView.getHeight() / 2))) {
-            return mSwipeToDismiss.start(event);
+            mSwipeToDismiss.start(event);
         }
 
         // Portrait strip (#62): in the phone-style (Modern / Tap to pause) players a swipe up on
@@ -900,13 +901,16 @@ public class MobilePlaybackFragment extends PlaybackFragment {
     private float mStripDownY;
     private boolean mStripDownInVideo;
 
-    private boolean replayDismissTouch(MotionEvent event) {
-        mReplayingDismissTouch = true;
+    private boolean cancelDismissTouch(MotionEvent event) {
+        MotionEvent cancel = MotionEvent.obtain(event);
+        cancel.setAction(MotionEvent.ACTION_CANCEL);
         try {
-            return interceptPlayerTouch(event)
-                    || requireActivity().getWindow().superDispatchTouchEvent(event);
+            if (mSwipe != null && mSwipe.isActive()) mSwipe.cancel();
+            replayTouch(cancel);
+            requireActivity().getWindow().superDispatchTouchEvent(cancel);
+            return true;
         } finally {
-            mReplayingDismissTouch = false;
+            cancel.recycle();
         }
     }
 
@@ -957,6 +961,11 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         float edgeX = 32 * density;
         float edgeY = 48 * density;
         boolean volumeSide = down.getX() >= playerView.getWidth() / 2f;
+        // Reserve the middle for dismissal so volume/brightness cannot own the same DOWN.
+        if (mSwipeToDismiss != null
+                && Math.abs(down.getX() - playerView.getWidth() / 2f) < playerView.getWidth() * 0.15f) {
+            return false;
+        }
         if (!volumeSide && !MobilePlayerStylePrefs.isBrightnessSwipeEnabled(requireContext())) {
             return false; // "Volume only": the left half behaves as if swipes were off
         }
@@ -1054,7 +1063,7 @@ public class MobilePlaybackFragment extends PlaybackFragment {
                                 playerView.getWidth() * playerView.getHeight() / 2);
                 mSwipeRawStartX = event.getX();
                 mSwipeRawStartY = event.getY();
-                mTouchDownTime = android.os.SystemClock.uptimeMillis();
+                mTouchDownTime = event.getEventTime();
                 return false;
 
             case MotionEvent.ACTION_MOVE:
@@ -1067,7 +1076,7 @@ public class MobilePlaybackFragment extends PlaybackFragment {
 
             case MotionEvent.ACTION_UP: {
                 boolean tap = mOverlayTapCandidate
-                        && android.os.SystemClock.uptimeMillis() - mTouchDownTime < 350;
+                        && event.getEventTime() - mTouchDownTime < 350;
                 mOverlayTapCandidate = false;
                 if (!tap) return false;
                 // Consume the UP (so no double-tap/tickle logic sees a stray UP and re-shows the
@@ -1256,6 +1265,9 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         // A pinch zoom (#85) belongs to the landscape player only; PIP and the strips show the whole picture.
         if (layoutState != 0 || inPip) {
             resetPinchZoom();
+        }
+        if (mSwipeToDismiss != null && (layoutState != mLayoutState || inPip)) {
+            mSwipeToDismiss.cancel();
         }
         // #30: on a portrait screen wider than ~10:16 (tablets, foldables) a full-width 9:16 strip
         // is taller than the screen and the Short gets cropped. Fit it instead: size the strip from
@@ -2347,6 +2359,7 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         mModernChrome = ModernPlayerChrome.create(this, activity);
         initTapDetector(activity);
         mSwipe = SwipeGestures.create(activity);
+        if (mSwipeToDismiss != null) mSwipeToDismiss.cancel();
         mSwipeToDismiss = new SwipeToDismiss(activity.findViewById(android.R.id.content), activity::onBackPressed);
         mPinch = PinchZoom.create(activity, mPinchTarget);
         initCutoutGuard(activity);

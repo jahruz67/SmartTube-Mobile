@@ -5,7 +5,7 @@ import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.animation.AccelerateInterpolator;
 
-/** Holds a possible downward drag so taps and other gestures can be replayed unchanged. */
+/** Watches normal touches, cancelling the player's gesture only when a downward drag takes over. */
 final class SwipeToDismiss {
     private final View mContent;
     private final Runnable mDismiss;
@@ -27,12 +27,12 @@ final class SwipeToDismiss {
         return mDown != null || mSettling || mDiscardUntilUp;
     }
 
-    boolean start(MotionEvent event) {
+    void start(MotionEvent event) {
+        releaseDown();
         mDown = MotionEvent.obtain(event);
-        return true;
     }
 
-    boolean handle(MotionEvent event, SwipeGestures.Router router) {
+    boolean handle(MotionEvent event, SwipeGestures.Router cancelPlayerTouch) {
         if (mDiscardUntilUp) {
             if (event.getActionMasked() == MotionEvent.ACTION_UP
                     || event.getActionMasked() == MotionEvent.ACTION_CANCEL) {
@@ -40,49 +40,57 @@ final class SwipeToDismiss {
             }
             return true;
         }
-        if (mSettling) return true;
+        if (mSettling) {
+            // A new finger can land before snap-back finishes. Consume its whole sequence.
+            if (event.getActionMasked() == MotionEvent.ACTION_DOWN) mDiscardUntilUp = true;
+            return true;
+        }
+        if (mDown == null) return false;
         switch (event.getActionMasked()) {
             case MotionEvent.ACTION_MOVE:
                 float dy = event.getRawY() - mDown.getRawY();
                 float dx = Math.abs(event.getRawX() - mDown.getRawX());
                 if (!mDragging) {
                     if (dy > mSlop && dy > 2 * dx) {
+                        cancelPlayerTouch.route(event);
                         mDragging = true;
-                    } else if (dx > mSlop || dy < -mSlop) {
-                        return replay(event, router);
+                    } else if (dx > mSlop || Math.abs(dy) > mSlop) {
+                        releaseDown();
+                        return false;
                     }
                 }
                 if (mDragging) mContent.setTranslationY(Math.max(0, dy));
-                return true;
+                return mDragging;
             case MotionEvent.ACTION_UP:
-                if (!mDragging) return replay(event, router);
-                boolean dismiss = event.getRawY() - mDown.getRawY() >= mDistance;
+                float releaseY = event.getRawY() - mDown.getRawY();
+                float releaseX = Math.abs(event.getRawX() - mDown.getRawX());
+                // Fast swipes may reach UP without an intermediate MOVE being delivered.
+                boolean dismiss = releaseY >= mDistance && releaseY > 2 * releaseX;
+                if (!mDragging && !dismiss) {
+                    releaseDown();
+                    return false;
+                }
+                if (!mDragging) cancelPlayerTouch.route(event);
+                mContent.setTranslationY(Math.max(0, releaseY));
                 releaseDown();
                 settle(dismiss);
                 return true;
             case MotionEvent.ACTION_POINTER_DOWN:
-                if (!mDragging) return replay(event, router);
+                if (!mDragging) {
+                    releaseDown();
+                    return false;
+                }
                 releaseDown();
                 mDiscardUntilUp = true;
                 settle(false);
                 return true;
             case MotionEvent.ACTION_CANCEL:
+                boolean wasDragging = mDragging;
                 releaseDown();
-                settle(false);
-                return true;
+                if (wasDragging) settle(false);
+                return wasDragging;
             default:
-                return true;
-        }
-    }
-
-    private boolean replay(MotionEvent event, SwipeGestures.Router router) {
-        MotionEvent down = mDown;
-        mDown = null;
-        try {
-            router.route(down);
-            return router.route(event);
-        } finally {
-            down.recycle();
+                return mDragging;
         }
     }
 
