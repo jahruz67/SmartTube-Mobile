@@ -323,6 +323,8 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         if (ctx == null) return;
         if (session != null) {
             // Tapping the notification (or the lockscreen / carousel player) reopens the player.
+            // The Media3 service exposes the active session; this session is its internal SABR bridge.
+            session.setActive(false);
             session.setSessionActivity(MediaNotificationService.createActivityIntent(ctx));
             MediaNotificationService.start(ctx, mSessionToken);
         } else {

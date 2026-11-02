@@ -50,6 +50,11 @@ public class MobilePlaybackActivity extends PlaybackActivity {
     private OrientationEventListener mOrientationWatch;
 
     @Override
+    protected boolean usesTvDisplayScaling() {
+        return false;
+    }
+
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
@@ -163,6 +168,9 @@ public class MobilePlaybackActivity extends PlaybackActivity {
      */
     @Override
     public void onBackPressed() {
+        if (mMobileFragment != null && mMobileFragment.closeModernSheet()) {
+            return;
+        }
         if (isInPipMode() || (getPlayerData().getBackgroundMode() == PlayerData.BACKGROUND_MODE_PIP
                 && mMobileFragment != null && mMobileFragment.isPlaying())) {
             super.onBackPressed();
@@ -359,6 +367,12 @@ public class MobilePlaybackActivity extends PlaybackActivity {
     }
 
     void applyOrientationForCurrentVideo() {
+        if (isInMultiWindowMode() || getResources().getConfiguration().smallestScreenWidthDp >= 600) {
+            stopOrientationWatch();
+            mForcedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
+            return;
+        }
         Video video = PlaybackPresenter.instance(this).getVideo();
 
         if (video != null && video.isShorts) {

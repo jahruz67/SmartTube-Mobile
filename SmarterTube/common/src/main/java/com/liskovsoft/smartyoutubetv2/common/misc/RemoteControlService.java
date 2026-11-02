@@ -27,8 +27,8 @@ public class RemoteControlService extends Service {
     }
 
     @Override
-    public void onCreate() {
-        super.onCreate();
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.d(TAG, "onStartCommand: %s", Helpers.toString(intent));
 
         // https://stackoverflow.com/questions/46445265/android-8-0-java-lang-illegalstateexception-not-allowed-to-start-service-inten
         // NOTE: it's impossible to hide notification on Android 9 and above
@@ -39,12 +39,9 @@ public class RemoteControlService extends Service {
             // NullPointerException: Attempt to read from field 'int com.android.server.am.UidRecord.curProcState' on a null object reference
             // ForegroundServiceStartNotAllowedException: Service.startForeground() not allowed due to mAllowStartForeground false (Android 14)
             e.printStackTrace();
+            stopSelf();
+            return START_NOT_STICKY;
         }
-    }
-
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d(TAG, "onStartCommand: %s", Helpers.toString(intent));
 
         PlaybackPresenter.instance(getApplicationContext()); // init RemoteControlListener
         StreamReminderService.instance(getApplicationContext()).startStop(); // init reminder service

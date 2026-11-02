@@ -1,6 +1,5 @@
 package com.liskovsoft.smartyoutubetv2.common.misc;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -8,6 +7,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build.VERSION;
 import android.provider.OpenableColumns;
+import androidx.core.content.IntentCompat;
 
 import com.liskovsoft.sharedutils.helpers.DateHelper;
 import com.liskovsoft.sharedutils.helpers.FileHelpers;
@@ -15,7 +15,6 @@ import com.liskovsoft.sharedutils.helpers.MessageHelpers;
 import com.liskovsoft.smartyoutubetv2.common.R;
 import com.liskovsoft.smartyoutubetv2.common.app.presenters.settings.BackupSettingsPresenter;
 import com.liskovsoft.smartyoutubetv2.common.misc.MediaServiceManager.OnError;
-import com.liskovsoft.smartyoutubetv2.common.misc.MotherActivity.OnResult;
 import com.liskovsoft.smartyoutubetv2.common.prefs.GeneralData;
 
 import java.io.File;
@@ -23,11 +22,9 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-public class BackupAndRestoreHelper implements OnResult {
+public class BackupAndRestoreHelper {
     public static final String BACKUP_FOLDER_NAME = "SmartTubeBackup";
-    private static final int REQ_PICK_FILES = 1001;
     private final Context mContext;
-    private Runnable mOnSuccess;
     private final String[] mPreferredFileManagers = {
             "com.ghisler.android.TotalCommander",
             "com.lonelycatgames.Xplore",
@@ -108,46 +105,6 @@ public class BackupAndRestoreHelper implements OnResult {
         mContext.startActivity(Intent.createChooser(intent, mContext.getString(R.string.app_backup)));
     }
 
-    /**
-     * NOTE: The file picker relies on apps that support the Storage Access Framework (SAF).
-     * At the moment, no known third-party file manager properly supports selecting ZIP
-     * archives through this API, so the backup file may not appear in the picker.
-     */
-    public void importAppMediaFolder(Runnable onSuccess) {
-        if (VERSION.SDK_INT < 19 || onSuccess == null) {
-            return;
-        }
-
-        mOnSuccess = onSuccess;
-
-        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-        intent.setType("*/*");
-        //intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
-        //intent.addCategory(Intent.CATEGORY_OPENABLE);
-        //intent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{
-        //        "application/zip",
-        //        "application/x-zip-compressed"
-        //});
-
-        ((MotherActivity) mContext).addOnResult(this);
-
-        ((Activity) mContext).startActivityForResult(intent, REQ_PICK_FILES);
-    }
-
-    @Override
-    public void onResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == REQ_PICK_FILES && resultCode == Activity.RESULT_OK) {
-            if (data == null) return;
-
-            Uri uri = data.getData();
-            if (uri == null && data.getClipData() != null) {
-                uri = data.getClipData().getItemAt(0).getUri();
-            }
-
-            unpackTempZip(uri, () -> mOnSuccess.run(), null);
-        }
-    }
-
     public void handleIncomingZip(Intent intent) {
         if (intent == null) {
             return;
@@ -158,7 +115,7 @@ public class BackupAndRestoreHelper implements OnResult {
         if (Intent.ACTION_VIEW.equals(intent.getAction())) {
             zipUri = intent.getData();
         } else if (Intent.ACTION_SEND.equals(intent.getAction())) {
-            zipUri = intent.getParcelableExtra(Intent.EXTRA_STREAM);
+            zipUri = IntentCompat.getParcelableExtra(intent, Intent.EXTRA_STREAM, Uri.class);
         }
 
         unpackTempZip(

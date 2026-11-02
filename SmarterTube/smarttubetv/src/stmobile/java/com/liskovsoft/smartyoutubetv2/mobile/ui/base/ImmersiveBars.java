@@ -9,7 +9,6 @@ import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 
-import com.liskovsoft.sharedutils.helpers.Helpers;
 import com.liskovsoft.smartyoutubetv2.common.prefs.GeneralData;
 
 /**
@@ -34,25 +33,23 @@ public final class ImmersiveBars {
     }
 
     public static void apply(Activity activity) {
-        if (activity == null || activity.isFinishing()
-                || !GeneralData.instance(activity).isFullscreenModeEnabled()) {
-            return;
-        }
-
-        // Upstream's own flags (and the legacy sticky-immersive path below API 30).
-        Helpers.makeActivityFullscreen2(activity);
-
-        if (Build.VERSION.SDK_INT < 30) {
+        if (activity == null || activity.isFinishing()) {
             return;
         }
 
         Window window = activity.getWindow();
+        // FLAG_FULLSCREEN prevents adjustResize on older devices.
+        window.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        WindowCompat.setDecorFitsSystemWindows(window, false);
         WindowInsetsControllerCompat controller = WindowCompat.getInsetsController(window, window.getDecorView());
         controller.setSystemBarsBehavior(WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
-        controller.hide(WindowInsetsCompat.Type.systemBars());
+        if (GeneralData.instance(activity).isFullscreenModeEnabled()) {
+            controller.hide(WindowInsetsCompat.Type.systemBars());
+        } else {
+            controller.show(WindowInsetsCompat.Type.systemBars());
+        }
 
-        // Same condition as upstream's (API 30+ with a cutout).
-        if (activity.getDisplay() != null && activity.getDisplay().getCutout() != null) {
+        if (Build.VERSION.SDK_INT >= 28) {
             WindowManager.LayoutParams attrs = window.getAttributes();
             attrs.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
             window.setAttributes(attrs);

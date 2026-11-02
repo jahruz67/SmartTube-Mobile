@@ -1,19 +1,27 @@
 package com.liskovsoft.smartyoutubetv2.common.misc;
 
-import android.app.Activity;
+import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.os.Build.VERSION;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 
-import androidx.annotation.NonNull;
+import androidx.activity.ComponentActivity;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.core.content.ContextCompat;
+import androidx.core.content.IntentCompat;
 
-import com.liskovsoft.sharedutils.helpers.AppInfoHelpers;
-import com.liskovsoft.sharedutils.helpers.PermissionHelpers;
-
-public class BackupReceiverActivity extends Activity {
+public class BackupReceiverActivity extends ComponentActivity {
     private BackupAndRestoreHelper mRestoreHelper;
-    private Runnable mPendingHandler;
+    private final ActivityResultLauncher<String> mStoragePermission = registerForActivityResult(
+            new ActivityResultContracts.RequestPermission(), granted -> {
+                if (granted) {
+                    restoreData();
+                }
+                finish();
+            });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -21,16 +29,18 @@ public class BackupReceiverActivity extends Activity {
 
         mRestoreHelper = new BackupAndRestoreHelper(this);
 
-        // Android 11+ (API 30+) removed the need for storage permission
-        // when accessing files via content:// URIs. Apps are granted temporary
-        // access to the URI by the sender, so you can read the file without
-        // READ_EXTERNAL_STORAGE.
-        if (PermissionHelpers.hasStoragePermissions(this) || AppInfoHelpers.getRealSdkVersion(this) > 29) {
+        Intent intent = getIntent();
+        Uri uri = Intent.ACTION_SEND.equals(intent.getAction())
+                ? IntentCompat.getParcelableExtra(intent, Intent.EXTRA_STREAM, Uri.class)
+                : intent.getData();
+        // Content URIs carry their own read grant; storage permission is only for legacy file URIs.
+        if ((uri != null && "content".equals(uri.getScheme())) || Build.VERSION.SDK_INT >= 33
+                || ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
+                == PackageManager.PERMISSION_GRANTED) {
             restoreData();
             finish();
-        } else {
-            mPendingHandler = this::restoreData;
-            PermissionHelpers.verifyStoragePermissions(this);
+        } else if (savedInstanceState == null) {
+            mStoragePermission.launch(Manifest.permission.READ_EXTERNAL_STORAGE);
         }
     }
 
@@ -38,20 +48,9 @@ public class BackupReceiverActivity extends Activity {
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
 
-        mRestoreHelper.handleIncomingZip(intent);
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if (requestCode == PermissionHelpers.REQUEST_EXTERNAL_STORAGE) {
-            if (grantResults.length >= 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                if (mPendingHandler != null) {
-                    mPendingHandler.run();
-                    mPendingHandler = null;
-                }
-            }
-            finish();
-        }
+        setIntent(intent);
+        restoreData();
+        finish();
     }
 
     private void restoreData() {

@@ -58,7 +58,8 @@ public final class SystemBarInsets {
             Insets bars = stableBarInsets ? Insets.NONE : insets.getInsets(WindowInsetsCompat.Type.systemBars());
             // ...except a cutout band over the ends of the bars' edges, which hides buttons (#47).
             Insets cutout = CutoutGuard.bands(activity, insets);
-            Insets pad = Insets.max(bars, cutout);
+            Insets ime = insets.getInsets(WindowInsetsCompat.Type.ime());
+            Insets pad = Insets.max(Insets.max(bars, cutout), ime);
             v.setPadding(left + pad.left, top + pad.top, right + pad.right, bottom + pad.bottom);
             // Fully consumed, which stops dispatch to the children, as the platform's own fitting
             // does. With Fullscreen mode off, the FitSystemWindows theme sets fitsSystemWindows on

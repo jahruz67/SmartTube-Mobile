@@ -3,6 +3,7 @@ apply plugin: 'kotlin-android'
 apply plugin: 'com.android.library'
 
 android {
+    namespace 'com.liskovsoft.smartyoutubetv2.common'
     // FIX: Default interface methods are only supported starting with Android N (--min-api 24)
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -66,7 +67,8 @@ dependencies {
     testStmobileImplementation 'org.robolectric:robolectric:4.10.3'
 
     implementation project(':sharedutils')
-    implementation project(':fragment-1.1.0')
+    implementation 'androidx.fragment:fragment:' + fragmentXVersion
+    implementation 'androidx.activity:activity:' + activityXVersion
     implementation project(':mediaserviceinterfaces')
     implementation project(':youtubeapi')
     implementation project(':filepicker-lib')

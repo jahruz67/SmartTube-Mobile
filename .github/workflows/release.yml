@@ -51,7 +51,7 @@ jobs:
           packages: 'platform-tools'
 
       - name: Install required Android SDK components
-        run: sdkmanager --install 'platforms;android-34' 'build-tools;30.0.3' 'ndk;21.0.6113669'
+        run: sdkmanager --install 'platforms;android-36' 'build-tools;35.0.0' 'ndk;28.2.13676358'
 
       - name: Build signed mobile release APKs
         working-directory: SmarterTube
@@ -71,8 +71,9 @@ jobs:
           mkdir -p release-assets
           cp SmarterTube/smarttubetv/build/outputs/apk/stmobile/release/*-universal.apk release-assets/
           for apk in release-assets/*.apk; do
-            "$ANDROID_HOME/build-tools/30.0.3/apksigner" verify "$apk"
-            badging="$("$ANDROID_HOME/build-tools/30.0.3/aapt" dump badging "$apk")"
+            "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify "$apk"
+            "$ANDROID_HOME/build-tools/35.0.0/zipalign" -c -P 16 4 "$apk"
+            badging="$("$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$apk")"
             if grep -q '^application-debuggable' <<< "$badging"; then
               echo "::error::Refusing to publish a debuggable APK."
               exit 1

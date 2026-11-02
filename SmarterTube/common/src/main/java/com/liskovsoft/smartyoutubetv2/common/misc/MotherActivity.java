@@ -15,6 +15,7 @@ import android.view.MotionEvent;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.activity.OnBackPressedCallback;
 import androidx.fragment.app.FragmentActivity;
 import com.liskovsoft.sharedutils.helpers.Helpers;
 import com.liskovsoft.sharedutils.helpers.KeyHelpers;
@@ -53,6 +54,18 @@ public class MotherActivity extends FragmentActivity {
     private boolean mIsOculusQuestFixEnabled;
     private boolean mIsFullscreenModeEnabled;
     private boolean mIsBackPressed;
+    // Route predictive Back through the existing screen-specific exit/PiP behavior.
+    private final OnBackPressedCallback mBackNavigation = new OnBackPressedCallback(true) {
+        @Override
+        public void handleOnBackPressed() {
+            setEnabled(false);
+            try {
+                MotherActivity.this.onBackPressed();
+            } finally {
+                setEnabled(true);
+            }
+        }
+    };
 
     public interface OnPermissions {
         void onPermissions(int requestCode, String[] permissions, int[] grantResults);
@@ -71,6 +84,7 @@ public class MotherActivity extends FragmentActivity {
         //    setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         //}
         super.onCreate(savedInstanceState);
+        getOnBackPressedDispatcher().addCallback(this, mBackNavigation);
 
         Log.d(TAG, "Starting %s...", this.getClass().getSimpleName());
 
@@ -199,7 +213,8 @@ public class MotherActivity extends FragmentActivity {
 
         if (context != null) {
             // NOTE: Use only cached metrics. Because metrics creation involves using WindowManager, which isn't available at this stage.
-            contextWrapper = wrapLocale(context, LocaleUpdater.getSavedLocale(context), sCachedDisplayMetrics);
+            contextWrapper = wrapLocale(context, LocaleUpdater.getSavedLocale(context),
+                    usesTvDisplayScaling() ? sCachedDisplayMetrics : null);
         }
 
         super.attachBaseContext(contextWrapper);
@@ -301,7 +316,13 @@ public class MotherActivity extends FragmentActivity {
     }
 
     private void initDpi() {
-        getResources().getDisplayMetrics().setTo(getDisplayMetrics(this));
+        if (usesTvDisplayScaling()) {
+            getResources().getDisplayMetrics().setTo(getDisplayMetrics(this));
+        }
+    }
+
+    protected boolean usesTvDisplayScaling() {
+        return true;
     }
 
     private DisplayMetrics getDisplayMetrics(Context context) {
@@ -373,7 +394,13 @@ public class MotherActivity extends FragmentActivity {
     @Override
     public void onBackPressed() {
         mIsBackPressed = true;
-        super.onBackPressed();
+        boolean enabled = mBackNavigation.isEnabled();
+        mBackNavigation.setEnabled(false);
+        try {
+            getOnBackPressedDispatcher().onBackPressed();
+        } finally {
+            mBackNavigation.setEnabled(enabled);
+        }
         // Oculus Quest fix: back button not closing the activity
         if (mIsOculusQuestFixEnabled) {
             finish();

@@ -17,8 +17,6 @@ public class RemoteControlReceiver extends BroadcastReceiver {
         Log.d(TAG, "Initializing remote control listener...");
 
         // Fix unload from the memory on some devices?
-        // NOTE: Starting from Android 12 (api 31) foreground service with type 'connectedDevice' not supported
-        // Use 'mediaPlayback' type instead
         try {
             Utils.updateRemoteControlService(context);
         } catch (Exception e) {

@@ -24,6 +24,8 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -55,7 +57,9 @@ import java.util.Map;
  * just its own slice.
  */
 public class MobileSearchFragment extends Fragment implements SearchView {
-    private static final int REQUEST_VOICE_SEARCH = 1001;
+    private final ActivityResultLauncher<Intent> mVoiceSearch = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> onVoiceSearchResult(result.getResultCode(), result.getData()));
     private static final long SUGGESTION_DELAY_MS = 250;
     private SearchPresenter mPresenter;
     private EditText mSearchInput;
@@ -287,7 +291,7 @@ public class MobileSearchFragment extends Fragment implements SearchView {
                 RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
         intent.putExtra(RecognizerIntent.EXTRA_PROMPT, getString(R.string.mobile_search_voice_prompt));
         try {
-            startActivityForResult(intent, REQUEST_VOICE_SEARCH);
+            mVoiceSearch.launch(intent);
         } catch (ActivityNotFoundException e) {
             Toast.makeText(getContext(), R.string.mobile_search_voice_unavailable,
                     Toast.LENGTH_SHORT).show();
@@ -295,10 +299,8 @@ public class MobileSearchFragment extends Fragment implements SearchView {
         }
     }
 
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode != REQUEST_VOICE_SEARCH || resultCode != Activity.RESULT_OK || data == null) {
+    private void onVoiceSearchResult(int resultCode, @Nullable Intent data) {
+        if (resultCode != Activity.RESULT_OK || data == null || mSearchInput == null) {
             return;
         }
         List<String> results = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);

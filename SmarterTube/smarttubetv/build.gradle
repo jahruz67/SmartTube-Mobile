@@ -4,7 +4,6 @@ buildscript {
     repositories {
         google()
         mavenCentral()
-        jcenter()
     }
 
     dependencies {
@@ -13,12 +12,12 @@ buildscript {
 
         // Check that you have the Google Services Gradle plugin v4.3.2 or later
         // (if not, add it).
-        classpath 'com.google.gms:google-services:4.3.15'
+        classpath 'com.google.gms:google-services:4.4.3'
 
         // Add the Crashlytics Gradle plugin.
         // https://firebase.google.com/docs/crashlytics/get-started?platform=android
         // https://firebase.google.com/docs/android/setup
-        classpath 'com.google.firebase:firebase-crashlytics-gradle:2.7.1'
+        classpath 'com.google.firebase:firebase-crashlytics-gradle:3.0.6'
     }
 }
 
@@ -41,6 +40,7 @@ if (new File("${projectDir}/google-services.json").exists() && (getGradle().getS
 }
 
 android {
+    namespace 'com.liskovsoft.smartyoutubetv2.tv'
     // FIX: Default interface methods are only supported starting with Android N (--min-api 24)
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -54,7 +54,8 @@ android {
     // whose android.jar stub otherwise throws "Method d/e not mocked". Return defaults so plain
     // logic tests run; Robolectric tests are unaffected (they shadow android with real impls).
     testOptions.unitTests.returnDefaultValues = true
-    ndkVersion "21.0.6113669" // reduce size of the *.so files (stripping debug symbols)
+    ndkVersion "28.2.13676358"
+    buildFeatures.buildConfig = true
     
     defaultConfig {
         // values linked with applicationId: searchable.searchSuggestAuthority, searchable.searchSuggestIntentData, VideoContract.CONTENT_AUTHORITY
@@ -153,7 +154,7 @@ android {
             }
 
             // gradle 4.6 migration
-            output.outputFileName = new File(newApkName)
+            output.outputFileName = newApkName
         }
     }
 
@@ -189,7 +190,7 @@ android {
         }
         stfdroid {
             applicationId "app.smarttube.fdroid"
-            minSdkVersion 21
+            minSdkVersion project.properties.minSdkVersion
             targetSdkVersion project.properties.compileSdkVersion
 
             // The content of Universal apk
@@ -211,10 +212,8 @@ android {
             // Fall back to ststable for dependency modules that don't
             // declare an stmobile flavor.
             matchingFallbacks = ['ststable']
-            // constants.gradle pins targetSdk to 27 for old Android TV boxes.
-            // 33 stops modern phones showing the "built for an older version
-            // of Android" warning.
-            targetSdkVersion 33
+            minSdkVersion 26
+            targetSdkVersion 36
             // Phone-port versioning. Lives in the flavor (not defaultConfig) so
             // upstream merges don't conflict on versionCode/versionName lines.
             //
@@ -293,6 +292,11 @@ android {
     }
 }
 
+// Robolectric supplies the host JVM's Conscrypt; Android's JNI library cannot run on the host.
+configurations.matching { it.name.endsWith('UnitTestRuntimeClasspath') }.configureEach {
+    exclude group: 'org.conscrypt', module: 'conscrypt-android'
+}
+
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
 
@@ -345,7 +349,8 @@ dependencies {
     androidTestStmobileImplementation 'androidx.test:rules:1.5.0'
     androidTestStmobileImplementation 'androidx.test.espresso:espresso-core:3.5.1'
 
-    implementation project(':fragment-1.1.0')
+    implementation 'androidx.fragment:fragment:' + fragmentXVersion
+    implementation 'androidx.activity:activity:' + activityXVersion
     implementation project(':leanback-1.0.0')
     implementation project(':common')
     implementation project(':sharedutils')
@@ -401,6 +406,7 @@ dependencies {
     // adds it to the stmobile flavor's classpath - smarttubetv depends on :common via a
     // non-transitive `implementation`, so it isn't visible here otherwise. No version drift.
     stmobileImplementation 'androidx.work:work-runtime:' + workVersion
+    stmobileImplementation 'androidx.media3:media3-session:1.8.0'
     // Guava provides com.google.common.util.concurrent.ListenableFuture, exposed in
     // ListenableWorker's API - required on the compile classpath to subclass Worker (same
     // "Work library deps" pairing that common and leanbackassistant use).

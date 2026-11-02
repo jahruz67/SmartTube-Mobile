@@ -2,6 +2,7 @@ apply from: gradle.ext.sharedModulesConstants
 apply plugin: 'com.android.library'
 
 android {
+    namespace 'androidx.leanback'
     // FIX: Default interface methods are only supported starting with Android N (--min-api 24)
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -39,6 +40,6 @@ dependencies {
     implementation 'androidx.media:media:' + mediaXVersion
     implementation 'androidx.interpolator:interpolator:' + interpolatorXVersion
 
-    implementation project(':fragment-1.1.0')
+    implementation 'androidx.fragment:fragment:' + fragmentXVersion
     implementation project(':sharedutils')
 }
