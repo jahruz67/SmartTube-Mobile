@@ -10,7 +10,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: release-${{ github.ref }}
+  group: mobile-production-release
   cancel-in-progress: false
 
 jobs:
@@ -32,6 +32,31 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      - name: Restore permanent release signing key
+        env:
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+          KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
+          ALIAS: ${{ secrets.ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          for name in SIGNING_KEY KEY_STORE_PASSWORD ALIAS KEY_PASSWORD; do
+            if [[ -z "${!name}" ]]; then
+              echo "::error::Missing repository secret: $name. Release builds require a permanent signing key; debug signing is never used."
+              exit 1
+            fi
+          done
+          umask 077
+          printf '%s' "$SIGNING_KEY" | base64 --decode > "$RUNNER_TEMP/mobile-release.jks"
+          printf 'MOBILE_KEYSTORE_PATH=%s/mobile-release.jks\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
+
+      - name: Set increasing production version
+        run: |
+          set -euo pipefail
+          # Preserve the package ID. Every new run supersedes the previous run and legacy 23743 builds.
+          echo "ORG_GRADLE_PROJECT_mobileVersionCode=$((100000 + GITHUB_RUN_NUMBER))" >> "$GITHUB_ENV"
+          echo "ORG_GRADLE_PROJECT_mobileVersionName=v1.0.${GITHUB_RUN_NUMBER}+st32.68" >> "$GITHUB_ENV"
+
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
         with:
@@ -40,21 +65,36 @@ jobs:
       - name: Install required Android SDK components
         run: sdkmanager --install 'platforms;android-34' 'build-tools;30.0.3' 'ndk;21.0.6113669'
 
-      - name: Build mobile debug APKs
+      - name: Build signed mobile release APKs
         working-directory: SmarterTube
+        env:
+          MOBILE_KEYSTORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
+          MOBILE_KEY_ALIAS: ${{ secrets.ALIAS }}
+          MOBILE_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           set -euo pipefail
-          test ! -e keystore.properties
           printf 'sdk.dir=%s\n' "$ANDROID_HOME" > local.properties
-          bash ./gradlew --no-daemon --console=plain --stacktrace :smarttubetv:assembleStmobileDebug
+          bash ./gradlew --no-daemon --console=plain --stacktrace :smarttubetv:assembleStmobileRelease
 
       - name: Prepare release assets
         run: |
           set -euo pipefail
           mkdir -p release-assets
-          cp SmarterTube/smarttubetv/build/outputs/apk/stmobile/debug/*.apk release-assets/
+          cp SmarterTube/smarttubetv/build/outputs/apk/stmobile/release/*.apk release-assets/
+          for apk in release-assets/*.apk; do
+            "$ANDROID_HOME/build-tools/30.0.3/apksigner" verify "$apk"
+            badging="$("$ANDROID_HOME/build-tools/30.0.3/aapt" dump badging "$apk")"
+            if grep -q '^application-debuggable' <<< "$badging"; then
+              echo "::error::Refusing to publish a debuggable APK."
+              exit 1
+            fi
+          done
           cd release-assets
           sha256sum *.apk > SHA256SUMS.txt
+
+      - name: Remove signing material
+        if: always()
+        run: rm -f -- "$RUNNER_TEMP/mobile-release.jks"
 
       - name: Publish APKs as a GitHub Release
         env:
@@ -65,24 +105,27 @@ jobs:
           if [[ "$GITHUB_REF_TYPE" == 'tag' ]]; then
             tag="$GITHUB_REF_NAME"
           else
-            tag="mobile-build-${GITHUB_RUN_NUMBER}"
+            tag="v1.0.${GITHUB_RUN_NUMBER}"
           fi
 
           cat > release-notes.md <<'EOF'
-          Mobile development APKs built from this repository's patched sources.
+          Production release APKs built from this repository's patched sources.
 
           Choose `universal` for all included architectures, or an APK matching your device. SHA-256 checksums are attached.
 
-          These APKs use a temporary Android debug signing key. Builds from separate workflow runs may require uninstalling the previous app before installation, which removes its local data.
+          These APKs use this project's permanent release signing key and an increasing Android version code. Future releases signed with the same key can update this app in place, preserving local data.
+
+          An older debug build can only be upgraded directly if it was signed with this same key. Android cannot update an existing installation with a different signing certificate.
           EOF
           printf '\nSource commit: `%s`\n' "$GITHUB_SHA" >> release-notes.md
 
           if gh release view "$tag" >/dev/null 2>&1; then
-            gh release upload "$tag" release-assets/* --clobber
+            echo "::error::Release $tag already exists. Use a new tag or dispatch a new release; published APKs are immutable."
+            exit 1
           else
             gh release create "$tag" release-assets/* \
               --target "$GITHUB_SHA" \
               --title "SmartTube Mobile $tag" \
               --notes-file release-notes.md \
-              --prerelease
+              --latest
           fi
