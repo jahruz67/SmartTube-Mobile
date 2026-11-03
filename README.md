@@ -75,6 +75,14 @@ With a connected device or a booted compatible emulator, run the navigation reso
 
 Use `bash ./gradlew` for the equivalent commands on Linux/macOS. Compilation and APK comparison cannot establish runtime parity: playback, authentication, service integrations, background audio and PiP also need device testing.
 
+The shared utility suite and offline API retry regression tests can also run without account credentials:
+
+```powershell
+.\gradlew.bat :sharedutils:testDebugUnitTest :youtubeapi:testStstableDebugUnitTest --tests '*SearchCallRetryTest'
+```
+
+Other inherited API tests contact live services and require valid account fixtures; they are not part of the offline verification command.
+
 ## Signing and releases
 
 Debug builds use the local Android debug certificate. Existing root `keystore.properties` support is retained, including its original override of debug signing. Release signing accepts either that private file (`storeFile`, `storePassword`, `keyAlias`, `keyPassword`) or the environment variables `MOBILE_KEYSTORE_PATH`, `MOBILE_KEYSTORE_PASSWORD`, `MOBILE_KEY_ALIAS`, and `MOBILE_KEY_PASSWORD`. Use the same private key as existing installations to preserve updates and data. Without private signing configuration, release APKs are unsigned.
@@ -90,6 +98,10 @@ Release output: `app/build/outputs/apk/stmobile/release/`. The release workflow 
 The original checkout is recoverable through Git branch `cleanup-baseline-20261103` at `7d8970b`. Its mobile debug APK built successfully. All 61 app JVM tests passed; one of 18 common tests (`unlockCallbackStillRunsAfterSuspend`) failed because its setup did not create the dim overlay needed to notify the registry. The cleaned test explicitly creates that overlay and executes the intended callback before checking its queued unlock. Production screensaver behavior is unchanged.
 
 The cleanup moves the Android build to the repository root, groups dependencies under `third_party`, consolidates duplicate dependency sources and settings, and groups phone preference storage under `mobile.settings`. Inactive ExoPlayer extensions/demos, an unused Fragment fork, unapplied source overlays, duplicate standalone wrappers, historical reports and obsolete publishing assets were removed from the source tree. An abandoned sample test containing a hardcoded external proxy and an unbounded wait was removed; it tested its own proxy setup rather than application code. App resources, native libraries, component names, preference keys, versions, and supported ABIs are preserved.
+
+Verification on November 3, 2026: a clean build from a tracked-source archive succeeded, with 61 app and 18 common JVM tests passing and the instrumentation APK compiled. Another 6 shared utility tests, 4 offline API retry tests, and 3 Python tooling tests passed. All four APK signatures and package IDs were verified. The universal APK matches all 1,452 baseline manifest/resource/asset/native entries byte for byte; all 26,395 defined classes are retained after accounting for preference package moves.
+
+Remaining verification limits: Android Lint reports **20 existing errors and 535 warnings**, including back-navigation, TV manifest assumptions, custom views, opt-in annotations and tint usage. Every error location matches an unchanged baseline source line; these were not suppressed or repaired with behavioral changes. No device was connected. The available API 28 emulator requires unavailable hardware acceleration, and software mode never became usable, so instrumentation execution and runtime feature parity remain unverified.
 
 ## License and attribution
 
