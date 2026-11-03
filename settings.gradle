@@ -1,0 +1,23 @@
+rootProject.name = 'SmartTube-Mobile'
+
+include ':app', ':common'
+
+// Vendored modules belong to this checkout; never select sibling checkouts.
+['chatkit', 'leanbackassistant', 'leanback-1.0.0', 'filepicker-lib',
+ 'doubletapplayerview', 'slidableactivity'].each { module ->
+    include ":${module}"
+    project(":${module}").projectDir = file("third_party/${module}")
+}
+
+
+gradle.ext.sharedModulesRoot = file('third_party/SharedModules')
+apply from: new File(gradle.ext.sharedModulesRoot, 'core_settings.gradle')
+
+gradle.ext.sharedModulesConstants = file('gradle/dependencies.gradle')
+
+gradle.ext.mediaServiceCoreRoot = file('third_party/MediaServiceCore')
+apply from: new File(gradle.ext.mediaServiceCoreRoot, 'core_settings.gradle')
+
+gradle.ext.exoplayerRoot = file('third_party/exoplayer-amzn-2.10.6')
+gradle.ext.exoplayerModulePrefix = 'exoplayer-'
+apply from: new File(gradle.ext.exoplayerRoot, 'core_settings.gradle')

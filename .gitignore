@@ -1,3 +1,32 @@
+# Reproducible Android/Gradle outputs and local configuration.
+**/build/
+**/.gradle/
+.kotlin/
+.idea/
+*.iml
+local.properties
+.externalNativeBuild/
+.cxx/
+captures/
+*.apk
+*.aab
+*.ap_
+*.dex
+*.class
+*.hprof
+hs_err_pid*.log
+*.log
+/reports/
+/dist/
+/release-assets/
+
+# Private signing material is supplied locally or through CI secrets.
+/signing/
+keystore.properties
+*.jks
+*.keystore
+*.p12
+
 # Python tooling caches
 __pycache__/
 *.py[cod]
@@ -5,4 +34,3 @@ __pycache__/
 # Local Windows/macOS metadata
 Thumbs.db
 .DS_Store
-reports

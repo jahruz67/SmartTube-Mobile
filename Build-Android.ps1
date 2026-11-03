@@ -1,10 +1,22 @@
 param(
-    [string]$JdkPath = 'C:\Program Files\Microsoft\jdk-17.0.21.21-hotspot',
-    [string]$SdkPath = "$env:LOCALAPPDATA\Android\Sdk"
+    [string]$JdkPath = $env:JAVA_HOME,
+    [string]$SdkPath = $env:ANDROID_HOME,
+    [string]$ReferenceApk
 )
 $ErrorActionPreference = 'Stop'
-$source = Join-Path $PSScriptRoot 'SmarterTube'
-$kit = Join-Path $PSScriptRoot 'SmartTube-Mobile-Build-Kit'
+if (-not $SdkPath) { $SdkPath = $env:ANDROID_SDK_ROOT }
+if (-not $SdkPath) { $SdkPath = Join-Path $env:LOCALAPPDATA 'Android/Sdk' }
+if (-not $JdkPath -or -not (Test-Path -LiteralPath "$JdkPath/bin/javac.exe")) {
+    throw 'Set JAVA_HOME or -JdkPath to JDK 17.'
+}
+foreach ($component in @('platforms/android-36/android.jar', 'build-tools/35.0.0/aapt.exe',
+                         'ndk/28.2.13676358/source.properties')) {
+    if (-not (Test-Path -LiteralPath (Join-Path $SdkPath $component))) {
+        throw "Missing Android SDK component: $component"
+    }
+}
+$env:JAVA_HOME = $JdkPath
+$env:ANDROID_HOME = $SdkPath
 $reports = Join-Path $PSScriptRoot 'reports'
 New-Item -ItemType Directory -Path $reports -Force | Out-Null
 
@@ -17,39 +29,24 @@ function Invoke-Checked {
     }
 }
 
-if (-not (Test-Path -LiteralPath "$JdkPath\bin\javac.exe")) { throw 'Set JdkPath to JDK 17.' }
-foreach ($component in @('platforms\android-36\android.jar', 'build-tools\35.0.0\aapt.exe')) {
-    if (-not (Test-Path -LiteralPath (Join-Path $SdkPath $component))) {
-        throw "Missing Android SDK component: $component"
-    }
-}
-if (Test-Path -LiteralPath "$source\keystore.properties") { throw 'Refusing inherited release signing keys.' }
-if (Test-Path -LiteralPath "$source\.git") {
-    $revision = & git -C $source rev-parse HEAD
-    if ($LASTEXITCODE -ne 0) { throw 'Unable to read source revision.' }
-} else {
-    $revision = (Get-Content -LiteralPath "$reports\BUILD_PROVENANCE.txt" | Where-Object { $_ -like 'commit=*' }) -replace '^commit=', ''
-}
-if ($revision -ne '3b780e9a8ac62ba59c90d090fa46d87210c45525') {
-    throw 'Unexpected source revision; preserve this checkout and inspect before building.'
-}
-$env:JAVA_HOME = $JdkPath
-$env:ANDROID_HOME = $SdkPath
-Set-Content -LiteralPath "$source\local.properties" -Value ('sdk.dir=' + $SdkPath.Replace('\', '/'))
-Invoke-Checked 'python' @('-m', 'unittest', 'discover', '-s', "$kit\tests", '-v') "$reports\kit-tests.log"
-# SmarterTube/ is the already-patched, versioned source tree. The overlay scripts in the
-# build kit are for creating a patched checkout from upstream; applying them here would
-# target old source anchors and could overwrite intentional updates.
-Push-Location $source
+Push-Location $PSScriptRoot
 try {
-    Invoke-Checked '.\gradlew.bat' @('--no-daemon', '--console=plain', "-Dorg.gradle.java.home=$JdkPath", 'clean', ':smarttubetv:assembleStmobileDebug', ':smarttubetv:testStmobileDebugUnitTest', ':common:testStmobileDebugUnitTest', ':smarttubetv:assembleStmobileDebugAndroidTest') "$reports\build-windows.log"
+    Invoke-Checked 'python' @('-m', 'unittest', 'discover', '-s', 'tools/tests', '-v') "$reports/tool-tests.log"
+    Invoke-Checked '.\gradlew.bat' @('--no-daemon', '--console=plain', "-Dorg.gradle.java.home=$JdkPath",
+        'clean', ':app:assembleStmobileDebug', ':app:testStmobileDebugUnitTest',
+        ':common:testStmobileDebugUnitTest', ':app:assembleStmobileDebugAndroidTest') "$reports/build.log"
+    $apks = @(Get-ChildItem -LiteralPath 'app/build/outputs/apk/stmobile/debug' -Filter '*.apk')
+    if ($apks.Count -eq 0) { throw 'Build completed without APK outputs.' }
+    foreach ($apk in $apks) {
+        $arguments = @('tools/inspect-apk.py', $apk.FullName)
+        if ($ReferenceApk -and $apk.BaseName.EndsWith('-universal')) {
+            $arguments += @('--reference', $ReferenceApk)
+        }
+        Invoke-Checked 'python' $arguments "$reports/$($apk.BaseName)-inspection.log"
+        Write-Output $apk.FullName
+    }
 } finally {
     Pop-Location
 }
-$apks = @(Get-ChildItem -LiteralPath "$source\smarttubetv\build\outputs\apk\stmobile\debug" -Filter '*.apk')
-if ($apks.Count -eq 0) { throw 'Build completed without APK outputs.' }
-foreach ($apk in $apks) {
-    Invoke-Checked 'python' @("$kit\scripts\inspect-apk.py", $apk.FullName, '--package', 'dev.smarttubemobile.unofficial') "$reports\$($apk.BaseName)-inspection.log"
-    Write-Output $apk.FullName
-}
-Write-Output 'Build, local unit tests, package identity and APK signatures verified. No emulator was used.'
+Write-Output 'Debug APKs, JVM tests, instrumentation compilation, package identity and signatures verified.'
+Write-Output 'Device tests are separate: gradlew.bat :app:connectedStmobileDebugAndroidTest'

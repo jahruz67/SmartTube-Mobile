@@ -1,109 +1,96 @@
 # SmartTube Mobile
 
-A native YouTube client for Android phones and tablets, built on [SmarterTube](https://github.com/CodeSculptor/SmarterTube) and the [SmartTube](https://github.com/yuliskov/SmartTube) playback engine.
+An independent Android phone and tablet client built on [SmarterTube](https://github.com/CodeSculptor/SmarterTube) and [SmartTube](https://github.com/yuliskov/SmartTube). Features include touch navigation, search, channel browsing, accounts and playlists, video and background playback, subtitles, picture-in-picture, SponsorBlock, Return YouTube Dislike, and DeArrow. This project is not affiliated with YouTube, Google, or the upstream developers.
 
-This is an independent, unofficial project. It is not affiliated with YouTube, Google, or the upstream projects.
+## Project structure
 
-## Features
-
-- Touch-friendly browsing, search, channel pages, and bottom navigation.
-- Portrait and landscape playback with multiple player styles.
-- Video quality controls, subtitles, playback speed, and seek previews.
-- Ad-free playback with SponsorBlock, Return YouTube Dislike, and DeArrow integration.
-- Account sign-in, subscriptions, history, and playlists.
-- Background audio, media notifications, and picture-in-picture.
-- Optional Shorts playback and subscription upload notifications.
-
-Feature availability can depend on upstream services and Android version.
-
-## Requirements
-
-- **Device:** Android 8 (API 26) or newer, with a touchscreen.
-- **Development:** JDK 17 and an Android SDK installation containing:
-  - Android SDK Platform 36
-  - Android SDK Build Tools 35.0.0
-  - Android NDK 28.2.13676358
-
-The repository includes a Gradle wrapper; a separate Gradle installation is unnecessary. Building requires internet access to download dependencies.
-
-## Installation
-
-Download an APK from this repository's **Releases** page, when available, and open it on your Android device. Allow installation from the app used to open the APK if Android prompts you.
-
-Choose the universal APK if you are unsure which architecture your device uses. Updates require a compatible version code and the same signing certificate as the installed app.
-
-## Build from source
-
-Clone this repository and open the `SmarterTube/` directory in Android Studio, or build from a terminal. The mobile product flavor is `stmobile`.
-
-Configure your JDK 17 installation through `JAVA_HOME`. Set `ANDROID_HOME` to your Android SDK directory, or specify the SDK in `SmarterTube/local.properties`:
-
-```properties
-sdk.dir=C:/Users/YOUR_USERNAME/AppData/Local/Android/Sdk
+```text
+app/              Android app: shared UI in src/main, phone UI in src/stmobile
+common/           Playback, presenters, models, networking and persistence
+third_party/      Required vendored media engine and Android library modules
+gradle/           Wrapper and shared dependency/SDK versions
+services/         Optional anonymous-statistics backend and its deployment instructions
+tools/            APK verification and its Python unit tests
+docs/             Version and updater compatibility contracts, inherited known issues
+.github/          Release workflow
 ```
 
-Use your actual SDK path. Shared source dependencies are located in `SmarterTube/SharedModules/`, `SmarterTube/MediaServiceCore/`, and `SmarterTube/exoplayer-amzn-2.10.6/`; preserve these directories.
+The source tree is self-contained. Vendored sources are ordinary tracked files; no Git submodule initialization or sibling checkout is required. Their original packages and licenses are retained. The modified Leanback widgets, media service, JavaScript engine, and ExoPlayer modules are required by the shared implementation even for the phone flavor. Upstream TV flavors remain available for compatibility; `stmobile` is the maintained application variant.
 
-### Windows (PowerShell)
+## Build prerequisites
+
+- JDK **17**, selected through `JAVA_HOME`.
+- Android SDK with **Platform 36**, **Build Tools 35.0.0**, and **NDK 28.2.13676358**.
+- Internet access for the wrapper and declared Maven dependencies. Gradle **8.13**, Android Gradle Plugin **8.13.2**, and Kotlin **2.3.10** are pinned; use the included wrapper.
+- Python 3 for `Build-Android.ps1` and APK inspection; a direct Gradle build does not require Python.
+
+Set `ANDROID_HOME` to the SDK installation, or add `sdk.dir=<your SDK path>` to an untracked root `local.properties`. The build never selects source dependencies outside this checkout. Open the repository root in Android Studio.
+
+### Windows / PowerShell
 
 From the repository root:
 
 ```powershell
-cd SmarterTube
-.\gradlew.bat :smarttubetv:assembleStmobileDebug
+.\gradlew.bat --no-daemon --console=plain clean :app:assembleStmobileDebug
 ```
 
 ### Linux / macOS
 
-From the repository root:
-
 ```bash
-cd SmarterTube
-bash ./gradlew :smarttubetv:assembleStmobileDebug
+bash ./gradlew --no-daemon --console=plain clean :app:assembleStmobileDebug
 ```
 
-Generated APKs are written to:
+APKs are written to `app/build/outputs/apk/stmobile/debug/`:
 
 ```text
-SmarterTube/smarttubetv/build/outputs/apk/stmobile/debug/
+SmartTube-Mobile-v1.0.0-st32.68-universal.apk
+SmartTube-Mobile-v1.0.0-st32.68-arm64-v8a.apk
+SmartTube-Mobile-v1.0.0-st32.68-armeabi-v7a.apk
+SmartTube-Mobile-v1.0.0-st32.68-x86.apk
 ```
 
-To build and run the local JVM and instrumentation APK compilation checks on Windows, use the repository script from PowerShell:
+The universal APK includes ARM64 and ARMv7; x86 is a separate APK. The application ID is `dev.smarttubemobile.unofficial`, version code **23744**, version name **v1.0.0+st32.68**, minimum Android **8 / API 26**, target/compile SDK **36**. `-PmobileVersionCode` and `-PmobileVersionName` retain the existing version overrides.
+
+## Tests and APK verification
+
+```powershell
+.\gradlew.bat --no-daemon --console=plain :app:testStmobileDebugUnitTest :common:testStmobileDebugUnitTest :app:assembleStmobileDebugAndroidTest
+python -m unittest discover -s tools/tests -v
+python tools/inspect-apk.py app/build/outputs/apk/stmobile/debug/SmartTube-Mobile-v1.0.0-st32.68-universal.apk
+```
+
+For a clean build, JVM tests, test APK compilation, and signature/package checks together:
 
 ```powershell
 .\Build-Android.ps1
 ```
 
-The script runs the build-kit unit tests, assembles the mobile debug APKs, runs the mobile and shared JVM tests, compiles the instrumentation test APK, and checks APK package identity and signatures. Instrumentation tests require a connected device or emulator to execute; this script only compiles them.
+The helper accepts `-JdkPath`, `-SdkPath`, and optional `-ReferenceApk`. Inspection with `--reference <baseline.apk>` requires the manifest, compiled resources, assets and native libraries to match the reference byte for byte. Keep `ANDROID_HOME` and `JAVA_HOME` set so inspection can find `aapt` and `apksigner`. Logs go to ignored `reports/`; generated files are not build inputs.
 
-The application ID is `dev.smarttubemobile.unofficial`. Debug builds use Android's debug signing key unless a local `keystore.properties` configures another key.
+With a connected device or a booted compatible emulator, run the navigation resource/accessibility smoke test:
 
-## Project structure
-
-```text
-SmarterTube/                       Android application and shared dependencies
-  smarttubetv/src/stmobile/        Mobile interface and resources
-  smarttubetv/src/main/            Shared application implementation
-  common/                         Shared models, presenters, and playback logic
-SmartTube-Mobile-Build-Kit/        Source patching tools and build documentation
-.github/workflows/                GitHub Actions workflows
-reports/                          Historical build and verification reports
-Build-Android.ps1                 Original pinned-source Windows build workflow
+```powershell
+.\gradlew.bat :app:connectedStmobileDebugAndroidTest
 ```
 
-The repository contains the patched source tree and the scripts used to create the mobile changes from the pinned upstream checkout. Build the checked-out sources directly; do not reapply those overlay scripts here.
+Use `bash ./gradlew` for the equivalent commands on Linux/macOS. Compilation and APK comparison cannot establish runtime parity: playback, authentication, service integrations, background audio and PiP also need device testing.
 
-## Development
+## Signing and releases
 
-Keep mobile-specific changes in the `stmobile` source set where practical. Include reproduction steps, Android version, and relevant logs when reporting a bug. For pull requests, describe the behavior changed and any validation performed.
+Debug builds use the local Android debug certificate. Existing root `keystore.properties` support is retained, including its original override of debug signing. Release signing accepts either that private file (`storeFile`, `storePassword`, `keyAlias`, `keyPassword`) or the environment variables `MOBILE_KEYSTORE_PATH`, `MOBILE_KEYSTORE_PASSWORD`, `MOBILE_KEY_ALIAS`, and `MOBILE_KEY_PASSWORD`. Use the same private key as existing installations to preserve updates and data. Without private signing configuration, release APKs are unsigned.
 
-The release workflow in [`.github/workflows/release.yml`](.github/workflows/release.yml) builds signed release APKs and publishes a GitHub Release when manually dispatched or triggered by a matching version tag. Local development builds do not require running this workflow.
+```powershell
+.\gradlew.bat :app:assembleStmobileRelease
+```
 
-Historical verification results are documented in [DELIVERY.md](DELIVERY.md). Those results describe an earlier build and do not establish validation of subsequent changes.
+Release output: `app/build/outputs/apk/stmobile/release/`. The release workflow requires GitHub secrets `MOBILE_KEYSTORE_BASE64` (base64 of the existing key), `MOBILE_KEYSTORE_PASSWORD`, `MOBILE_KEY_ALIAS`, and `MOBILE_KEY_PASSWORD`. Signing material is ignored and must be backed up privately. The previously tracked local key has been preserved, but old Git history still contains it; history and signing identity were not rewritten.
 
-## Credits and license
+## Cleanup baseline
 
-- [SmarterTube](https://github.com/CodeSculptor/SmarterTube) provides the Android phone and tablet interface.
-- [SmartTube](https://github.com/yuliskov/SmartTube), by yuliskov and contributors, provides the underlying client and playback engine.
+The original checkout is recoverable through Git branch `cleanup-baseline-20261103` at `7d8970b`. Its mobile debug APK built successfully. All 61 app JVM tests passed; one of 18 common tests (`unlockCallbackStillRunsAfterSuspend`) failed because its setup did not create the dim overlay needed to notify the registry. The cleaned test explicitly creates that overlay and executes the intended callback before checking its queued unlock. Production screensaver behavior is unchanged.
 
-The upstream application is licensed under the [MIT License](SmarterTube/LICENSE). Third-party components retain their respective licenses. See [source attribution](SmartTube-Mobile-Build-Kit/SOURCE_ATTRIBUTION.md) for additional details.
+The cleanup moves the Android build to the repository root, groups dependencies under `third_party`, consolidates duplicate dependency sources and settings, and groups phone preference storage under `mobile.settings`. Inactive ExoPlayer extensions/demos, an unused Fragment fork, unapplied source overlays, duplicate standalone wrappers, historical reports and obsolete publishing assets were removed from the source tree. An abandoned sample test containing a hardcoded external proxy and an unbounded wait was removed; it tested its own proxy setup rather than application code. App resources, native libraries, component names, preference keys, versions, and supported ABIs are preserved.
+
+## License and attribution
+
+The application retains the upstream [MIT license](LICENSE). SharedModules and MediaServiceCore originate from yuliskov's projects; the vendored ExoPlayer fork derives from the Android Open Source Project/Amazon and retains its Apache license. ChatKit, modified Leanback, file picker, double-tap player, and sliding activity sources retain their respective license files under `third_party/`. Original source notices and test fixtures are retained.
