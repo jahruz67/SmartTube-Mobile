@@ -411,6 +411,10 @@ public class MobilePlaybackActivity extends PlaybackActivity {
             MobileMiniPlayer.restore(this);
             mMobileFragment.restoreVideoSurface();
             mMobileFragment.blockEngine(false);
+            // Make sure the video keeps playing after returning from the mini player. The
+            // surface is restored above; re-apply playWhenReady so playback actually resumes
+            // instead of staying stopped after the swipe-out / restore cycle.
+            mMobileFragment.setPlayWhenReady(true);
         }
         if (mForcedOrientation != ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED) {
             watchForMatchingOrientation();
