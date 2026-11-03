@@ -1,6 +1,7 @@
 package com.liskovsoft.smartyoutubetv2.mobile.ui.playback;
 
 import android.content.Intent;
+import android.app.Activity;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.view.Gravity;
@@ -12,7 +13,6 @@ import android.widget.TextView;
 
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.Video;
 import com.liskovsoft.smartyoutubetv2.common.app.presenters.PlaybackPresenter;
-import com.liskovsoft.smartyoutubetv2.mobile.ui.base.MobileActivity;
 import com.liskovsoft.smartyoutubetv2.tv.R;
 
 /** Keeps the active video visible in a small in-app bar while navigating phone screens. */
@@ -20,6 +20,8 @@ public final class MobileMiniPlayer {
     private static MobilePlaybackActivity sPlaybackActivity;
     private static ViewGroup sHost;
     private static View sOverlay;
+    private static TextView sTitleView;
+    private static TextView sPlayPauseView;
     private static boolean sMinimized;
 
     private MobileMiniPlayer() {}
@@ -36,6 +38,10 @@ public final class MobileMiniPlayer {
         return sPlaybackActivity == activity;
     }
 
+    static boolean isMinimizedPlayback(MobilePlaybackActivity activity) {
+        return sMinimized && sPlaybackActivity == activity;
+    }
+
     static void restore(MobilePlaybackActivity activity) {
         if (sPlaybackActivity != activity) return;
         sMinimized = false;
@@ -49,7 +55,7 @@ public final class MobileMiniPlayer {
         sPlaybackActivity = null;
     }
 
-    public static void show(MobileActivity activity) {
+    public static void show(Activity activity) {
         if (!sMinimized || sPlaybackActivity == null) return;
         ViewGroup host = activity.findViewById(android.R.id.content);
         if (host == null) return;
@@ -91,13 +97,15 @@ public final class MobileMiniPlayer {
         title.setPadding(dp(activity, 12), 0, dp(activity, 8), 0);
         bar.addView(title, new LinearLayout.LayoutParams(0, height, 1));
         title.setOnClickListener(v -> expand(activity));
+        sTitleView = title;
 
         TextView playPause = button(activity, "Ⅱ", activity.getString(R.string.mobile_player_play_pause));
         playPause.setOnClickListener(v -> {
             fragment.setPlayWhenReady(!fragment.getPlayWhenReady());
-            playPause.setText(fragment.getPlayWhenReady() ? "Ⅱ" : "▶");
+            updatePlaybackState(fragment.getPlayWhenReady());
         });
         bar.addView(playPause, new LinearLayout.LayoutParams(dp(activity, 44), height));
+        sPlayPauseView = playPause;
 
         TextView close = button(activity, "×", activity.getString(R.string.mobile_player_collapse));
         close.setOnClickListener(v -> close());
@@ -107,7 +115,26 @@ public final class MobileMiniPlayer {
         sOverlay = overlay;
     }
 
-    private static TextView button(MobileActivity activity, String label, String description) {
+    public static void onHostDestroyed(Activity activity) {
+        if (sOverlay != null && sOverlay.getContext() == activity) {
+            removeOverlay();
+        }
+    }
+
+    static void updateVideo(Video video) {
+        if (sTitleView != null) {
+            sTitleView.setText(video != null && video.getTitle() != null
+                    ? video.getTitle() : "Now playing");
+        }
+    }
+
+    static void updatePlaybackState(boolean playing) {
+        if (sPlayPauseView != null) {
+            sPlayPauseView.setText(playing ? "Ⅱ" : "▶");
+        }
+    }
+
+    private static TextView button(Activity activity, String label, String description) {
         TextView button = new TextView(activity);
         button.setText(label);
         button.setTextColor(Color.WHITE);
@@ -118,7 +145,7 @@ public final class MobileMiniPlayer {
         return button;
     }
 
-    private static void expand(MobileActivity activity) {
+    private static void expand(Activity activity) {
         if (sPlaybackActivity == null) return;
         removeOverlay();
         activity.startActivity(new Intent(activity, MobilePlaybackActivity.class)
@@ -136,7 +163,7 @@ public final class MobileMiniPlayer {
             fragment.blockEngine(false);
         }
         sPlaybackActivity = null;
-        playback.finishReally();
+        playback.finishMiniPlayer();
     }
 
     private static void removeOverlay() {
@@ -145,9 +172,11 @@ public final class MobileMiniPlayer {
         }
         sOverlay = null;
         sHost = null;
+        sTitleView = null;
+        sPlayPauseView = null;
     }
 
-    private static int dp(MobileActivity activity, int value) {
+    private static int dp(Activity activity, int value) {
         return Math.round(value * activity.getResources().getDisplayMetrics().density);
     }
 }

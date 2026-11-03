@@ -44,6 +44,7 @@ import com.liskovsoft.smartyoutubetv2.tv.ui.playback.PlaybackActivity;
 public class MobilePlaybackActivity extends PlaybackActivity {
     private MobilePlaybackFragment mMobileFragment;
     private boolean mMiniPlayerPlaybackActive;
+    private boolean mFinishingMiniPlayer;
     // Full-screen button (#46): the orientation it forced, and a sensor watch that hands rotation
     // back to the device once the phone is physically turned to match.
     private int mForcedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
@@ -128,6 +129,7 @@ public class MobilePlaybackActivity extends PlaybackActivity {
 
     void onMiniPlayerPlaybackStateChanged(boolean active) {
         mMiniPlayerPlaybackActive = active;
+        MobileMiniPlayer.updatePlaybackState(active);
         updateMiniPlayerParams();
     }
 
@@ -141,8 +143,23 @@ public class MobilePlaybackActivity extends PlaybackActivity {
 
     @Override
     public void finishReally() {
+        if (MobileMiniPlayer.isMinimizedPlayback(this)) {
+            mFinishingMiniPlayer = true;
+        }
         MobileMiniPlayer.onPlaybackFinished(this);
         super.finishReally();
+    }
+
+    void finishMiniPlayer() {
+        mFinishingMiniPlayer = true;
+        finishReally();
+    }
+
+    @Override
+    protected void startParentViewOnFinish() {
+        if (!mFinishingMiniPlayer) {
+            super.startParentViewOnFinish();
+        }
     }
 
     private void updateMiniPlayerParams() {

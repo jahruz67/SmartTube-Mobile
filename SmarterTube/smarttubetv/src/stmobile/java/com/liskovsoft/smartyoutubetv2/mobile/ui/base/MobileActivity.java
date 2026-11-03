@@ -106,6 +106,12 @@ public abstract class MobileActivity extends MotherActivity {
     }
 
     @Override
+    protected void onDestroy() {
+        MobileMiniPlayer.onHostDestroyed(this);
+        super.onDestroy();
+    }
+
+    @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
         allowLandscapeOnTablets();

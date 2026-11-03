@@ -128,8 +128,12 @@ public abstract class LeanbackActivity extends MotherActivity {
     @Override
     public void finishReally() {
         // Mandatory line. Fix un-proper view order (especially for playback view).
-        getViewManager().startParentView(this);
+        startParentViewOnFinish();
         super.finishReally();
+    }
+
+    protected void startParentViewOnFinish() {
+        getViewManager().startParentView(this);
     }
 
     private void finishTheApp() {

@@ -86,6 +86,8 @@ import io.reactivex.disposables.Disposable;
  * through the standard {@link PlaybackPresenter#onSuggestionItemClicked(Video)} path.
  */
 public class MobilePlaybackFragment extends PlaybackFragment {
+    private ViewGroup mMobileSurfaceRoot;
+    private View mMobileSubtitleView;
     private MediaControllerCompat mMiniPlayerController;
     private final MediaControllerCompat.Callback mMiniPlayerCallback = new MediaControllerCompat.Callback() {
         @Override
@@ -105,19 +107,35 @@ public class MobilePlaybackFragment extends PlaybackFragment {
     }
 
     void moveVideoSurfaceTo(ViewGroup target) {
-        View surface = getSurfaceView();
-        ViewGroup parent = (ViewGroup) surface.getParent();
-        if (parent != null) {
-            parent.removeView(surface);
+        ViewGroup surfaceRoot = getMobileSurfaceRoot();
+        if (surfaceRoot == null) {
+            return;
         }
-        target.addView(surface, new ViewGroup.LayoutParams(
+        ViewGroup parent = (ViewGroup) surfaceRoot.getParent();
+        if (parent != null) {
+            parent.removeView(surfaceRoot);
+        }
+        target.addView(surfaceRoot, new ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        View subtitles = getMobileSubtitleView();
+        if (subtitles != null) {
+            ViewGroup subtitleParent = (ViewGroup) subtitles.getParent();
+            if (subtitleParent != null) {
+                subtitleParent.removeView(subtitles);
+            }
+            target.addView(subtitles, new ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        }
     }
 
     void detachVideoSurface() {
-        View surface = getSurfaceView();
-        if (surface.getParent() instanceof ViewGroup) {
-            ((ViewGroup) surface.getParent()).removeView(surface);
+        ViewGroup surfaceRoot = getMobileSurfaceRoot();
+        if (surfaceRoot != null && surfaceRoot.getParent() instanceof ViewGroup) {
+            ((ViewGroup) surfaceRoot.getParent()).removeView(surfaceRoot);
+        }
+        View subtitles = getMobileSubtitleView();
+        if (subtitles != null && subtitles.getParent() instanceof ViewGroup) {
+            ((ViewGroup) subtitles.getParent()).removeView(subtitles);
         }
     }
 
@@ -125,10 +143,45 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         if (getView() == null) {
             return;
         }
-        ViewGroup surfaceRoot = getView().findViewById(R.id.surface_root);
-        if (surfaceRoot != null && getSurfaceView().getParent() != surfaceRoot) {
-            moveVideoSurfaceTo(surfaceRoot);
+        ViewGroup surfaceRoot = getMobileSurfaceRoot();
+        ViewGroup playbackRoot = getView().findViewById(R.id.playback_fragment_root);
+        if (surfaceRoot != null && playbackRoot != null && surfaceRoot.getParent() != playbackRoot) {
+            ViewGroup parent = (ViewGroup) surfaceRoot.getParent();
+            if (parent != null) {
+                parent.removeView(surfaceRoot);
+            }
+            playbackRoot.addView(surfaceRoot, 0, new ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         }
+        View subtitles = getMobileSubtitleView();
+        if (subtitles != null && subtitles.getParent() != playbackRoot) {
+            ViewGroup parent = (ViewGroup) subtitles.getParent();
+            if (parent != null) {
+                parent.removeView(subtitles);
+            }
+            playbackRoot.addView(subtitles, 1, new ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        }
+    }
+
+    private ViewGroup getMobileSurfaceRoot() {
+        if (getView() != null) {
+            ViewGroup surfaceRoot = getView().findViewById(R.id.surface_root);
+            if (surfaceRoot != null) {
+                mMobileSurfaceRoot = surfaceRoot;
+            }
+        }
+        return mMobileSurfaceRoot;
+    }
+
+    private View getMobileSubtitleView() {
+        if (getView() != null) {
+            View subtitles = getView().findViewById(R.id.leanback_subtitles);
+            if (subtitles != null) {
+                mMobileSubtitleView = subtitles;
+            }
+        }
+        return mMobileSubtitleView;
     }
 
     @Override
@@ -390,6 +443,15 @@ public class MobilePlaybackFragment extends PlaybackFragment {
     }
 
     @Override
+    public void onDestroy() {
+        if (mMiniPlayerController != null) {
+            mMiniPlayerController.unregisterCallback(mMiniPlayerCallback);
+            mMiniPlayerController = null;
+        }
+        super.onDestroy();
+    }
+
+    @Override
     public void onDestroyView() {
         if (mSwipeToDismiss != null) mSwipeToDismiss.cancel();
         mSwipeToDismiss = null;
@@ -405,6 +467,8 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         mAvatarTarget = null;
         resetHeaderTextCache();
         mPanel = null;
+        mMobileSurfaceRoot = null;
+        mMobileSubtitleView = null;
         super.onDestroyView();
     }
 
@@ -453,6 +517,7 @@ public class MobilePlaybackFragment extends PlaybackFragment {
     @Override
     public void setVideo(Video video) {
         super.setVideo(video);
+        MobileMiniPlayer.updateVideo(video);
 
         if (initPanelViews()) {
             bindHeader(video);

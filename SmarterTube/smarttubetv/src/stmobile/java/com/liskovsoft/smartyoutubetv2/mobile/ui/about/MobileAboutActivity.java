@@ -10,6 +10,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.liskovsoft.smartyoutubetv2.mobile.ui.base.SystemBarInsets;
+import com.liskovsoft.smartyoutubetv2.mobile.ui.playback.MobileMiniPlayer;
 import com.liskovsoft.smartyoutubetv2.mobile.update.MobileUpdateChecker;
 import com.liskovsoft.smartyoutubetv2.tv.BuildConfig;
 import com.liskovsoft.smartyoutubetv2.tv.R;
@@ -27,6 +28,18 @@ import com.liskovsoft.smartyoutubetv2.tv.R;
  */
 public class MobileAboutActivity extends AppCompatActivity {
     private boolean mChecking;
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        MobileMiniPlayer.show(this);
+    }
+
+    @Override
+    protected void onDestroy() {
+        MobileMiniPlayer.onHostDestroyed(this);
+        super.onDestroy();
+    }
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
