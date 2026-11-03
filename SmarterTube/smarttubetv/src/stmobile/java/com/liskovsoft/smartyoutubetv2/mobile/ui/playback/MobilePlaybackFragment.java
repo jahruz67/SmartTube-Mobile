@@ -104,6 +104,33 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         }
     }
 
+    void moveVideoSurfaceTo(ViewGroup target) {
+        View surface = getSurfaceView();
+        ViewGroup parent = (ViewGroup) surface.getParent();
+        if (parent != null) {
+            parent.removeView(surface);
+        }
+        target.addView(surface, new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+    }
+
+    void detachVideoSurface() {
+        View surface = getSurfaceView();
+        if (surface.getParent() instanceof ViewGroup) {
+            ((ViewGroup) surface.getParent()).removeView(surface);
+        }
+    }
+
+    void restoreVideoSurface() {
+        if (getView() == null) {
+            return;
+        }
+        ViewGroup surfaceRoot = getView().findViewById(R.id.surface_root);
+        if (surfaceRoot != null && getSurfaceView().getParent() != surfaceRoot) {
+            moveVideoSurfaceTo(surfaceRoot);
+        }
+    }
+
     @Override
     public void setPlayWhenReady(boolean play) {
         super.setPlayWhenReady(play);
@@ -2551,7 +2578,10 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         initTapDetector(activity);
         mSwipe = SwipeGestures.create(activity);
         if (mSwipeToDismiss != null) mSwipeToDismiss.cancel();
-        mSwipeToDismiss = new SwipeToDismiss(activity.findViewById(android.R.id.content), activity::onBackPressed);
+        mSwipeToDismiss = new SwipeToDismiss(activity.findViewById(android.R.id.content),
+                activity instanceof MobilePlaybackActivity
+                        ? ((MobilePlaybackActivity) activity)::minimizePlayback
+                        : activity::onBackPressed);
         mPinch = PinchZoom.create(activity, mPinchTarget);
         initCutoutGuard(activity);
 

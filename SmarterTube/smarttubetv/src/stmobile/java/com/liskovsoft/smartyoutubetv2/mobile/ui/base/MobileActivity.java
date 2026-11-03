@@ -9,6 +9,7 @@ import androidx.annotation.Nullable;
 import androidx.core.view.WindowCompat;
 
 import com.liskovsoft.smartyoutubetv2.common.misc.MotherActivity;
+import com.liskovsoft.smartyoutubetv2.mobile.ui.playback.MobileMiniPlayer;
 import com.liskovsoft.smartyoutubetv2.mobile.ui.prefs.MobileThemePrefs;
 import com.liskovsoft.smartyoutubetv2.tv.R;
 
@@ -101,6 +102,7 @@ public abstract class MobileActivity extends MotherActivity {
         if (registersInViewStack()) {
             getViewManager().addTop(this);
         }
+        MobileMiniPlayer.show(this);
     }
 
     @Override

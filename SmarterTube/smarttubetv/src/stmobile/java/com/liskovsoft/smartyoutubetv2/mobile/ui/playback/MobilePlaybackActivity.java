@@ -116,9 +116,33 @@ public class MobilePlaybackActivity extends PlaybackActivity {
         return true;
     }
 
+    /** Collapse a downward swipe into the app's mini player while video is playing. */
+    void minimizePlayback() {
+        if (mMiniPlayerPlaybackActive && mMobileFragment != null && mMobileFragment.getPlayWhenReady()
+                && !isInPipMode()) {
+            MobileMiniPlayer.minimize(this);
+            return;
+        }
+        onBackPressed();
+    }
+
     void onMiniPlayerPlaybackStateChanged(boolean active) {
         mMiniPlayerPlaybackActive = active;
         updateMiniPlayerParams();
+    }
+
+    MobilePlaybackFragment getMobileFragment() {
+        return mMobileFragment;
+    }
+
+    void showParentForMiniPlayer() {
+        getViewManager().startParentView(this);
+    }
+
+    @Override
+    public void finishReally() {
+        MobileMiniPlayer.onPlaybackFinished(this);
+        super.finishReally();
     }
 
     private void updateMiniPlayerParams() {
@@ -367,6 +391,11 @@ public class MobilePlaybackActivity extends PlaybackActivity {
         super.onResume();
         reapplyFullscreen();
         updateMiniPlayerParams();
+        if (MobileMiniPlayer.isPlaybackActivity(this) && mMobileFragment != null) {
+            MobileMiniPlayer.restore(this);
+            mMobileFragment.restoreVideoSurface();
+            mMobileFragment.blockEngine(false);
+        }
         if (mForcedOrientation != ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED) {
             watchForMatchingOrientation();
         }
