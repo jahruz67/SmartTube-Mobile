@@ -5,7 +5,7 @@ import com.liskovsoft.googlecommon.common.helpers.RetrofitOkHttpHelper
 import com.liskovsoft.googlecommon.common.helpers.tests.TestHelpers
 import com.liskovsoft.googleapi.drive3.data.FileMetadata
 import com.liskovsoft.sharedutils.helpers.Helpers
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -18,8 +18,8 @@ import org.robolectric.shadows.ShadowLog
 @RunWith(RobolectricTestRunner::class)
 class DriveApiTest {
     private lateinit var mService: DriveApi
-    private val mTestRequestBody = RequestBody.create(MediaType.parse("text/plain"), TEST_FILE_CONTENTS)
-    private val mTestRequestBody2 = RequestBody.create(MediaType.parse("text/plain"), TEST_FILE_CONTENTS2)
+    private val mTestRequestBody = RequestBody.create("text/plain".toMediaType(), TEST_FILE_CONTENTS)
+    private val mTestRequestBody2 = RequestBody.create("text/plain".toMediaType(), TEST_FILE_CONTENTS2)
 
     companion object {
         private const val TEST_FOLDER_NAME = "testFolder"

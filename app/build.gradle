@@ -23,6 +23,15 @@ buildscript {
 
 apply plugin: 'com.android.application'
 
+// Firebase belongs to the TV flavors. Mixed mobile/library task requests must
+// not process the TV google-services.json or inject Crashlytics IDs into mobile.
+tasks.configureEach {
+    if (name.contains('Stmobile') &&
+            (name.endsWith('GoogleServices') || name.toLowerCase().contains('crashlytics'))) {
+        enabled = false
+    }
+}
+
 def keystorePropertiesFile = rootProject.file("keystore.properties")
 def keystoreProperties = new Properties()
 if (keystorePropertiesFile.exists()) {
