@@ -12,12 +12,15 @@ import android.support.v4.media.session.PlaybackStateCompat;
 import android.text.TextUtils;
 import android.text.style.ClickableSpan;
 import android.view.GestureDetector;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
+import android.view.SurfaceHolder;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -88,6 +91,11 @@ import io.reactivex.disposables.Disposable;
 public class MobilePlaybackFragment extends PlaybackFragment {
     private ViewGroup mMobileSurfaceRoot;
     private View mMobileSubtitleView;
+    private ViewGroup.LayoutParams mMobileSurfaceLayoutParams;
+    private ViewGroup.LayoutParams mMobileSubtitleLayoutParams;
+    private SurfaceHolder mAttachedVideoSurface;
+    private boolean mVideoSurfaceTransferPending;
+    private boolean mPlayAfterVideoSurfaceTransfer;
     private MediaControllerCompat mMiniPlayerController;
     private final MediaControllerCompat.Callback mMiniPlayerCallback = new MediaControllerCompat.Callback() {
         @Override
@@ -97,6 +105,7 @@ public class MobilePlaybackFragment extends PlaybackFragment {
     };
 
     private void updateMiniPlayerPlaybackState(PlaybackStateCompat state) {
+        MobileMiniPlayer.updatePlaybackState(getMiniPlayerPlayWhenReady());
         Activity activity = getActivity();
         if (activity instanceof MobilePlaybackActivity) {
             boolean active = state != null && getPlayWhenReady()
@@ -106,26 +115,94 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         }
     }
 
+    boolean getMiniPlayerPlayWhenReady() {
+        return mVideoSurfaceTransferPending ? mPlayAfterVideoSurfaceTransfer : getPlayWhenReady();
+    }
+
+    void toggleMiniPlayerPlayback() {
+        VideoPlayerGlue glue = getPlayerGlue();
+        if (glue == null || !isEngineInitialized()) {
+            return;
+        }
+        boolean play = !getMiniPlayerPlayWhenReady();
+        if (mVideoSurfaceTransferPending) {
+            mPlayAfterVideoSurfaceTransfer = play;
+        }
+        if (play) {
+            glue.play();
+        } else {
+            glue.pause();
+        }
+        updateMiniPlayerPlaybackState(mMiniPlayerController != null ? mMiniPlayerController.getPlaybackState() : null);
+    }
+
+    @Override
+    public void setSurfaceHolderCallback(SurfaceHolder.Callback callback) {
+        if (callback == null) {
+            mVideoSurfaceTransferPending = false;
+            mAttachedVideoSurface = null;
+            super.setSurfaceHolderCallback(null);
+            return;
+        }
+        super.setSurfaceHolderCallback(new SurfaceHolder.Callback() {
+            @Override
+            public void surfaceCreated(SurfaceHolder holder) {
+                mAttachedVideoSurface = holder;
+                callback.surfaceCreated(holder);
+                completeVideoSurfaceTransfer();
+            }
+
+            @Override
+            public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+                callback.surfaceChanged(holder, format, width, height);
+            }
+
+            @Override
+            public void surfaceDestroyed(SurfaceHolder holder) {
+                mAttachedVideoSurface = null;
+                callback.surfaceDestroyed(holder);
+            }
+        });
+    }
+
+    void prepareVideoSurfaceTransfer() {
+        if (!mVideoSurfaceTransferPending) {
+            mPlayAfterVideoSurfaceTransfer = getPlayWhenReady();
+            mVideoSurfaceTransferPending = true;
+        }
+    }
+
+    private void completeVideoSurfaceTransfer() {
+        if (!mVideoSurfaceTransferPending || mAttachedVideoSurface == null
+                || !mAttachedVideoSurface.getSurface().isValid() || !isEngineInitialized()) {
+            return;
+        }
+        mVideoSurfaceTransferPending = false;
+        // Surface removal can interrupt playback. Restore intent only after the adapter has
+        // connected the replacement surface, including when returning to fullscreen.
+        setPlayWhenReady(mPlayAfterVideoSurfaceTransfer);
+    }
+
     void moveVideoSurfaceTo(ViewGroup target) {
         ViewGroup surfaceRoot = getMobileSurfaceRoot();
         if (surfaceRoot == null) {
             return;
         }
-        ViewGroup parent = (ViewGroup) surfaceRoot.getParent();
-        if (parent != null) {
-            parent.removeView(surfaceRoot);
+        prepareVideoSurfaceTransfer();
+        if (mMobileSurfaceLayoutParams == null) {
+            mMobileSurfaceLayoutParams = surfaceRoot.getLayoutParams();
         }
-        target.addView(surfaceRoot, new ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         View subtitles = getMobileSubtitleView();
+        if (subtitles != null && mMobileSubtitleLayoutParams == null) {
+            mMobileSubtitleLayoutParams = subtitles.getLayoutParams();
+        }
+        moveVideoView(surfaceRoot, target, 0, new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT, Gravity.CENTER));
         if (subtitles != null) {
-            ViewGroup subtitleParent = (ViewGroup) subtitles.getParent();
-            if (subtitleParent != null) {
-                subtitleParent.removeView(subtitles);
-            }
-            target.addView(subtitles, new ViewGroup.LayoutParams(
+            moveVideoView(subtitles, target, 1, new FrameLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         }
+        completeVideoSurfaceTransfer();
     }
 
     void restoreVideoSurface() {
@@ -134,23 +211,28 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         }
         ViewGroup surfaceRoot = getMobileSurfaceRoot();
         ViewGroup playbackRoot = getView().findViewById(R.id.playback_fragment_root);
-        if (surfaceRoot != null && playbackRoot != null && surfaceRoot.getParent() != playbackRoot) {
-            ViewGroup parent = (ViewGroup) surfaceRoot.getParent();
-            if (parent != null) {
-                parent.removeView(surfaceRoot);
-            }
-            playbackRoot.addView(surfaceRoot, 0, new ViewGroup.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        if (surfaceRoot == null || playbackRoot == null) {
+            return;
         }
+        if (surfaceRoot.getParent() != playbackRoot) {
+            prepareVideoSurfaceTransfer();
+        }
+        moveVideoView(surfaceRoot, playbackRoot, 0, mMobileSurfaceLayoutParams);
         View subtitles = getMobileSubtitleView();
-        if (subtitles != null && subtitles.getParent() != playbackRoot) {
-            ViewGroup parent = (ViewGroup) subtitles.getParent();
-            if (parent != null) {
-                parent.removeView(subtitles);
-            }
-            playbackRoot.addView(subtitles, 1, new ViewGroup.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        if (subtitles != null) {
+            moveVideoView(subtitles, playbackRoot, 1, mMobileSubtitleLayoutParams);
         }
+        completeVideoSurfaceTransfer();
+    }
+
+    private void moveVideoView(View view, ViewGroup target, int index, ViewGroup.LayoutParams params) {
+        if (view.getParent() == target) {
+            return;
+        }
+        if (view.getParent() instanceof ViewGroup) {
+            ((ViewGroup) view.getParent()).removeView(view);
+        }
+        target.addView(view, index, params);
     }
 
     private ViewGroup getMobileSurfaceRoot() {
@@ -175,11 +257,12 @@ public class MobilePlaybackFragment extends PlaybackFragment {
 
     @Override
     public void setPlayWhenReady(boolean play) {
-        super.setPlayWhenReady(play);
-        // Disable auto-entry immediately on a touch pause, before the asynchronous session callback.
-        if (!play) {
-            updateMiniPlayerPlaybackState(null);
+        if (mVideoSurfaceTransferPending) {
+            mPlayAfterVideoSurfaceTransfer = play;
         }
+        super.setPlayWhenReady(play);
+        // Keep the mini bar and PiP eligibility in sync before the session callback arrives.
+        updateMiniPlayerPlaybackState(mMiniPlayerController != null ? mMiniPlayerController.getPlaybackState() : null);
     }
 
     private ConstraintLayout mRoot;
@@ -458,6 +541,10 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         mPanel = null;
         mMobileSurfaceRoot = null;
         mMobileSubtitleView = null;
+        mMobileSurfaceLayoutParams = null;
+        mMobileSubtitleLayoutParams = null;
+        mAttachedVideoSurface = null;
+        mVideoSurfaceTransferPending = false;
         super.onDestroyView();
     }
 

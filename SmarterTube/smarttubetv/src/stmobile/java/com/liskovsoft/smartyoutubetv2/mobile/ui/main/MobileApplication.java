@@ -251,6 +251,7 @@ public class MobileApplication extends MainApplication {
     protected void setupViewManager() {
         ViewManager viewManager = ViewManager.instance(this);
 
+        viewManager.setActivityReorderingEnabled(true);
         viewManager.setRoot(MobileBrowseActivity.class);
         viewManager.register(SplashView.class, SplashActivity.class); // root activity, no parent
         viewManager.register(BrowseView.class, MobileBrowseActivity.class); // phone Home

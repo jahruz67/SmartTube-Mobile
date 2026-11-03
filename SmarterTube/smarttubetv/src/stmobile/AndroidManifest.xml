@@ -6,9 +6,8 @@
     launchMode note: the TV manifest declares every activity as singleInstance, which puts
     each activity in its own isolated task. On a phone that breaks the back-stack — the
     translucent AppDialogActivity has nothing behind it and the app drops out of recents.
-    The phone build overrides launchMode so all activities share one task: MobileBrowseActivity
-    is the singleTask root; MobileSearchActivity is also singleTask so the player can return
-    straight to it (clearing itself off the top); the rest are singleTop and stack within it.
+    The phone build uses singleTop activities in one task. ViewManager reorders existing screens
+    to the front so returning to Home or Search preserves the in-app mini player's activity.
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           xmlns:tools="http://schemas.android.com/tools"
@@ -114,11 +113,11 @@
             android:windowSoftInputMode="adjustResize"
             android:theme="@style/Theme.SmarterTube.Mobile.TranslucentPanel" />
 
-        <!-- Native phone Home screen (Phase 2). singleTask = the root of the app task. -->
+        <!-- Phone Home. ViewManager reuses it without clearing the retained mini player. -->
         <activity
             android:name="com.liskovsoft.smartyoutubetv2.mobile.ui.browse.MobileBrowseActivity"
             android:exported="false"
-            android:launchMode="singleTask"
+            android:launchMode="singleTop"
             android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation|layoutDirection|keyboardHidden"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.SmarterTube.Mobile" />
@@ -172,14 +171,12 @@
             android:screenOrientation="portrait"
             android:theme="@style/Theme.SmarterTube.Mobile" />
 
-        <!-- Native phone Search screen. singleTask so when the player closes, relaunching
-             this activity routes to the existing instance and clears the player off the top
-             (singleTop would instead spawn a duplicate below the player). adjustResize so the
-             keyboard pushes the results/suggestions list instead of covering it. -->
+        <!-- Phone Search. ViewManager reorders the existing instance while keeping the mini
+             player alive. adjustResize lets the keyboard push results instead of covering them. -->
         <activity
             android:name="com.liskovsoft.smartyoutubetv2.mobile.ui.search.MobileSearchActivity"
             android:exported="false"
-            android:launchMode="singleTask"
+            android:launchMode="singleTop"
             android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation|layoutDirection|keyboardHidden"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustResize"

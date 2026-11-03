@@ -51,6 +51,7 @@ public class ViewManager {
     private long mPendingActivityMs;
     private Class<?> mPendingActivityClass;
     private WeakHashSet<Runnable> mOnFinish;
+    private boolean mActivityReorderingEnabled;
 
     private ViewManager(Context context) {
         mContext = context;
@@ -93,6 +94,11 @@ public class ViewManager {
 
     public Class<? extends Activity> getRootActivity() {
         return mRootActivity;
+    }
+
+    /** Reuse phone screens without clearing a retained player from their task. */
+    public void setActivityReorderingEnabled(boolean enabled) {
+        mActivityReorderingEnabled = enabled;
     }
 
     /**
@@ -151,6 +157,9 @@ public class ViewManager {
                 try {
                     Log.d(TAG, "Launching parent activity: " + parentActivity.getSimpleName());
                     Intent intent = new Intent(activity, parentActivity);
+                    if (mActivityReorderingEnabled) {
+                        intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+                    }
 
                     safeStartActivity(activity, intent);
                 } catch (ActivityNotFoundException e) {
@@ -195,6 +204,9 @@ public class ViewManager {
 
         // Fix: Calling startActivity() from outside of an Activity  context requires the FLAG_ACTIVITY_NEW_TASK flag
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        if (mActivityReorderingEnabled) {
+            intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+        }
 
         safeStartActivity(mContext, intent);
     }

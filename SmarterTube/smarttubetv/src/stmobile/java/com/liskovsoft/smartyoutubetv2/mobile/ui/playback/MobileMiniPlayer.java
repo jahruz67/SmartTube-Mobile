@@ -1,9 +1,10 @@
 package com.liskovsoft.smartyoutubetv2.mobile.ui.playback;
 
-import android.content.Intent;
 import android.app.Activity;
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,14 +24,14 @@ public final class MobileMiniPlayer {
     private static TextView sTitleView;
     private static TextView sPlayPauseView;
     private static boolean sMinimized;
-    private static boolean sInitialSurfaceTransferPending;
 
     private MobileMiniPlayer() {}
 
     static void minimize(MobilePlaybackActivity activity) {
+        if (isMinimizedPlayback(activity)) return;
         sPlaybackActivity = activity;
         sMinimized = true;
-        sInitialSurfaceTransferPending = true;
+        activity.getMobileFragment().prepareVideoSurfaceTransfer();
         activity.getMobileFragment().blockEngine(true);
         activity.showParentForMiniPlayer();
     }
@@ -45,29 +46,35 @@ public final class MobileMiniPlayer {
 
     static void restore(MobilePlaybackActivity activity) {
         if (sPlaybackActivity != activity) return;
+        MobilePlaybackFragment fragment = activity.getMobileFragment();
+        if (fragment != null) {
+            fragment.restoreVideoSurface();
+        }
         sMinimized = false;
-        sInitialSurfaceTransferPending = false;
         removeOverlay();
         sPlaybackActivity = null;
     }
 
     static void onPlaybackFinished(MobilePlaybackActivity activity) {
         if (sPlaybackActivity != activity) return;
-        sMinimized = false;
-        sInitialSurfaceTransferPending = false;
-        removeOverlay();
-        sPlaybackActivity = null;
+        MobilePlaybackFragment fragment = activity.getMobileFragment();
+        if (fragment != null) {
+            fragment.setPlayWhenReady(false);
+            fragment.blockEngine(false);
+        }
+        restore(activity);
     }
 
     public static void show(Activity activity) {
-        if (!sMinimized || sPlaybackActivity == null) return;
+        if (!sMinimized || sPlaybackActivity == null || activity == sPlaybackActivity
+                || activity.isFinishing() || activity.isDestroyed()) return;
         ViewGroup host = activity.findViewById(android.R.id.content);
         if (host == null) return;
         if (sHost == host && sOverlay != null) return;
 
-        removeOverlay();
         MobilePlaybackFragment fragment = sPlaybackActivity.getMobileFragment();
-        if (fragment == null) return;
+        if (fragment == null || fragment.getView() == null || !fragment.isEngineInitialized()) return;
+        removeOverlay();
 
         FrameLayout overlay = new FrameLayout(activity);
         FrameLayout.LayoutParams overlayParams = new FrameLayout.LayoutParams(
@@ -77,7 +84,8 @@ public final class MobileMiniPlayer {
         LinearLayout bar = new LinearLayout(activity);
         bar.setGravity(Gravity.CENTER_VERTICAL);
         bar.setBackgroundColor(Color.rgb(28, 28, 28));
-        int height = dp(activity, 90);
+        bar.setOnClickListener(v -> expand(activity));
+        int height = dp(activity, 64);
         FrameLayout.LayoutParams barParams = new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, height, Gravity.BOTTOM);
         barParams.leftMargin = dp(activity, 8);
@@ -86,12 +94,7 @@ public final class MobileMiniPlayer {
         overlay.addView(bar, barParams);
 
         FrameLayout video = new FrameLayout(activity);
-        bar.addView(video, new LinearLayout.LayoutParams(dp(activity, 160), height));
-        fragment.moveVideoSurfaceTo(video);
-        if (sInitialSurfaceTransferPending && !fragment.getPlayWhenReady()) {
-            fragment.setPlayWhenReady(true);
-        }
-        sInitialSurfaceTransferPending = false;
+        bar.addView(video, new LinearLayout.LayoutParams(dp(activity, 112), height));
         video.setOnClickListener(v -> expand(activity));
 
         Video current = PlaybackPresenter.instance(activity).getVideo();
@@ -101,6 +104,7 @@ public final class MobileMiniPlayer {
         title.setTextSize(14);
         title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         title.setMaxLines(2);
+        title.setEllipsize(TextUtils.TruncateAt.END);
         title.setGravity(Gravity.CENTER_VERTICAL);
         title.setPadding(dp(activity, 12), 0, dp(activity, 8), 0);
         bar.addView(title, new LinearLayout.LayoutParams(0, height, 1));
@@ -108,10 +112,7 @@ public final class MobileMiniPlayer {
         sTitleView = title;
 
         TextView playPause = button(activity, "Ⅱ", activity.getString(R.string.mobile_player_play_pause));
-        playPause.setOnClickListener(v -> {
-            fragment.setPlayWhenReady(!fragment.getPlayWhenReady());
-            updatePlaybackState(fragment.getPlayWhenReady());
-        });
+        playPause.setOnClickListener(v -> fragment.toggleMiniPlayerPlayback());
         bar.addView(playPause, new LinearLayout.LayoutParams(dp(activity, 44), height));
         sPlayPauseView = playPause;
 
@@ -121,10 +122,16 @@ public final class MobileMiniPlayer {
 
         sHost = host;
         sOverlay = overlay;
+        fragment.moveVideoSurfaceTo(video);
+        updatePlaybackState(fragment.getMiniPlayerPlayWhenReady());
     }
 
     public static void onHostDestroyed(Activity activity) {
         if (sOverlay != null && sOverlay.getContext() == activity) {
+            MobilePlaybackFragment fragment = sPlaybackActivity != null ? sPlaybackActivity.getMobileFragment() : null;
+            if (fragment != null) {
+                fragment.restoreVideoSurface();
+            }
             removeOverlay();
         }
     }
@@ -137,6 +144,9 @@ public final class MobileMiniPlayer {
     }
 
     static void updatePlaybackState(boolean playing) {
+        if (sOverlay != null) {
+            sOverlay.setKeepScreenOn(playing);
+        }
         if (sPlayPauseView != null) {
             sPlayPauseView.setText(playing ? "Ⅱ" : "▶");
         }
@@ -155,7 +165,6 @@ public final class MobileMiniPlayer {
 
     private static void expand(Activity activity) {
         if (sPlaybackActivity == null) return;
-        removeOverlay();
         activity.startActivity(new Intent(activity, MobilePlaybackActivity.class)
                 .addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT));
     }
@@ -163,15 +172,6 @@ public final class MobileMiniPlayer {
     private static void close() {
         MobilePlaybackActivity playback = sPlaybackActivity;
         if (playback == null) return;
-        sMinimized = false;
-        sInitialSurfaceTransferPending = false;
-        removeOverlay();
-        MobilePlaybackFragment fragment = playback.getMobileFragment();
-        if (fragment != null) {
-            fragment.restoreVideoSurface();
-            fragment.blockEngine(false);
-        }
-        sPlaybackActivity = null;
         playback.finishMiniPlayer();
     }
 

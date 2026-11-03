@@ -80,6 +80,7 @@ public class MobilePlaybackActivity extends PlaybackActivity {
         // Only leaving active playback should open a mini player. In-app navigation and
         // paused videos must not pin the activity, even when the PiP setting is selected.
         if (mMobileFragment == null || !mMiniPlayerPlaybackActive || !mMobileFragment.getPlayWhenReady()
+                || MobileMiniPlayer.isMinimizedPlayback(this)
                 || isInPipMode() || isBackPressed() || isFinishing()
                 || (getViewManager().isNewViewPending() && !getViewManager().isViewPending(PlaybackView.class))) {
             return;
@@ -117,9 +118,9 @@ public class MobilePlaybackActivity extends PlaybackActivity {
         return true;
     }
 
-    /** Collapse a downward swipe into the app's mini player while video is playing. */
+    /** Collapse a downward swipe without closing a paused or buffering player. */
     void minimizePlayback() {
-        if (mMobileFragment != null && mMobileFragment.getPlayWhenReady() && !isInPipMode()) {
+        if (mMobileFragment != null && mMobileFragment.isEngineInitialized() && !isInPipMode()) {
             MobileMiniPlayer.minimize(this);
             return;
         }
@@ -128,7 +129,6 @@ public class MobilePlaybackActivity extends PlaybackActivity {
 
     void onMiniPlayerPlaybackStateChanged(boolean active) {
         mMiniPlayerPlaybackActive = active;
-        MobileMiniPlayer.updatePlaybackState(active);
         updateMiniPlayerParams();
     }
 
@@ -137,6 +137,7 @@ public class MobilePlaybackActivity extends PlaybackActivity {
     }
 
     void showParentForMiniPlayer() {
+        updateMiniPlayerParams();
         getViewManager().startParentView(this);
     }
 
@@ -159,6 +160,12 @@ public class MobilePlaybackActivity extends PlaybackActivity {
         if (!mFinishingMiniPlayer) {
             super.startParentViewOnFinish();
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        MobileMiniPlayer.onPlaybackFinished(this);
+        super.onDestroy();
     }
 
     private void updateMiniPlayerParams() {
@@ -184,7 +191,8 @@ public class MobilePlaybackActivity extends PlaybackActivity {
             params.setSourceRectHint(bounds);
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            params.setAutoEnterEnabled(mMiniPlayerPlaybackActive && !isFinishing());
+            params.setAutoEnterEnabled(mMiniPlayerPlaybackActive && !isFinishing()
+                    && !MobileMiniPlayer.isMinimizedPlayback(this));
         }
         return params.build();
     }
@@ -226,11 +234,9 @@ public class MobilePlaybackActivity extends PlaybackActivity {
     /**
      * PIP fix (#33): don't relaunch Home when the player drops into PIP.
      *
-     * The shared base launches the parent activity here. On the phone, Home
-     * ({@code MobileBrowseActivity}) is {@code singleTask} and already sits at the root of this
-     * task, so it is revealed automatically the moment the player pins to a PIP window. Relaunching
-     * it races with that task-pinning transition and can clear the player out of the task — the
-     * player is destroyed, its engine released, and the pop-up shows Home instead of the video.
+     * The shared base launches the parent activity here. On the phone, the previous screen is
+     * already in this task and is revealed when the player pins to a PIP window. Relaunching it
+     * races with that task-pinning transition; keep the existing phone screen in place.
      *
      * We still do the one thing {@code startParentView} does that matters here: drop the player
      * from the ViewManager stack, so returning from PIP resolves correctly.
@@ -406,12 +412,11 @@ public class MobilePlaybackActivity extends PlaybackActivity {
     protected void onResume() {
         super.onResume();
         reapplyFullscreen();
-        updateMiniPlayerParams();
         if (MobileMiniPlayer.isPlaybackActivity(this) && mMobileFragment != null) {
             MobileMiniPlayer.restore(this);
-            mMobileFragment.restoreVideoSurface();
             mMobileFragment.blockEngine(false);
         }
+        updateMiniPlayerParams();
         if (mForcedOrientation != ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED) {
             watchForMatchingOrientation();
         }

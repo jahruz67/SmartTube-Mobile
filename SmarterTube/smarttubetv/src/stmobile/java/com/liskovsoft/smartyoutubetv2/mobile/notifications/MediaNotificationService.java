@@ -208,7 +208,7 @@ public class MediaNotificationService extends MediaSessionService {
 
     public static PendingIntent createActivityIntent(Context context) {
         Intent intent = new Intent(context, MobilePlaybackActivity.class)
-                .addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                .addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
         return PendingIntent.getActivity(context, 0, intent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
     }
