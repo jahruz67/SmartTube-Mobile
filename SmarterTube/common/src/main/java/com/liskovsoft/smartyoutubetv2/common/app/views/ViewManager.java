@@ -136,6 +136,10 @@ public class ViewManager {
     }
 
     public void startParentView(Activity activity) {
+        startParentView(activity, 0);
+    }
+
+    public void startParentView(Activity activity, int flags) {
         if (activity.getIntent() != null) {
             removeTopActivity();
 
@@ -157,6 +161,7 @@ public class ViewManager {
                 try {
                     Log.d(TAG, "Launching parent activity: " + parentActivity.getSimpleName());
                     Intent intent = new Intent(activity, parentActivity);
+                    intent.addFlags(flags);
                     if (mActivityReorderingEnabled) {
                         intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
                     }

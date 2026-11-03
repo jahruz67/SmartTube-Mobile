@@ -8,6 +8,7 @@ import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -24,6 +25,7 @@ public final class MobileMiniPlayer {
     private static TextView sTitleView;
     private static TextView sPlayPauseView;
     private static boolean sMinimized;
+    private static boolean sExpanding;
 
     private MobileMiniPlayer() {}
 
@@ -31,6 +33,7 @@ public final class MobileMiniPlayer {
         if (isMinimizedPlayback(activity)) return;
         sPlaybackActivity = activity;
         sMinimized = true;
+        sExpanding = false;
         activity.getMobileFragment().prepareVideoSurfaceTransfer();
         activity.getMobileFragment().blockEngine(true);
         activity.showParentForMiniPlayer();
@@ -51,6 +54,7 @@ public final class MobileMiniPlayer {
             fragment.restoreVideoSurface();
         }
         sMinimized = false;
+        sExpanding = false;
         removeOverlay();
         sPlaybackActivity = null;
     }
@@ -124,6 +128,10 @@ public final class MobileMiniPlayer {
         sOverlay = overlay;
         fragment.moveVideoSurfaceTo(video);
         updatePlaybackState(fragment.getMiniPlayerPlayWhenReady());
+        bar.setAlpha(0f);
+        bar.setTranslationY(dp(activity, 16));
+        bar.animate().alpha(1f).translationY(0f).setDuration(160)
+                .setInterpolator(new DecelerateInterpolator()).start();
     }
 
     public static void onHostDestroyed(Activity activity) {
@@ -164,9 +172,10 @@ public final class MobileMiniPlayer {
     }
 
     private static void expand(Activity activity) {
-        if (sPlaybackActivity == null) return;
+        if (sPlaybackActivity == null || sExpanding) return;
+        sExpanding = true;
         activity.startActivity(new Intent(activity, MobilePlaybackActivity.class)
-                .addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT));
+                .addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT | Intent.FLAG_ACTIVITY_NO_ANIMATION));
     }
 
     private static void close() {

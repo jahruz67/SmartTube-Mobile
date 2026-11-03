@@ -180,7 +180,9 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         mVideoSurfaceTransferPending = false;
         // Surface removal can interrupt playback. Restore intent only after the adapter has
         // connected the replacement surface, including when returning to fullscreen.
-        setPlayWhenReady(mPlayAfterVideoSurfaceTransfer);
+        if (getPlayWhenReady() != mPlayAfterVideoSurfaceTransfer) {
+            setPlayWhenReady(mPlayAfterVideoSurfaceTransfer);
+        }
     }
 
     void moveVideoSurfaceTo(ViewGroup target) {
@@ -210,8 +212,9 @@ public class MobilePlaybackFragment extends PlaybackFragment {
             return;
         }
         ViewGroup surfaceRoot = getMobileSurfaceRoot();
-        ViewGroup playbackRoot = getView().findViewById(R.id.playback_fragment_root);
-        if (surfaceRoot == null || playbackRoot == null) {
+        // The <fragment> tag replaces this root's XML ID with playback_controls_fragment.
+        ViewGroup playbackRoot = (ViewGroup) getView();
+        if (surfaceRoot == null) {
             return;
         }
         if (surfaceRoot.getParent() != playbackRoot) {

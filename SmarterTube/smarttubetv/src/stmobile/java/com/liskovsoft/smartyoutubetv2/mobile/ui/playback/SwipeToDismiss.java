@@ -3,7 +3,6 @@ package com.liskovsoft.smartyoutubetv2.mobile.ui.playback;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
-import android.view.animation.AccelerateInterpolator;
 import android.view.animation.DecelerateInterpolator;
 
 /** Watches normal touches, cancelling the player's gesture only when a downward drag takes over. */
@@ -103,13 +102,20 @@ final class SwipeToDismiss {
 
     private void settle(boolean dismiss) {
         mSettling = true;
-        mContent.animate().translationY(dismiss ? mContent.getHeight() : 0)
-                .setDuration(dismiss ? 180 : 220)
-                .setInterpolator(dismiss ? new AccelerateInterpolator() : new DecelerateInterpolator())
+        if (dismiss) {
+            // Hand off while the video is still visible, without sliding it offscreen first.
+            mDismiss.run();
+            mContent.postOnAnimation(() -> {
+                mContent.setTranslationY(0);
+                mSettling = false;
+            });
+            return;
+        }
+        mContent.animate().translationY(0)
+                .setDuration(220)
+                .setInterpolator(new DecelerateInterpolator())
                 .withEndAction(() -> {
                     mSettling = false;
-                    if (dismiss) mDismiss.run();
-                    mContent.setTranslationY(0);
                 }).start();
     }
 

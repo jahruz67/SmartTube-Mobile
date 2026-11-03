@@ -138,7 +138,7 @@ public class MobilePlaybackActivity extends PlaybackActivity {
 
     void showParentForMiniPlayer() {
         updateMiniPlayerParams();
-        getViewManager().startParentView(this);
+        getViewManager().startParentView(this, Intent.FLAG_ACTIVITY_NO_ANIMATION);
     }
 
     @Override
@@ -406,6 +406,15 @@ public class MobilePlaybackActivity extends PlaybackActivity {
     protected void onPause() {
         super.onPause();
         stopOrientationWatch();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        // Reattach before the fullscreen window draws; keep the engine retained until resume.
+        if (MobileMiniPlayer.isPlaybackActivity(this) && mMobileFragment != null) {
+            mMobileFragment.restoreVideoSurface();
+        }
     }
 
     @Override
