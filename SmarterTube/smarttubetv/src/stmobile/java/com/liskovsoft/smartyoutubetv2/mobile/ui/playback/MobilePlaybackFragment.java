@@ -160,7 +160,10 @@ public class MobilePlaybackFragment extends PlaybackFragment {
             @Override
             public void surfaceDestroyed(SurfaceHolder holder) {
                 mAttachedVideoSurface = null;
-                callback.surfaceDestroyed(holder);
+                // Keep ExoPlayer on its current output until the replacement holder arrives.
+                if (!mVideoSurfaceTransferPending) {
+                    callback.surfaceDestroyed(holder);
+                }
             }
         });
     }
@@ -194,6 +197,8 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         if (mMobileSurfaceLayoutParams == null) {
             mMobileSurfaceLayoutParams = surfaceRoot.getLayoutParams();
         }
+        // The old holder can remain valid until Android dispatches its destroy callback.
+        mAttachedVideoSurface = null;
         View subtitles = getMobileSubtitleView();
         if (subtitles != null && mMobileSubtitleLayoutParams == null) {
             mMobileSubtitleLayoutParams = subtitles.getLayoutParams();
@@ -219,6 +224,7 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         }
         if (surfaceRoot.getParent() != playbackRoot) {
             prepareVideoSurfaceTransfer();
+            mAttachedVideoSurface = null;
         }
         moveVideoView(surfaceRoot, playbackRoot, 0, mMobileSurfaceLayoutParams);
         View subtitles = getMobileSubtitleView();
