@@ -32,14 +32,13 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Restore private release signing key
-        env:
-          MOBILE_KEYSTORE_BASE64: ${{ secrets.MOBILE_KEYSTORE_BASE64 }}
+      - name: Configure repository release signing key
         run: |
           set -euo pipefail
-          test -n "$MOBILE_KEYSTORE_BASE64"
-          printf '%s' "$MOBILE_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/mobile-release.jks"
-          printf 'MOBILE_KEYSTORE_PATH=%s/mobile-release.jks\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
+          signing_dir="$GITHUB_WORKSPACE/.github/signing"
+          test -s "$signing_dir/mobile-release.jks"
+          cat "$signing_dir/mobile-release.env" >> "$GITHUB_ENV"
+          printf 'MOBILE_KEYSTORE_PATH=%s/mobile-release.jks\n' "$signing_dir" >> "$GITHUB_ENV"
 
       - name: Set increasing production version
         run: |
@@ -57,10 +56,6 @@ jobs:
         run: sdkmanager --install 'platforms;android-36' 'build-tools;35.0.0' 'ndk;28.2.13676358'
 
       - name: Build signed mobile release APKs
-        env:
-          MOBILE_KEYSTORE_PASSWORD: ${{ secrets.MOBILE_KEYSTORE_PASSWORD }}
-          MOBILE_KEY_ALIAS: ${{ secrets.MOBILE_KEY_ALIAS }}
-          MOBILE_KEY_PASSWORD: ${{ secrets.MOBILE_KEY_PASSWORD }}
         run: |
           set -euo pipefail
           printf 'sdk.dir=%s\n' "$ANDROID_HOME" > local.properties

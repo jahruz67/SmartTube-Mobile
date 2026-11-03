@@ -20,12 +20,14 @@ hs_err_pid*.log
 /dist/
 /release-assets/
 
-# Private signing material is supplied locally or through CI secrets.
+# Ignore local signing material except the project's release key.
 /signing/
 keystore.properties
 *.jks
 *.keystore
 *.p12
+!/.github/signing/mobile-release.jks
+!/.github/signing/mobile-release.env
 
 # Python tooling caches
 __pycache__/
