@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.io.File;
 import java.util.List;
+import java.util.concurrent.CancellationException;
 
 import arte.programar.materialfile.R;
 import arte.programar.materialfile.utils.FileTypeUtils;
@@ -18,10 +19,18 @@ import arte.programar.materialfile.utils.FileTypeUtils;
 class DirectoryAdapter extends RecyclerView.Adapter<DirectoryAdapter.DirectoryViewHolder> {
 
     private final List<File> mFiles;
+    private final FileTypeUtils.FileType[] mFileTypes;
     private OnItemClickListener mOnItemClickListener;
 
     DirectoryAdapter(List<File> files) {
         mFiles = files;
+        mFileTypes = new FileTypeUtils.FileType[files.size()];
+        for (int i = 0; i < files.size(); i++) {
+            if (Thread.currentThread().isInterrupted()) {
+                throw new CancellationException();
+            }
+            mFileTypes[i] = FileTypeUtils.getFileType(files.get(i));
+        }
     }
 
     void setOnItemClickListener(OnItemClickListener listener) {
@@ -41,7 +50,7 @@ class DirectoryAdapter extends RecyclerView.Adapter<DirectoryAdapter.DirectoryVi
     public void onBindViewHolder(DirectoryViewHolder holder, int position) {
         File currentFile = mFiles.get(position);
 
-        FileTypeUtils.FileType fileType = FileTypeUtils.getFileType(currentFile);
+        FileTypeUtils.FileType fileType = mFileTypes[position];
         holder.mFileImage.setImageResource(fileType.getIcon());
         holder.mFileSubtitle.setText(fileType.getDescription());
         holder.mFileTitle.setText(currentFile.getName());
@@ -68,7 +77,10 @@ class DirectoryAdapter extends RecyclerView.Adapter<DirectoryAdapter.DirectoryVi
             itemView.setOnClickListener(v -> {
                 // MOD:
                 //clickListener.onItemClick(v, getBindingAdapterPosition());
-                clickListener.onItemClick(v, getAdapterPosition());
+                int position = getAdapterPosition();
+                if (clickListener != null && position != RecyclerView.NO_POSITION) {
+                    clickListener.onItemClick(v, position);
+                }
             });
 
             mFileImage = itemView.findViewById(R.id.item_file_image);

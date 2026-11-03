@@ -529,7 +529,9 @@ public class SabrStream {
 
             // Normal reading: 47, 58. 52, 53, 42, 35, 20, 21, 22, 20...
             if (contains(KNOWN_PARTS, part.partId)) {
-                Log.d(TAG, "Found known part: id=%s, size=%s, position=%s", part.partId, part.size, part.data.getPosition());
+                if (android.util.Log.isLoggable(TAG, android.util.Log.DEBUG)) {
+                    Log.d(TAG, "Found known part: id=%s, size=%s, position=%s", part.partId, part.size, part.data.getPosition());
+                }
                 break;
             } else {
                 String msg = String.format("Unknown part encountered: id=%s, size=%s, position=%s", part.partId, part.size, part.data.getPosition());

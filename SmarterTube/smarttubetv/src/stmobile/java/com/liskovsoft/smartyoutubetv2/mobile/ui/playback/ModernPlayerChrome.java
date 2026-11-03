@@ -83,7 +83,26 @@ final class ModernPlayerChrome {
     private final TextView mPreviewTime;
     private final StoryboardManager mStoryboard;
     private int mPreviewIndex = -1;
+    private long mLastPreviewSecond = Long.MIN_VALUE;
+    private String mLastPreviewChapter;
+    private boolean mLastPreviewChapterVisible;
+    private boolean mHasPreviewLabels;
     private String mVideoId;
+    private long mLastPositionMs = Long.MIN_VALUE;
+    private long mLastDurationMs = Long.MIN_VALUE;
+    private boolean mPositionSnapshotValid;
+    private String mLastTimeText;
+    private int mLastSeekProgress = Integer.MIN_VALUE;
+    private boolean mHasPlayState;
+    private boolean mLastPlayState;
+    private boolean mHasCcState;
+    private boolean mLastCcState;
+    private boolean mHasLikeState;
+    private boolean mLastLikeState;
+    private boolean mHasDislikeState;
+    private boolean mLastDislikeState;
+    private boolean mChromeVisibilityKnown;
+    private boolean mLastChromeVisibility;
     private final View mActions;
     private final ImageButton mLike;
     private final ImageButton mDislike;
@@ -93,6 +112,7 @@ final class ModernPlayerChrome {
     private final TextView mSheetTitle;
     private final RecyclerView mSheetList;
     private boolean mSheetShowsUpNext;
+    private final int[] mSheetCardLocation = new int[2];
 
     private final Handler mHandler = new Handler(Looper.getMainLooper());
     private final Runnable mPoll = new Runnable() {
@@ -187,8 +207,14 @@ final class ModernPlayerChrome {
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 if (fromUser) {
                     long duration = mHost.getDurationMs();
-                    mTime.setText(timeWithChapter(duration * progress / SEEK_MAX, duration));
-                    updatePreview(progress);
+                    long position = duration * progress / SEEK_MAX;
+                    String chapter = chapterTitleAt(position);
+                    setTimeText(timeWithChapter(position, duration, chapter));
+                    mLastPositionMs = position;
+                    mLastDurationMs = duration;
+                    mPositionSnapshotValid = true;
+                    mLastSeekProgress = progress;
+                    updatePreview(progress, position, duration, chapter);
                     mHost.tickle(); // keep the controls up while dragging
                 }
             }
@@ -220,12 +246,14 @@ final class ModernPlayerChrome {
         mVideoId = video != null ? video.videoId : null;
         mUserSeeking = false;
         showPreview(false);
+        mPositionSnapshotValid = false;
         mStoryboard.init(video, durationMs);
     }
 
     /** Upstream's setSeekBarSegments(): null clears (new video), a list adds marks. */
     void setSeekBarSegments(List<SeekBarSegment> segments) {
         mSeek.addSegments(segments);
+        mPositionSnapshotValid = false;
     }
 
     private void showPreview(boolean show) {
@@ -245,6 +273,9 @@ final class ModernPlayerChrome {
             mCentre.setVisibility(View.VISIBLE);
             mPreview.setVisibility(View.GONE);
             mPreviewIndex = -1;
+            mHasPreviewLabels = false;
+            mLastPreviewSecond = Long.MIN_VALUE;
+            mLastPreviewChapter = null;
             mStoryboard.clearPreview();
         }
     }
@@ -252,11 +283,32 @@ final class ModernPlayerChrome {
     private void updatePreview(int progress) {
         long duration = mHost.getDurationMs();
         long position = duration * progress / SEEK_MAX;
-        mPreviewTime.setText(format(position));
-
         String chapter = chapterTitleAt(position);
-        mPreviewChapter.setText(chapter != null ? chapter : "");
-        mPreviewChapter.setVisibility(chapter != null ? View.VISIBLE : View.GONE);
+        updatePreview(progress, position, duration, chapter);
+    }
+
+    private void updatePreview(int progress, long position, long duration, String chapter) {
+        long displayedSecond = position / 1000;
+        if (!mHasPreviewLabels || displayedSecond != mLastPreviewSecond) {
+            String time = format(position);
+            if (!TextUtils.equals(mPreviewTime.getText(), time)) {
+                mPreviewTime.setText(time);
+            }
+            mLastPreviewSecond = displayedSecond;
+        }
+        boolean chapterVisible = chapter != null;
+        String chapterText = chapterVisible ? chapter : "";
+        if (!mHasPreviewLabels || !TextUtils.equals(mLastPreviewChapter, chapterText)) {
+            if (!TextUtils.equals(mPreviewChapter.getText(), chapterText)) {
+                mPreviewChapter.setText(chapterText);
+            }
+            mLastPreviewChapter = chapterText;
+        }
+        if (!mHasPreviewLabels || mLastPreviewChapterVisible != chapterVisible) {
+            mPreviewChapter.setVisibility(chapterVisible ? View.VISIBLE : View.GONE);
+            mLastPreviewChapterVisible = chapterVisible;
+        }
+        mHasPreviewLabels = true;
 
         // Keep the bubble centred over the thumb, inside the chrome's (padded) bounds.
         int width = dp(mLandscape ? PREVIEW_WIDTH_LANDSCAPE_DP : PREVIEW_WIDTH_DP);
@@ -282,7 +334,10 @@ final class ModernPlayerChrome {
 
     /** "1:17 / 19:06 • Chapter title" (YouTube-style), or just the times without chapters. */
     private String timeWithChapter(long positionMs, long durationMs) {
-        String chapter = chapterTitleAt(positionMs);
+        return timeWithChapter(positionMs, durationMs, chapterTitleAt(positionMs));
+    }
+
+    private String timeWithChapter(long positionMs, long durationMs, String chapter) {
         return chapter != null ? formatTime(positionMs, durationMs) + "  •  " + chapter : formatTime(positionMs, durationMs);
     }
 
@@ -326,7 +381,11 @@ final class ModernPlayerChrome {
             mUserSeeking = false; // hidden mid-drag (rotation, PIP): no stop-tracking callback follows
             showPreview(false);
         }
-        mRoot.setVisibility(show ? View.VISIBLE : View.GONE);
+        if (!mChromeVisibilityKnown || mLastChromeVisibility != show) {
+            mRoot.setVisibility(show ? View.VISIBLE : View.GONE);
+            mLastChromeVisibility = show;
+            mChromeVisibilityKnown = true;
+        }
         if (show) {
             update();
         }
@@ -366,16 +425,18 @@ final class ModernPlayerChrome {
         mRoot.setPadding(left, 0, right, 0);
     }
 
-    void bindVideo(Video video) {
+    void bindVideo(Video video, String author) {
         String videoId = video != null ? video.videoId : null;
         if (!TextUtils.equals(mVideoId, videoId)) {
             mVideoId = videoId;
             mUserSeeking = false;
             showPreview(false);
             mStoryboard.release();
+            mPositionSnapshotValid = false;
+            mLastSeekProgress = Integer.MIN_VALUE;
         }
         mTitle.setText(video != null && video.getTitle() != null ? video.getTitle() : "");
-        mChannel.setText(video != null && video.getAuthor() != null ? video.getAuthor() : "");
+        mChannel.setText(author != null ? author : "");
         if (mSheetShowsUpNext) {
             closeSheet(); // a video picked from More videos is now playing
         }
@@ -386,16 +447,52 @@ final class ModernPlayerChrome {
         if (mRoot.getVisibility() != View.VISIBLE) {
             return;
         }
-        mPlayPause.setImageResource(mHost.getPlayWhenReady() ? R.drawable.ic_shorts_pause : R.drawable.ic_shorts_play);
+        boolean playWhenReady = mHost.getPlayWhenReady();
+        if (!mHasPlayState || mLastPlayState != playWhenReady) {
+            mPlayPause.setImageResource(playWhenReady ? R.drawable.ic_shorts_pause : R.drawable.ic_shorts_play);
+            mLastPlayState = playWhenReady;
+            mHasPlayState = true;
+        }
         long duration = mHost.getDurationMs();
         if (!mUserSeeking) {
             long position = mHost.getPositionMs();
-            mTime.setText(timeWithChapter(position, duration));
-            mSeek.setProgress(duration > 0 ? (int) (position * SEEK_MAX / duration) : 0);
+            if (!mPositionSnapshotValid || position != mLastPositionMs || duration != mLastDurationMs) {
+                setTimeText(timeWithChapter(position, duration));
+                mLastPositionMs = position;
+                mLastDurationMs = duration;
+                mPositionSnapshotValid = true;
+            }
+            int progress = duration > 0 ? (int) (position * SEEK_MAX / duration) : 0;
+            if (mLastSeekProgress != progress) {
+                mSeek.setProgress(progress);
+                mLastSeekProgress = progress;
+            }
         }
-        mCc.setAlpha(isOn(R.id.lb_control_closed_captioning) ? 1f : 0.6f);
-        tint(mLike, isOn(R.id.action_thumbs_up));
-        tint(mDislike, isOn(R.id.action_thumbs_down));
+        boolean ccOn = isOn(R.id.lb_control_closed_captioning);
+        if (!mHasCcState || mLastCcState != ccOn) {
+            mCc.setAlpha(ccOn ? 1f : 0.6f);
+            mLastCcState = ccOn;
+            mHasCcState = true;
+        }
+        boolean likeOn = isOn(R.id.action_thumbs_up);
+        if (!mHasLikeState || mLastLikeState != likeOn) {
+            tint(mLike, likeOn);
+            mLastLikeState = likeOn;
+            mHasLikeState = true;
+        }
+        boolean dislikeOn = isOn(R.id.action_thumbs_down);
+        if (!mHasDislikeState || mLastDislikeState != dislikeOn) {
+            tint(mDislike, dislikeOn);
+            mLastDislikeState = dislikeOn;
+            mHasDislikeState = true;
+        }
+    }
+
+    private void setTimeText(String text) {
+        if (!TextUtils.equals(mLastTimeText, text)) {
+            mTime.setText(text);
+            mLastTimeText = text;
+        }
     }
 
     // ---- Sheet ---------------------------------------------------------------------------------
@@ -406,10 +503,11 @@ final class ModernPlayerChrome {
 
     /** Touch routing while the sheet is open: the card handles its own touches; a tap outside closes. */
     boolean handleSheetTouch(MotionEvent event) {
-        int[] loc = new int[2];
-        mSheetCard.getLocationOnScreen(loc);
-        boolean inside = event.getRawX() >= loc[0] && event.getRawX() <= loc[0] + mSheetCard.getWidth()
-                && event.getRawY() >= loc[1] && event.getRawY() <= loc[1] + mSheetCard.getHeight();
+        mSheetCard.getLocationOnScreen(mSheetCardLocation);
+        boolean inside = event.getRawX() >= mSheetCardLocation[0]
+                && event.getRawX() <= mSheetCardLocation[0] + mSheetCard.getWidth()
+                && event.getRawY() >= mSheetCardLocation[1]
+                && event.getRawY() <= mSheetCardLocation[1] + mSheetCard.getHeight();
         if (inside) {
             return false;
         }

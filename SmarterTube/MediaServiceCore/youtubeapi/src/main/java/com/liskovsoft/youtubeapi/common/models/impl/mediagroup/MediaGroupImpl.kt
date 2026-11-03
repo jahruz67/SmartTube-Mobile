@@ -17,6 +17,17 @@ import com.liskovsoft.youtubeapi.next.v2.gen.getShelves
 import com.liskovsoft.youtubeapi.notifications.gen.NotificationsResult
 import com.liskovsoft.youtubeapi.notifications.gen.getItems
 import com.liskovsoft.youtubeapi.search.v2.gen.SearchSection
+import java.util.IdentityHashMap
+
+private fun <T> mergeLists(first: List<T>?, second: List<T>?): List<T> {
+    if (first == null) return second ?: emptyList()
+    if (second == null) return first
+
+    return ArrayList<T>(first.size + second.size).apply {
+        addAll(first)
+        addAll(second)
+    }
+}
 
 /**
  *  Always renders first tab
@@ -27,7 +38,7 @@ internal data class BrowseMediaGroup(
     private val liveResult: BrowseResult? = null
 ): BaseMediaGroup(options) {
     override fun getItemWrappersInt(): List<ItemWrapper?> =
-        listOfNotNull(liveResult?.getLiveItems(), browseResult.getItems()).flatten()
+        mergeLists(liveResult?.getLiveItems(), browseResult.getItems())
     override fun getNextPageKeyInt(): String? = browseResult.getContinuationToken()
     override fun getTitleInt(): String? = browseResult.getTitle()
 }
@@ -48,7 +59,8 @@ internal data class LiveMediaGroup(
     private val liveResult: BrowseResult,
     private val options: MediaGroupOptions
 ): BaseMediaGroup(options) {
-    override fun getItemWrappersInt(): List<ItemWrapper?> = listOfNotNull(liveResult.getLiveItems(), liveResult.getPastLiveItems()).flatten()
+    override fun getItemWrappersInt(): List<ItemWrapper?> =
+        mergeLists(liveResult.getLiveItems(), liveResult.getPastLiveItems())
     override fun getNextPageKeyInt(): String? = null
     override fun getTitleInt(): String? = liveResult.getTitle()
 }
@@ -183,11 +195,17 @@ internal data class ChannelListMediaGroup(
             result.add(TabMediaItem(it, options.groupType))
         }
 
-        if (sortBy == SORT_BY_NAME) result.sortBy { it.title?.lowercase() }
+        if (sortBy == SORT_BY_NAME || sortBy == SORT_BY_NEW_CONTENT) {
+            val normalizedTitles = IdentityHashMap<MediaItem, String?>()
+            result.forEach { normalizedTitles[it] = it.title?.lowercase() }
+            val titleComparator = Comparator<MediaItem> { left, right ->
+                compareValues(normalizedTitles[left], normalizedTitles[right])
+            }
+            result.sortWith(titleComparator)
 
-        if (sortBy == SORT_BY_NEW_CONTENT) {
-            result.sortBy { it.title?.lowercase() }
-            result.sortByDescending { it.hasNewContent() }
+            if (sortBy == SORT_BY_NEW_CONTENT) {
+                result.sortByDescending { it.hasNewContent() }
+            }
         }
 
         result
@@ -249,7 +267,7 @@ internal data class MergedMediaGroup(
     private val live: MediaGroup?
 ): BaseMediaGroup(options) {
     init {
-        mediaItems = listOfNotNull(live?.mediaItems, videos?.mediaItems).flatten()
+        mediaItems = mergeLists(live?.mediaItems, videos?.mediaItems)
     }
 
     override fun getItemWrappersInt(): List<ItemWrapper?>? = null

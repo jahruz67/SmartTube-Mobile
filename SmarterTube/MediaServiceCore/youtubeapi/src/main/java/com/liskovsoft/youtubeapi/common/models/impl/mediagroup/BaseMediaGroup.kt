@@ -1,6 +1,7 @@
 package com.liskovsoft.youtubeapi.common.models.impl.mediagroup
 
 import com.liskovsoft.googlecommon.common.helpers.YouTubeHelper
+import com.liskovsoft.googlecommon.common.helpers.ServiceHelper
 import com.liskovsoft.mediaserviceinterfaces.data.MediaGroup
 import com.liskovsoft.mediaserviceinterfaces.data.MediaItem
 import com.liskovsoft.youtubeapi.browse.v2.BrowseApiHelper
@@ -16,10 +17,18 @@ internal abstract class BaseMediaGroup(private val options: MediaGroupOptions): 
         (options.removeWatched && (it.getPercentWatched() ?: 0) > 80 && !it.isLive())
     }
     // TODO: remove the filter when yt will able to mark shorts longer than one minute
-    private val legacyFilter: ((WrapperMediaItem) -> Boolean) = {
-        options.removeShorts
-                && (options.groupType == MediaGroup.TYPE_HISTORY || options.groupType == MediaGroup.TYPE_HOME)
-                && YouTubeHelper.isShorts(it, options.enableLegacyUI)
+    private val legacyFilter: ((ItemWrapper) -> Boolean) = { item ->
+        if (options.removeShorts &&
+                (options.groupType == MediaGroup.TYPE_HISTORY || options.groupType == MediaGroup.TYPE_HOME)) {
+            val title = item.getTitle()
+            title != null && YouTubeHelper.isShorts(
+                    title,
+                    ServiceHelper.timeTextToMillis(item.getLengthText() ?: item.getBadgeText()),
+                    item.getThumbnails()?.getOptimalResThumbnailUrl(),
+                    options.enableLegacyUI)
+        } else {
+            false
+        }
     }
     private var _titleItem: String? = null
         get() = field ?: titleItem
@@ -32,9 +41,8 @@ internal abstract class BaseMediaGroup(private val options: MediaGroupOptions): 
     private val titleItem by lazy { getTitleInt() }
     protected open val mediaItemList: List<MediaItem?>? by lazy { getItemWrappersInt()
         ?.mapIndexedNotNull { index, it -> it
-            ?.let { if (filter.invoke(it)) null else it }
+            ?.let { if (filter.invoke(it) || legacyFilter.invoke(it)) null else it }
             ?.let { WrapperMediaItem(it).apply { playlistIndex = index } }
-            ?.let { if (legacyFilter.invoke(it)) null else it }
         }?.let {
             // Move Watch Later to the top
             if (options.groupType != MediaGroup.TYPE_USER_PLAYLISTS)

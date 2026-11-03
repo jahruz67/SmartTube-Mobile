@@ -188,6 +188,42 @@ public class MessagesListAdapter<MESSAGE extends IMessage>
         trimEnd();
     }
 
+    /** Equivalent to repeated addToStart calls, with one prefix shift and insertion notification. */
+    public void addAllToStart(List<MESSAGE> messages, boolean scroll) {
+        if (messages == null || messages.isEmpty()) {
+            return;
+        }
+        List<Wrapper> prefix = new ArrayList<>();
+        Date previous = null;
+        for (MESSAGE message : messages) {
+            if (!IMessage.checkMessage(message)) {
+                continue;
+            }
+            if (prefix.isEmpty()) {
+                removeLoadingMessageIfNeeded();
+            }
+            if (isDateHeaderEnabled) {
+                boolean sameDate = prefix.isEmpty() ? isPreviousSameDate(0, message.getCreatedAt())
+                        : DateFormatter.isSameDay(previous, message.getCreatedAt());
+                if (!sameDate) {
+                    prefix.add(new Wrapper<>(message.getCreatedAt()));
+                }
+            }
+            prefix.add(new Wrapper<>(message));
+            previous = message.getCreatedAt();
+        }
+        if (prefix.isEmpty()) {
+            return;
+        }
+        Collections.reverse(prefix);
+        items.addAll(0, prefix);
+        notifyItemRangeInserted(0, prefix.size());
+        if (layoutManager != null && scroll) {
+            layoutManager.scrollToPosition(0);
+        }
+        trimEnd();
+    }
+
     /**
      * Adds messages list in chronological order. Use this method to add history.
      *

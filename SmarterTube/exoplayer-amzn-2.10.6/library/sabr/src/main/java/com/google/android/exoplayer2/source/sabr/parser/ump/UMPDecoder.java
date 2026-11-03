@@ -3,12 +3,12 @@ package com.google.android.exoplayer2.source.sabr.parser.ump;
 import androidx.annotation.NonNull;
 
 import com.google.android.exoplayer2.extractor.ExtractorInput;
-import com.liskovsoft.sharedutils.helpers.Helpers;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
 public class UMPDecoder {
+    private final byte[] mVarIntByte = new byte[1];
     public UMPPart decode(@NonNull ExtractorInput extractorInput) {
         try {
             int partType = (int) readVarInt(extractorInput);
@@ -27,10 +27,10 @@ public class UMPDecoder {
         }
     }
 
-    private long readVarInt(StreamWrapper input) throws IOException, InterruptedException {
+    private synchronized long readVarInt(StreamWrapper input) throws IOException, InterruptedException {
         // https://web.archive.org/web/20250430054327/https://github.com/gsuberland/UMP_Format/blob/main/UMP_Format.md
         // https://web.archive.org/web/20250429151021/https://github.com/davidzeng0/innertube/blob/main/googlevideo/ump.md
-        byte[] buffer = new byte[1];
+        byte[] buffer = mVarIntByte;
         boolean success = input.readFully(buffer, 0, 1, true);
         if (!success) {
             // Expected EOF
@@ -48,7 +48,7 @@ public class UMPDecoder {
             result |= byteInt & mask;
         }
 
-        for (int i : Helpers.range(1, size - 1, 1)) {
+        for (int i = 1; i < size; i++) {
             success = input.readFully(buffer, 0, 1, true);
             if (!success) {
                 return -1;

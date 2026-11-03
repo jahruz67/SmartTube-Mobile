@@ -6,6 +6,7 @@ import com.liskovsoft.youtubeapi.formatbuilders.mpdbuilder.MediaFormatComparator
 import com.liskovsoft.youtubeapi.formatbuilders.utils.MediaFormatUtils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -55,9 +56,10 @@ public class YouTubeUrlListBuilder implements UrlListBuilder {
         // Put hq items on top.
         // Note, hq items sometimes cannot be played.
         for (MediaFormat item : mVideos) {
-            list.add(0, item.getUrl());
+            list.add(item.getUrl());
         }
 
+        Collections.reverse(list);
         return list;
     }
 }

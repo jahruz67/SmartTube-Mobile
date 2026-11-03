@@ -49,7 +49,7 @@ public class Playlist {
      * Used to sync list with remotely added items
      */
     public void addAll(List<Video> videos) {
-        mPlaylist.removeAll(videos);
+        mPlaylist.removeAll(new java.util.HashSet<>(videos));
         mPlaylist.addAll(videos);
     }
 

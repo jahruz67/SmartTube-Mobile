@@ -160,14 +160,15 @@ public class PlayerUIController extends BasePlayerController {
         }
 
         // Only default in the list
-        if (getPlayer().getSubtitleFormats() == null || getPlayer().getSubtitleFormats().size() == 1) {
+        List<FormatItem> subtitleFormats = getPlayer().getSubtitleFormats();
+        if (subtitleFormats == null || subtitleFormats.size() == 1) {
             return;
         }
 
         FormatItem matchedFormat = null;
 
         for (FormatItem item : getPlayerData().getLastSubtitleFormats()) {
-            if (getPlayer().getSubtitleFormats().contains(item)) {
+            if (subtitleFormats.contains(item)) {
                 matchedFormat = item;
                 break;
             }

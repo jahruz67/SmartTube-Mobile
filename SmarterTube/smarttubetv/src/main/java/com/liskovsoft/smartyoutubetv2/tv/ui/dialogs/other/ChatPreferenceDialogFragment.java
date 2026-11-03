@@ -22,6 +22,8 @@ public class ChatPreferenceDialogFragment extends LeanbackPreferenceDialogFragme
     private boolean mIsTransparent;
     private ChatReceiver mChatReceiver;
     private CharSequence mDialogTitle;
+    private ChatReceiver.Callback mChatCallback;
+    private MessagesList mMessagesList;
 
     public static ChatPreferenceDialogFragment newInstance(ChatReceiver chatReceiver, String key) {
         final Bundle args = new Bundle(1);
@@ -58,6 +60,7 @@ public class ChatPreferenceDialogFragment extends LeanbackPreferenceDialogFragme
         }
 
         MessagesList messagesList = (MessagesList) view.findViewById(R.id.messagesList);
+        mMessagesList = messagesList;
         MessagesListAdapter<ChatItemMessage> adapter = new MessagesListAdapter<>(SENDER_ID, (imageView, url, payload) ->
                 Glide.with(view.getContext())
                     .load(url)
@@ -67,7 +70,8 @@ public class ChatPreferenceDialogFragment extends LeanbackPreferenceDialogFragme
         messagesList.setAdapter(adapter);
 
         if (mChatReceiver != null) {
-            mChatReceiver.setCallback(chatItem -> adapter.addToStart(ChatItemMessage.from(chatItem), true));
+            mChatCallback = chatItem -> adapter.addToStart(ChatItemMessage.from(chatItem), true);
+            mChatReceiver.setCallback(mChatCallback);
         }
 
         if (mIsTransparent) {
@@ -79,5 +83,19 @@ public class ChatPreferenceDialogFragment extends LeanbackPreferenceDialogFragme
 
     public void enableTransparent(boolean enable) {
         mIsTransparent = enable;
+    }
+
+    @Override
+    public void onDestroyView() {
+        if (mChatReceiver != null && mChatCallback != null) {
+            mChatReceiver.clearCallback(mChatCallback);
+        }
+        mChatCallback = null;
+        if (mMessagesList != null) {
+            mMessagesList.clearOnScrollListeners();
+            mMessagesList.swapAdapter(null, true);
+            mMessagesList = null;
+        }
+        super.onDestroyView();
     }
 }

@@ -8,4 +8,7 @@ public interface ChatReceiver {
     }
     void addChatItem(ChatItem chatItem);
     void setCallback(Callback callback);
+    default void clearCallback(Callback owner) {
+        // Implementations with callback ownership can detach only the requested owner.
+    }
 }

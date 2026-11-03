@@ -20,8 +20,21 @@ internal data class SuggestionsGroup(val shelf: ShelfRenderer): MediaGroup {
                     set(value) { field = value ?: "" }
 
     private val titleItem by lazy { shelf.getTitle() }
-    private val mediaItemList by lazy { (shelves?.flatMap { it.getItemWrappers() ?: emptyList() } ?: shelf.getItemWrappers())
-        ?.mapIndexed { index, it -> it?.let { WrapperMediaItem(it).apply { playlistIndex = index } } } }
+    private val mediaItemList by lazy {
+        shelves?.let { shelfList ->
+            val result = ArrayList<MediaItem?>()
+            var index = 0
+            shelfList.forEach { shelf ->
+                shelf.getItemWrappers()?.forEach { wrapper ->
+                    result.add(wrapper?.let { WrapperMediaItem(it).apply { playlistIndex = index } })
+                    index++
+                }
+            }
+            result
+        } ?: shelf.getItemWrappers()?.mapIndexed { index, wrapper ->
+            wrapper?.let { WrapperMediaItem(it).apply { playlistIndex = index } }
+        }
+    }
     private val nextPageKeyVal by lazy { shelf.getContinuationToken() }
 
     override fun getType(): Int {

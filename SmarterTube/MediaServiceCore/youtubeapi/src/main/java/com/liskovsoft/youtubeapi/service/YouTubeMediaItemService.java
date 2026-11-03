@@ -480,12 +480,24 @@ public class YouTubeMediaItemService implements MediaItemService {
     public Observable<DeArrowData> getDeArrowDataObserve(List<String> videoIds) {
         return RxHelper.create(emitter -> {
             for (String videoId : videoIds) {
+                if (emitter.isDisposed()) {
+                    return;
+                }
+
                 DeArrowData result = getDeArrowData(videoId);
-                if (result != null) {
+
+                if (emitter.isDisposed()) {
+                    return;
+                }
+
+                if (result != null && !emitter.isDisposed()) {
                     emitter.onNext(result);
                 }
             }
-            emitter.onComplete();
+
+            if (!emitter.isDisposed()) {
+                emitter.onComplete();
+            }
         });
     }
 

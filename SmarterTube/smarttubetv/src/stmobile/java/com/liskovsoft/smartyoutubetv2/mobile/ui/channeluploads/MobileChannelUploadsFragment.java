@@ -23,6 +23,8 @@ import com.liskovsoft.smartyoutubetv2.common.app.views.ChannelUploadsView;
 import com.liskovsoft.smartyoutubetv2.mobile.ui.browse.VideoCardAdapter;
 import com.liskovsoft.smartyoutubetv2.tv.R;
 
+import java.util.List;
+
 /**
  * Native portrait Channel-uploads screen. Implements {@link ChannelUploadsView} and is
  * driven by the existing {@link ChannelUploadsPresenter} unchanged. One continuous
@@ -129,7 +131,13 @@ public class MobileChannelUploadsFragment extends Fragment implements ChannelUpl
                 break;
             case VideoGroup.ACTION_APPEND:
                 if (!group.isEmpty()) {
-                    mAdapter.setVideosIncrementally(group.getVideos());
+                    List<Video> videos = group.getVideos();
+                    int oldCount = mAdapter.getItemCount();
+                    if (videos != null && videos.size() > oldCount) {
+                        mAdapter.appendVideos(videos.subList(oldCount, videos.size()));
+                    } else {
+                        mAdapter.setVideos(videos);
+                    }
                 }
                 break;
             default: // ACTION_PREPEND

@@ -143,9 +143,19 @@ public final class YouTubeHelper {
             return false;
         }
 
-        String title = mediaItem.getTitle().toLowerCase();
+        return isShorts(
+                mediaItem.getTitle(),
+                mediaItem.getDurationMs(),
+                mediaItem.getCardImageUrl(),
+                isLegacyUiEnabled);
+    }
 
-        long lengthMs = mediaItem.getDurationMs();
+    public static boolean isShorts(String itemTitle, long lengthMs, String imageUrl, boolean isLegacyUiEnabled) {
+        if (itemTitle == null) {
+            return false;
+        }
+
+        String title = itemTitle.toLowerCase();
 
         // YT already able to mark shorts shorter than one minute (but not more than that)
         if (!isLegacyUiEnabled && lengthMs > 0 && lengthMs <= 60_000) {
@@ -164,7 +174,6 @@ public final class YouTubeHelper {
             return true;
         }
 
-        String imageUrl = mediaItem.getCardImageUrl();
         boolean isShortsUrl = imageUrl != null && (imageUrl.contains("-AG2CIACgA-") || imageUrl.contains("-oaymwEmCIAFEOAD8quKqQMa8AEB-AHOBYAC"));
 
         if (isShortsUrl) {

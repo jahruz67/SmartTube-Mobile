@@ -14,7 +14,6 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
-import java.util.concurrent.CopyOnWriteArrayList
 
 internal object RssService {
     private const val RSS_URL: String = "https://www.youtube.com/feeds/videos.xml?channel_id="
@@ -43,12 +42,16 @@ internal object RssService {
     }
 
     private fun fetchFeeds(channelIds: List<String>): MutableList<MediaItem> = runBlocking {
-        val items = CopyOnWriteArrayList<MediaItem>()
+        val items = mutableListOf<MediaItem>()
 
         coroutineScope { // wait for all child coroutines complete
             for (channelId in channelIds) {
                 launch {
-                    fetchFeed(channelId)?.let { items.addAll(it) }
+                    fetchFeed(channelId)?.let { feedItems ->
+                        synchronized(items) {
+                            items.addAll(feedItems)
+                        }
+                    }
                 }
             }
         }

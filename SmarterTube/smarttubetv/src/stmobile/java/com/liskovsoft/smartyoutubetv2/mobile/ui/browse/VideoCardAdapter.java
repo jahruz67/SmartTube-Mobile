@@ -17,8 +17,10 @@ import com.liskovsoft.smartyoutubetv2.tv.R;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Flat list of video cards. Used both for grid sections and (horizontally) inside shelves.
@@ -43,6 +45,7 @@ public class VideoCardAdapter extends RecyclerView.Adapter<VideoCardAdapter.View
     private final OnVideoAction mClick;
     private final OnVideoAction mLongClick;
     private final List<Video> mVideos = new ArrayList<>();
+    private final Map<Video, List<Integer>> mPositionsByVideo = new HashMap<>();
     private boolean mAdaptiveStyles;
     private boolean mVerticalShorts;
 
@@ -110,22 +113,8 @@ public class VideoCardAdapter extends RecyclerView.Adapter<VideoCardAdapter.View
         if (videos != null) {
             mVideos.addAll(videos);
         }
+        rebuildPositionIndex();
         notifyDataSetChanged();
-    }
-
-    /** Append a cumulative continuation without rebinding its unchanged prefix. */
-    public void setVideosIncrementally(List<Video> videos) {
-        if (videos == null || videos.size() <= mVideos.size()) {
-            setVideos(videos);
-            return;
-        }
-        for (int i = 0; i < mVideos.size(); i++) {
-            if (mVideos.get(i) != videos.get(i)) {
-                setVideos(videos);
-                return;
-            }
-        }
-        appendVideos(videos.subList(mVideos.size(), videos.size()));
     }
 
     /**
@@ -143,19 +132,53 @@ public class VideoCardAdapter extends RecyclerView.Adapter<VideoCardAdapter.View
         if (videos == null || videos.isEmpty()) {
             return;
         }
+        int count = videos.size();
         mVideos.addAll(position, videos);
+        shiftIndexedPositions(position, count);
+        for (int i = 0; i < count; i++) {
+            addIndexedPosition(mVideos.get(position + i), position + i);
+        }
         notifyItemRangeInserted(position, videos.size());
     }
 
     public void clear() {
         mVideos.clear();
+        mPositionsByVideo.clear();
         notifyDataSetChanged();
     }
 
     public void remove(List<Video> videos) {
-        if (videos != null && mVideos.removeAll(videos)) {
-            notifyDataSetChanged();
+        if (videos == null || videos.isEmpty()) {
+            return;
         }
+
+        Set<Video> requested = new HashSet<>(videos);
+        List<Integer> removed = new ArrayList<>();
+        for (int i = 0; i < mVideos.size(); i++) {
+            if (requested.contains(mVideos.get(i))) {
+                removed.add(i);
+            }
+        }
+        if (removed.isEmpty()) {
+            return;
+        }
+
+        // Remove from the end so earlier positions remain valid. Group adjacent rows into a
+        // single range notification while preserving the order and duplicate semantics of removeAll.
+        for (int i = removed.size() - 1; i >= 0;) {
+            int end = removed.get(i);
+            int start = end;
+            i--;
+            while (i >= 0 && removed.get(i) == start - 1) {
+                start = removed.get(i);
+                i--;
+            }
+            for (int position = end; position >= start; position--) {
+                mVideos.remove(position);
+            }
+            notifyItemRangeRemoved(start, end - start + 1);
+        }
+        rebuildPositionIndex();
     }
 
     /**
@@ -167,26 +190,52 @@ public class VideoCardAdapter extends RecyclerView.Adapter<VideoCardAdapter.View
         if (changed == null || changed.isEmpty()) {
             return;
         }
-        Map<Video, List<Integer>> positions = new HashMap<>();
         for (Video video : changed) {
-            if (video != null && !positions.containsKey(video)) {
-                positions.put(video, new ArrayList<>());
-            }
-        }
-        for (int i = 0; i < mVideos.size(); i++) {
-            List<Integer> matches = positions.get(mVideos.get(i));
-            if (matches != null) {
-                matches.add(i);
-            }
-        }
-        for (Video video : changed) {
-            List<Integer> matches = positions.get(video);
+            List<Integer> matches = video != null ? mPositionsByVideo.get(video) : null;
             if (matches == null) {
                 continue;
             }
             for (int position : matches) {
                 mVideos.get(position).sync(video);
                 notifyItemChanged(position, WATCHED_PAYLOAD);
+            }
+        }
+    }
+
+    private void rebuildPositionIndex() {
+        mPositionsByVideo.clear();
+        for (int i = 0; i < mVideos.size(); i++) {
+            addIndexedPosition(mVideos.get(i), i);
+        }
+    }
+
+    private void addIndexedPosition(Video video, int position) {
+        if (video == null) {
+            return;
+        }
+        List<Integer> positions = mPositionsByVideo.get(video);
+        if (positions == null) {
+            positions = new ArrayList<>();
+            mPositionsByVideo.put(video, positions);
+        }
+        if (positions.isEmpty() || positions.get(positions.size() - 1) < position) {
+            positions.add(position);
+            return;
+        }
+        int index = 0;
+        while (index < positions.size() && positions.get(index) < position) {
+            index++;
+        }
+        positions.add(index, position);
+    }
+
+    private void shiftIndexedPositions(int fromPosition, int amount) {
+        for (List<Integer> positions : mPositionsByVideo.values()) {
+            for (int i = 0; i < positions.size(); i++) {
+                int position = positions.get(i);
+                if (position >= fromPosition) {
+                    positions.set(i, position + amount);
+                }
             }
         }
     }
@@ -244,7 +293,15 @@ public class VideoCardAdapter extends RecyclerView.Adapter<VideoCardAdapter.View
 
         Video video = mVideos.get(position);
         holder.title.setText(video.getTitle());
-        String author = video.getAuthor();
+        String author;
+        String stats = null;
+        if (holder.style == STYLE_VIDEO) {
+            Video.AuthorAndStats authorAndStats = video.getAuthorAndStats();
+            author = authorAndStats.author;
+            stats = authorAndStats.stats;
+        } else {
+            author = video.getAuthor();
+        }
         if (holder.style != STYLE_VIDEO && (author == null || author.isEmpty())) {
             // Shorts/playlist tiles often carry no author; show their secondary line
             // (view count / "View full playlist") instead.
@@ -253,7 +310,6 @@ public class VideoCardAdapter extends RecyclerView.Adapter<VideoCardAdapter.View
         }
         if (holder.style == STYLE_VIDEO && author != null && !author.isEmpty()) {
             // Second line: "196K views • 2 wk ago" (the published time was missing on cards).
-            String stats = video.getSecondTitleAfterAuthor();
             if (stats != null) {
                 author = author + "\n" + stats;
             }
@@ -289,6 +345,12 @@ public class VideoCardAdapter extends RecyclerView.Adapter<VideoCardAdapter.View
             }
             return true;
         });
+    }
+
+    @Override
+    public void onViewRecycled(@NonNull ViewHolder holder) {
+        Glide.with(holder.itemView.getContext()).clear(holder.thumb);
+        super.onViewRecycled(holder);
     }
 
     /**

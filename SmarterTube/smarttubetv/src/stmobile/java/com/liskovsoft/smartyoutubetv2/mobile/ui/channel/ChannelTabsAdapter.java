@@ -219,7 +219,10 @@ public class ChannelTabsAdapter extends RecyclerView.Adapter<ChannelTabsAdapter.
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         // Pages are recycled across tabs, so the column count is per bind, not per holder.
         ((GridLayoutManager) holder.grid.getLayoutManager()).setSpanCount(spanFor(mGroups.get(position)));
-        holder.grid.setAdapter(mAdapters.get(position));
+        RecyclerView.Adapter<?> adapter = mAdapters.get(position);
+        if (holder.grid.getAdapter() != adapter) {
+            holder.grid.setAdapter(adapter);
+        }
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {

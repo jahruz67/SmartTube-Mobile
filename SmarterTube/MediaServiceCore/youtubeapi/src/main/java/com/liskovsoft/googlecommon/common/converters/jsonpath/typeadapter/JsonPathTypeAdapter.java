@@ -7,7 +7,6 @@ import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.ParseContext;
 import com.jayway.jsonpath.PathNotFoundException;
 import com.liskovsoft.googlecommon.common.converters.jsonpath.JsonPathObj;
-import com.liskovsoft.sharedutils.helpers.Helpers;
 import com.liskovsoft.sharedutils.mylogger.Log;
 import com.liskovsoft.googlecommon.common.converters.jsonpath.JsonPath;
 import com.liskovsoft.googlecommon.common.helpers.ReflectionHelper;
@@ -19,9 +18,12 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 public class JsonPathTypeAdapter<T> {
     private static final String TAG = JsonPathTypeAdapter.class.getSimpleName();
+    private static final ConcurrentMap<Class<?>, FieldDescriptor[]> FIELD_METADATA = new ConcurrentHashMap<>();
     private final ParseContext mParser;
     private final Class<?> mType;
 
@@ -39,25 +41,26 @@ public class JsonPathTypeAdapter<T> {
     public final T read(InputStream is) {
         is = process(is);
 
-        String jsonContent = null;
+        DocumentContext parser = mParser.parse(is);
 
         String[] jsonPath = getJsonPath(getGenericType());
 
         if (jsonPath != null) { // annotation on the same collection class
-            DocumentContext parser = mParser.parse(is);
             for (String path : jsonPath) {
                 try {
-                    jsonContent = parser.read(path).toString();
-                    break;
+                    Object jsonValue = parser.read(path);
+                    if (jsonValue == null) {
+                        throw new NullPointerException();
+                    }
+                    return (T) readType(getGenericType(), jsonValue);
                 } catch (PathNotFoundException e) {
                     Log.e(TAG, e.getMessage());
                 }
             }
-        } else { // annotation on field
-            jsonContent = Helpers.toString(is);
+            return null;
         }
 
-        T result = (T) readType(getGenericType(), jsonContent);
+        T result = (T) readType(getGenericType(), parser);
 
         //if (result == null) {
         //    // Dump root object
@@ -78,8 +81,16 @@ public class JsonPathTypeAdapter<T> {
         return mType;
     }
 
-    private Object readType(Class<?> type, String jsonContent) {
-        if (type == null || jsonContent == null) {
+    private Object readType(Class<?> type, Object jsonValue) {
+        if (type == null || jsonValue == null) {
+            return null;
+        }
+
+        return readType(type, mParser.parse(jsonValue));
+    }
+
+    private Object readType(Class<?> type, DocumentContext parser) {
+        if (type == null || parser == null) {
             return null;
         }
 
@@ -90,11 +101,9 @@ public class JsonPathTypeAdapter<T> {
             Constructor<?> constructor = type.getConstructor();
             obj = constructor.newInstance();
 
-            DocumentContext parser = mParser.parse(jsonContent);
+            FieldDescriptor[] fields = getFieldMetadata(type);
 
-            List<Field> fields = ReflectionHelper.getAllFields(type);
-
-            for (Field field : fields) {
+            for (FieldDescriptor field : fields) {
                 boolean result = processField(field, obj, type, parser);
 
                 // At least one field is set
@@ -109,12 +118,12 @@ public class JsonPathTypeAdapter<T> {
         return done ? obj : null;
     }
 
-    private boolean processField(Field field, Object obj, Class<?> type, DocumentContext parser) {
+    private boolean processField(FieldDescriptor descriptor, Object obj, Class<?> type, DocumentContext parser) {
         //Log.d(TAG, "Processing on thread: %s", Thread.currentThread().getName());
 
+        Field field = descriptor.field;
         boolean done = false;
-        field.setAccessible(true);
-        String[] jsonPath = getJsonPath(field);
+        String[] jsonPath = descriptor.jsonPath;
 
         if (jsonPath == null) {
             return false;
@@ -137,11 +146,11 @@ public class JsonPathTypeAdapter<T> {
 
         try {
             if (JsonPathObj.class.isAssignableFrom(field.getType())) {
-                Object val = readType(field.getType(), jsonVal.toString());
+                Object val = readType(field.getType(), jsonVal);
                 field.set(obj, val);
             } else if (jsonVal instanceof JsonArray) {
                 List<Object> list = null;
-                Class<?> myType = ReflectionHelper.getGenericParamType(field);
+                Class<?> myType = descriptor.getGenericParamType();
 
                 if (myType == null) {
                     Log.e(TAG, "Please, supply generic field for the list type: " + field);
@@ -154,7 +163,7 @@ public class JsonPathTypeAdapter<T> {
                     if (jsonObj instanceof JsonPrimitive) {
                         item = parsePrimitive((JsonPrimitive) jsonObj);
                     } else {
-                        item = readType(myType, jsonObj.toString());
+                        item = readType(myType, jsonObj);
                     }
 
                     if (item != null) {
@@ -172,7 +181,7 @@ public class JsonPathTypeAdapter<T> {
 
                 field.set(obj, val);
             } else if (jsonVal instanceof JsonObject) {
-                Object val = readType(field.getType(), jsonVal.toString());
+                Object val = readType(field.getType(), jsonVal);
                 field.set(obj, val);
             }
 
@@ -186,19 +195,36 @@ public class JsonPathTypeAdapter<T> {
         return done;
     }
 
-    private String[] getJsonPath(Class<?> type) {
+    private static FieldDescriptor[] getFieldMetadata(Class<?> type) {
+        FieldDescriptor[] cached = FIELD_METADATA.get(type);
+        if (cached != null) {
+            return cached;
+        }
+
+        List<FieldDescriptor> descriptors = new ArrayList<>();
+        for (Field field : ReflectionHelper.getAllFields(type)) {
+            field.setAccessible(true);
+            descriptors.add(new FieldDescriptor(field, getJsonPath(field), ReflectionHelper.getGenericParams(field)));
+        }
+
+        FieldDescriptor[] computed = descriptors.toArray(new FieldDescriptor[0]);
+        FieldDescriptor[] existing = FIELD_METADATA.putIfAbsent(type, computed);
+        return existing != null ? existing : computed;
+    }
+
+    private static String[] getJsonPath(Class<?> type) {
         Annotation[] annotations = type.getAnnotations();
 
         return getJsonPath(annotations);
     }
 
-    private String[] getJsonPath(Field field) {
+    private static String[] getJsonPath(Field field) {
         Annotation[] annotations = field.getAnnotations();
 
         return getJsonPath(annotations);
     }
 
-    private String[] getJsonPath(Annotation[] annotations) {
+    private static String[] getJsonPath(Annotation[] annotations) {
         for (Annotation annotation : annotations) {
             if (annotation instanceof JsonPath) {
                 return ((JsonPath) annotation).value();
@@ -224,5 +250,25 @@ public class JsonPathTypeAdapter<T> {
         }
 
         return val;
+    }
+
+    private static final class FieldDescriptor {
+        private final Field field;
+        private final String[] jsonPath;
+        private final Type[] genericParams;
+
+        private FieldDescriptor(Field field, String[] jsonPath, Type[] genericParams) {
+            this.field = field;
+            this.jsonPath = jsonPath;
+            this.genericParams = genericParams;
+        }
+
+        private Class<?> getGenericParamType() {
+            if (genericParams != null && genericParams.length == 1) {
+                return (Class<?>) genericParams[0];
+            }
+
+            return null;
+        }
     }
 }

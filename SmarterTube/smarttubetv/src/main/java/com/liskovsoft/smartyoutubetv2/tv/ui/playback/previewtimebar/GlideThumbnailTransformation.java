@@ -7,7 +7,6 @@ import com.bumptech.glide.load.resource.bitmap.BitmapTransformation;
 import com.liskovsoft.sharedutils.mylogger.Log;
 import com.liskovsoft.smartyoutubetv2.common.BuildConfig;
 
-import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 
 public class GlideThumbnailTransformation extends BitmapTransformation {
@@ -20,6 +19,7 @@ public class GlideThumbnailTransformation extends BitmapTransformation {
 
     private final int mX;
     private final int mY;
+    private final byte[] mDiskKey = new byte[8];
 
     public GlideThumbnailTransformation(long position) {
         this(position, 0, 0, 7, 7, 5000);
@@ -35,6 +35,10 @@ public class GlideThumbnailTransformation extends BitmapTransformation {
         int thumbPos = (int) position / mThumbDurationMS;
         mY = thumbPos / mMaxLines;
         mX = thumbPos % mMaxColumns;
+        for (int i = 0; i < 4; i++) {
+            mDiskKey[i] = (byte) (mX >>> ((3 - i) * 8));
+            mDiskKey[i + 4] = (byte) (mY >>> ((3 - i) * 8));
+        }
 
         if (BuildConfig.DEBUG) {
             Log.d(TAG, "Thumbnail coordinates (%sx%s): pos: %s, line: %s, col: %s", mMaxColumns, mMaxLines, thumbPos + 1, mY + 1, mX + 1);
@@ -59,13 +63,12 @@ public class GlideThumbnailTransformation extends BitmapTransformation {
 
     @Override
     public void updateDiskCacheKey(MessageDigest messageDigest) {
-        byte[] data = ByteBuffer.allocate(8).putInt(mX).putInt(mY).array();
-        messageDigest.update(data);
+        messageDigest.update(mDiskKey);
     }
 
     @Override
     public int hashCode() {
-        return (String.valueOf(mX) + String.valueOf(mY)).hashCode();
+        return 31 * mX + mY;
     }
 
     @Override

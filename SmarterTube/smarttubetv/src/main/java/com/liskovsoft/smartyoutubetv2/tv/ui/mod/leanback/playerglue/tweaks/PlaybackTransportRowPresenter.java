@@ -105,6 +105,10 @@ public class PlaybackTransportRowPresenter extends PlaybackRowPresenter {
         long mTotalTimeInMs = Long.MIN_VALUE;
         long mCurrentTimeInMs = Long.MIN_VALUE;
         long mRemainingTimeInMs = Long.MIN_VALUE;
+        long mDisplayedTimeBucket = Long.MIN_VALUE;
+        int mDisplayedTimeMode = -1;
+        java.util.Locale mDisplayedTimeLocale;
+        boolean mDisplayed24Hour;
         long mSecondaryProgressInMs;
         final StringBuilder mTempBuilder = new StringBuilder();
         ControlBarPresenter.ViewHolder mControlsVh;
@@ -767,17 +771,33 @@ public class PlaybackTransportRowPresenter extends PlaybackRowPresenter {
             remainingTimeMs = applySpeedCorrection(remainingTimeMs);
 
             if (mEndingTime != null) {
-                if (mPlayerData.isRemainingTimeEnabled()) {
+                int mode = mPlayerData.isRemainingTimeEnabled() ? 1 : mPlayerData.isEndingTimeEnabled() ? 2 : 0;
+                if (mode == 0) {
+                    mDisplayedTimeMode = 0;
+                    mEndingTime.setVisibility(View.GONE);
+                    return;
+                }
+                long endingTimeMs = System.currentTimeMillis() + remainingTimeMs;
+                long bucket = mode == 1 ? remainingTimeMs / 1_000 : endingTimeMs / 60_000;
+                java.util.Locale locale = java.util.Locale.getDefault();
+                boolean hour24 = android.text.format.DateFormat.is24HourFormat(mEndingTime.getContext());
+                if (mode == mDisplayedTimeMode && bucket == mDisplayedTimeBucket
+                        && locale.equals(mDisplayedTimeLocale) && hour24 == mDisplayed24Hour
+                        && mEndingTime.getVisibility() == View.VISIBLE) {
+                    return;
+                }
+                if (mode == 1) {
                     formatTime(remainingTimeMs, mTempBuilder);
                     mEndingTime.setText(String.format(mRemainingTimeFormat, mTempBuilder.toString()));
-                    mEndingTime.setVisibility(View.VISIBLE);
-                } else if (mPlayerData.isEndingTimeEnabled()) {
-                    mEndingTime.setText(String.format(mEndingTimeFormat,
-                            DateHelper.toShortTime(System.currentTimeMillis() + remainingTimeMs)));
-                    mEndingTime.setVisibility(View.VISIBLE);
                 } else {
-                    mEndingTime.setVisibility(View.GONE);
+                    mEndingTime.setText(String.format(mEndingTimeFormat,
+                            DateHelper.toShortTime(endingTimeMs)));
                 }
+                mEndingTime.setVisibility(View.VISIBLE);
+                mDisplayedTimeMode = mode;
+                mDisplayedTimeBucket = bucket;
+                mDisplayedTimeLocale = locale;
+                mDisplayed24Hour = hour24;
             }
         }
 

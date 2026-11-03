@@ -51,6 +51,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.OkHttpClient;
@@ -72,6 +73,7 @@ public class ExoMediaSourceFactory {
     private TrackErrorFixer mTrackErrorFixer;
     private DataSource.Factory mMediaDataSourceFactory;
     private DataSource.Factory mSabrMediaDataSourceFactory;
+    private ExecutorService mCronetExecutor;
 
     public ExoMediaSourceFactory(Context context) {
         mContext = context;
@@ -98,14 +100,7 @@ public class ExoMediaSourceFactory {
     }
 
     public MediaSource fromUrlList(List<String> urlList) {
-        MediaSource[] mediaSources = new MediaSource[urlList.size()];
-
-        for (int i = 0; i < urlList.size(); i++) {
-            mediaSources[i] = buildMediaSource(Uri.parse(urlList.get(i)), null);
-        }
-
-        //return mediaSources.length == 1 ? mediaSources[0] : new ConcatenatingMediaSource(mediaSources); // or playlist
-        return mediaSources[0]; // item with max resolution
+        return buildMediaSource(Uri.parse(urlList.get(0)), null); // item with max resolution
     }
 
     /**
@@ -298,7 +293,7 @@ public class ExoMediaSourceFactory {
         CronetDataSourceFactory dataSourceFactory =
                 new CronetDataSourceFactory(
                         new CronetEngineWrapper(CronetManager.getEngine(mContext)),
-                        Executors.newSingleThreadExecutor(),
+                        getCronetExecutor(),
                         null,
                         bandwidthMeter,
                         (int) OkHttpManager.getConnectTimeoutMs(),
@@ -307,6 +302,13 @@ public class ExoMediaSourceFactory {
                         USER_AGENT);
         addCommonHeaders(dataSourceFactory);
         return dataSourceFactory;
+    }
+
+    private synchronized ExecutorService getCronetExecutor() {
+        if (mCronetExecutor == null) {
+            mCronetExecutor = Executors.newSingleThreadExecutor();
+        }
+        return mCronetExecutor;
     }
 
     /**
@@ -363,9 +365,13 @@ public class ExoMediaSourceFactory {
         mTrackErrorFixer = trackErrorFixer;
     }
 
-    public void release() {
+    public synchronized void release() {
         mMediaDataSourceFactory = null;
         mSabrMediaDataSourceFactory = null;
+        if (mCronetExecutor != null) {
+            mCronetExecutor.shutdown();
+            mCronetExecutor = null;
+        }
     }
 
     @NonNull

@@ -61,6 +61,7 @@ public class SabrProcessor {
     private final int liveSegmentTargetDurationSec;
     private long playerTimeMs;
     private final String poToken;
+    private volatile ByteString decodedPoToken;
     private final boolean postLive;
     private final String videoId;
     private final long durationMs;
@@ -751,44 +752,30 @@ public class SabrProcessor {
                         nextRequestPolicy != null ?
                                 nextRequestPolicy.getPlaybackCookie().toByteString() : ByteString.EMPTY
                 )
-                .setClientInfo(clientInfo)
-                .addAllSabrContexts(createSabrContexts())
-                .addAllUnsentSabrContexts(createUnsentSabrContexts());
-
-        if (poToken != null && !poToken.isEmpty()) {
-            builder.setPoToken(ByteString.copyFrom(Base64.decode(poToken, Base64.URL_SAFE)));
-        }
-
-        return builder.build();
-    }
-
-    private List<SabrContext> createSabrContexts() {
-        List<SabrContext> result = new ArrayList<>();
+                .setClientInfo(clientInfo);
 
         for (SabrContextUpdate context : sabrContextUpdates.values()) {
             if (sabrContextsToSend.contains(context.getType())) {
-                result.add(
-                        SabrContext.newBuilder()
-                            .setType(context.getType())
-                            .setValue(context.getValue())
-                            .build()
-                );
+                builder.addSabrContexts(SabrContext.newBuilder()
+                        .setType(context.getType()).setValue(context.getValue()).build());
             }
         }
-
-        return result;
-    }
-
-    private List<Integer> createUnsentSabrContexts() {
-        List<Integer> result = new ArrayList<>();
-
         for (Integer contextType : sabrContextsToSend) {
             if (!sabrContextUpdates.containsKey(contextType)) {
-                result.add(contextType);
+                builder.addUnsentSabrContexts(contextType);
             }
         }
 
-        return result;
+        if (poToken != null && !poToken.isEmpty()) {
+            ByteString token = decodedPoToken;
+            if (token == null) {
+                token = ByteString.copyFrom(Base64.decode(poToken, Base64.URL_SAFE));
+                decodedPoToken = token;
+            }
+            builder.setPoToken(token);
+        }
+
+        return builder.build();
     }
 
     private FormatSelector matchFormatSelector(FormatInitializationMetadata formatInitMetadata) {

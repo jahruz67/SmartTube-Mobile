@@ -19,8 +19,10 @@ import com.liskovsoft.smartyoutubetv2.tv.R;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Compact up-next list for the portrait player panel: small 16:9 thumbnail left, title and
@@ -41,6 +43,7 @@ public class UpNextRowAdapter extends RecyclerView.Adapter<RecyclerView.ViewHold
 
     private final List<Video> mVideos = new ArrayList<>();
     private final List<Video> mChapters = new ArrayList<>();
+    private final Set<String> mVideoIds = new HashSet<>();
     private final OnVideo mClick;
     private final OnVideo mLongClick;
 
@@ -53,10 +56,11 @@ public class UpNextRowAdapter extends RecyclerView.Adapter<RecyclerView.ViewHold
         if (videos == null || videos.isEmpty()) {
             return;
         }
-        // Several suggestion groups can carry the same video — keep the first occurrence only.
+        // Filter against rows that were present before this batch. The old scan admitted
+        // same-batch duplicate IDs, so don't update membership until the batch is selected.
         List<Video> fresh = new ArrayList<>();
         for (Video video : videos) {
-            if (video != null && !containsId(video.videoId)) {
+            if (video != null && (video.videoId == null || !mVideoIds.contains(video.videoId))) {
                 fresh.add(video);
             }
         }
@@ -65,6 +69,11 @@ public class UpNextRowAdapter extends RecyclerView.Adapter<RecyclerView.ViewHold
         }
         int start = mVideos.size();
         mVideos.addAll(fresh);
+        for (Video video : fresh) {
+            if (video.videoId != null) {
+                mVideoIds.add(video.videoId);
+            }
+        }
         notifyItemRangeInserted(offset() + start, fresh.size());
     }
 
@@ -90,18 +99,6 @@ public class UpNextRowAdapter extends RecyclerView.Adapter<RecyclerView.ViewHold
         return mChapters.isEmpty() ? 0 : 1;
     }
 
-    private boolean containsId(String videoId) {
-        if (videoId == null) {
-            return false;
-        }
-        for (Video video : mVideos) {
-            if (videoId.equals(video.videoId)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     public void remove(List<Video> videos) {
         if (videos == null) {
             return;
@@ -112,6 +109,7 @@ public class UpNextRowAdapter extends RecyclerView.Adapter<RecyclerView.ViewHold
             changed = true;
         }
         if (changed) {
+            rebuildVideoIds();
             notifyDataSetChanged();
         }
     }
@@ -148,6 +146,7 @@ public class UpNextRowAdapter extends RecyclerView.Adapter<RecyclerView.ViewHold
     public void clear() {
         mVideos.clear();
         mChapters.clear();
+        mVideoIds.clear();
         notifyDataSetChanged();
     }
 
@@ -229,6 +228,23 @@ public class UpNextRowAdapter extends RecyclerView.Adapter<RecyclerView.ViewHold
         });
     }
 
+    @Override
+    public void onViewRecycled(@NonNull RecyclerView.ViewHolder holder) {
+        if (holder instanceof Holder) {
+            Glide.with(holder.itemView.getContext()).clear(((Holder) holder).thumb);
+        }
+        super.onViewRecycled(holder);
+    }
+
+    private void rebuildVideoIds() {
+        mVideoIds.clear();
+        for (Video video : mVideos) {
+            if (video != null && video.videoId != null) {
+                mVideoIds.add(video.videoId);
+            }
+        }
+    }
+
     /** The "Chapters" label + horizontal strip of chapter cards. */
     static class ChaptersHolder extends RecyclerView.ViewHolder {
         final ChapterCardAdapter adapter = new ChapterCardAdapter();
@@ -246,14 +262,50 @@ public class UpNextRowAdapter extends RecyclerView.Adapter<RecyclerView.ViewHold
     }
 
     static class ChapterCardAdapter extends RecyclerView.Adapter<ChapterCardAdapter.CardHolder> {
+        private static final Object TEXT_PAYLOAD = new Object();
         private final List<Video> mItems = new ArrayList<>();
+        private final List<ChapterSnapshot> mSnapshots = new ArrayList<>();
         private OnVideo mClick;
 
         void set(List<Video> items, OnVideo click) {
-            mItems.clear();
-            mItems.addAll(items);
             mClick = click;
+            if (hasSameReferences(items)) {
+                for (int i = 0; i < mItems.size(); i++) {
+                    ChapterSnapshot previous = mSnapshots.get(i);
+                    ChapterSnapshot current = new ChapterSnapshot(mItems.get(i));
+                    if (!previous.sameAs(current)) {
+                        mSnapshots.set(i, current);
+                        if (ChapterSnapshot.equal(previous.imageUrl, current.imageUrl)) {
+                            notifyItemChanged(i, TEXT_PAYLOAD);
+                        } else {
+                            notifyItemChanged(i);
+                        }
+                    }
+                }
+                return;
+            }
+            mItems.clear();
+            mSnapshots.clear();
+            if (items != null) {
+                mItems.addAll(items);
+                for (Video item : mItems) {
+                    mSnapshots.add(new ChapterSnapshot(item));
+                }
+            }
             notifyDataSetChanged();
+        }
+
+        private boolean hasSameReferences(List<Video> items) {
+            int size = items != null ? items.size() : 0;
+            if (size != mItems.size()) {
+                return false;
+            }
+            for (int i = 0; i < size; i++) {
+                if (mItems.get(i) != items.get(i)) {
+                    return false;
+                }
+            }
+            return true;
         }
 
         @Override
@@ -281,6 +333,49 @@ public class UpNextRowAdapter extends RecyclerView.Adapter<RecyclerView.ViewHold
                     mClick.onVideo(chapter);
                 }
             });
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull CardHolder h, int position, @NonNull List<Object> payloads) {
+            if (!payloads.isEmpty() && payloads.contains(TEXT_PAYLOAD)) {
+                Video chapter = mItems.get(position);
+                h.title.setText(chapter.getTitle() != null ? chapter.getTitle() : "");
+                h.time.setText(chapter.badge != null ? chapter.badge : "");
+                h.itemView.setOnClickListener(v -> {
+                    if (mClick != null) {
+                        mClick.onVideo(chapter);
+                    }
+                });
+                return;
+            }
+            onBindViewHolder(h, position);
+        }
+
+        @Override
+        public void onViewRecycled(@NonNull CardHolder holder) {
+            Glide.with(holder.itemView.getContext()).clear(holder.thumb);
+            super.onViewRecycled(holder);
+        }
+
+        private static final class ChapterSnapshot {
+            final String title;
+            final String badge;
+            final String imageUrl;
+
+            ChapterSnapshot(Video video) {
+                title = video != null ? video.getTitle() : null;
+                badge = video != null ? video.badge : null;
+                imageUrl = video != null ? video.getCardImageUrl() : null;
+            }
+
+            boolean sameAs(ChapterSnapshot other) {
+                return equal(title, other.title) && equal(badge, other.badge)
+                        && equal(imageUrl, other.imageUrl);
+            }
+
+            private static boolean equal(String first, String second) {
+                return first == null ? second == null : first.equals(second);
+            }
         }
 
         static class CardHolder extends RecyclerView.ViewHolder {

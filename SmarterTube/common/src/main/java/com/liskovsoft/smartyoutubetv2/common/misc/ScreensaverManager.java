@@ -28,7 +28,7 @@ public class ScreensaverManager {
     private static final WeakHashSet<ScreensaverManager> sInstances = new WeakHashSet<>();
     private static boolean sLockInstance;
     private final WeakReference<Activity> mActivity;
-    private final WeakReference<View> mDimContainer;
+    private WeakReference<View> mDimContainer = new WeakReference<>(null);
     private final Runnable mDimScreen = this::dimScreen;
     private final Runnable mUndimScreen = this::undimScreen;
     private final Runnable mUnlockInstance = () -> sLockInstance = false;
@@ -54,7 +54,6 @@ public class ScreensaverManager {
 
     public ScreensaverManager(Activity activity) {
         mActivity = new WeakReference<>(activity);
-        mDimContainer = new WeakReference<>(createDimContainer(activity));
         enable();
         addToRegistry();
     }
@@ -233,7 +232,7 @@ public class ScreensaverManager {
         Activity activity = mActivity.get();
         View dimContainer = mDimContainer.get();
 
-        if (activity == null || dimContainer == null) {
+        if (activity == null) {
             return;
         }
 
@@ -249,6 +248,14 @@ public class ScreensaverManager {
                 )
         ) {
             return;
+        }
+
+        if (dimContainer == null) {
+            if (!show) {
+                return;
+            }
+            dimContainer = createDimContainer(activity);
+            mDimContainer = new WeakReference<>(dimContainer);
         }
 
         int screenOffColor = Utils.getColor(activity, R.color.black, getTweaksData().getScreenOffDimmingPercents());

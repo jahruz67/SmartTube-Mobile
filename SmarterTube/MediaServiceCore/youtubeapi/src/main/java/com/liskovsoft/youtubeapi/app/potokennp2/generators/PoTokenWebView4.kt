@@ -41,8 +41,8 @@ internal class PoTokenWebView4 private constructor(
     private var onInitDone: () -> Unit
 ) : PoTokenGenerator {
     private val webView = WebView(context)
-    private val poTokenEmitters = mutableListOf<Pair<String, (String) -> Unit>>()
-    private var initError: Throwable? = null
+    private val poTokenEmitters = mutableListOf<PendingPoToken>()
+    @Volatile private var initError: Throwable? = null
     override var expirationMs: Long = -1
         private set
 
@@ -307,11 +307,17 @@ internal class PoTokenWebView4 private constructor(
         Log.d(TAG, "generatePoToken() called with identifier $identifier")
         val latch = CountDownLatch(1)
         lateinit var pot: String
+        var completionError: Throwable? = null
 
-        addPoTokenEmitter(identifier) {
-            pot = it
+        val pending = addPoTokenEmitter(identifier) { token, error ->
+            if (error != null) {
+                completionError = error
+            } else if (token != null) {
+                pot = token
+            }
             latch.countDown()
         }
+        completionError?.let { throw it }
 
         val u8Identifier = stringToU8(identifier)
 
@@ -334,8 +340,11 @@ internal class PoTokenWebView4 private constructor(
             )
         }
 
-        latch.await(10, TimeUnit.SECONDS)
+        if (!latch.await(10, TimeUnit.SECONDS)) {
+            removePoTokenEmitter(pending)
+        }
 
+        completionError?.let { throw it }
         initError?.let { throw it }
 
         return pot
@@ -362,7 +371,7 @@ internal class PoTokenWebView4 private constructor(
         val poToken = u8ToBase64(poTokenU8)
 
         Log.d(TAG, "Generated poToken: identifier=$identifier poToken=$poToken")
-        popPoTokenEmitter(identifier)?.invoke(poToken)
+        popPoTokenEmitter(identifier)?.complete(poToken, null)
     }
 
     //endregion
@@ -373,10 +382,18 @@ internal class PoTokenWebView4 private constructor(
      * multiple poToken requests can be generated invparallel, and the results will be notified to
      * the right emitters.
      */
-    private fun addPoTokenEmitter(identifier: String, emitter: (String) -> Unit) {
-        synchronized(poTokenEmitters) {
-            poTokenEmitters.add(Pair(identifier, emitter))
+    private fun addPoTokenEmitter(identifier: String, emitter: (String?, Throwable?) -> Unit): PendingPoToken {
+        val pending = PendingPoToken(identifier, emitter)
+        val existingError = synchronized(poTokenEmitters) {
+            val error = initError
+            if (error == null) {
+                poTokenEmitters.add(pending)
+            }
+            error
         }
+
+        existingError?.let { pending.complete(null, it) }
+        return pending
     }
 
     /**
@@ -384,25 +401,40 @@ internal class PoTokenWebView4 private constructor(
      * [identifier]. The emitter is supposed to be used immediately after to either signal a success
      * or an error.
      */
-    private fun popPoTokenEmitter(identifier: String): ((String) -> Unit)? {
+    private fun popPoTokenEmitter(identifier: String): PendingPoToken? {
         return synchronized(poTokenEmitters) {
-            poTokenEmitters.indexOfFirst { it.first == identifier }.takeIf { it >= 0 }?.let {
-                poTokenEmitters.removeAt(it).second
+            poTokenEmitters.indexOfFirst { it.identifier == identifier }.takeIf { it >= 0 }?.let {
+                poTokenEmitters.removeAt(it)
             }
         }
     }
 
     /**
-     * Clears [poTokenEmitters] and returns its previous contents. The emitters are supposed to be
-     * used immediately after to either signal a success or an error.
+     * Removes a timed-out completion from the pending registry.
      */
-    private fun popAllPoTokenEmitters(): List<Pair<String, (String) -> Unit>> {
-        return synchronized(poTokenEmitters) {
+    private fun removePoTokenEmitter(pending: PendingPoToken) {
+        synchronized(poTokenEmitters) {
+            poTokenEmitters.remove(pending)
+        }
+    }
+
+    private fun completeAllPoTokenEmitters(error: Throwable) {
+        val pending = synchronized(poTokenEmitters) {
+            if (initError == null) {
+                initError = error
+            }
             val result = poTokenEmitters.toList()
             poTokenEmitters.clear()
             result
         }
+        val terminalError = initError ?: error
+        pending.forEach { it.complete(null, terminalError) }
     }
+
+    private data class PendingPoToken(
+        val identifier: String,
+        val complete: (String?, Throwable?) -> Unit
+    )
     //endregion
 
     //region Utils
@@ -451,8 +483,7 @@ internal class PoTokenWebView4 private constructor(
      * to [generatorEmitter].
      */
     private fun onInitializationErrorCloseAndCancel(error: Throwable) {
-        initError = error
-        popAllPoTokenEmitters()
+        completeAllPoTokenEmitters(error)
         runOnMainThread {
             close()
             // throw error
@@ -465,6 +496,7 @@ internal class PoTokenWebView4 private constructor(
      */
     @MainThread
     override fun close() {
+        completeAllPoTokenEmitters(PoTokenException("PoToken generator closed"))
         webView.clearHistory()
         // clears RAM cache and disk cache (globally for all WebViews)
         webView.clearCache(true)

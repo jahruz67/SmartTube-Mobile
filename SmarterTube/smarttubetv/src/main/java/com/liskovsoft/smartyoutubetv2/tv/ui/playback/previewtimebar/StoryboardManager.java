@@ -8,6 +8,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.collection.ArraySet;
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.RequestBuilder;
 import com.bumptech.glide.request.target.CustomTarget;
 import com.bumptech.glide.request.target.Target;
@@ -203,11 +204,7 @@ public class StoryboardManager {
 
         //Log.d(TAG, "Loading preview. Position: %s, groupNum: %s, groupDurationMS: %s, groupSize", currentPosition, groupNum, mStoryboard.getGroupDurationMS(), size);
 
-        RequestBuilder<Bitmap> request = Glide.with(mContext)
-                .asBitmap()
-                .load(mStoryboard.getGroupUrl(groupNum))
-                .apply(ViewUtil.glideOptions())
-                .override(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL)
+        RequestBuilder<Bitmap> request = spriteRequest(mStoryboard.getGroupUrl(groupNum))
                 .transform(transformation);
 
         if (mCurrentImgNum != groupNum) {
@@ -243,8 +240,14 @@ public class StoryboardManager {
 
         String link = mStoryboard.getGroupUrl(imgNum);
 
-        mPreloadTargets.add(Glide.with(mContext)
-                .load(link)
-                .preload());
+        mPreloadTargets.add(spriteRequest(link).preload());
+    }
+
+    private RequestBuilder<Bitmap> spriteRequest(String url) {
+        // Sprites are static: share source bytes between prefetch and differently cropped tiles.
+        return Glide.with(mContext).asBitmap().load(url)
+                .diskCacheStrategy(DiskCacheStrategy.DATA)
+                .skipMemoryCache(true)
+                .override(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL);
     }
 }

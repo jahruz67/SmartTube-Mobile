@@ -46,6 +46,14 @@ public class StreamReminderService implements TickleListener {
         return sInstance;
     }
 
+    public static void startIfNeeded(Context context) {
+        if (sInstance != null) {
+            sInstance.startStop();
+        } else if (!GeneralData.instance(context).getPendingStreams().isEmpty()) {
+            instance(context).startStop();
+        }
+    }
+
     public boolean isReminderSet(Video video) {
         return mGeneralData.containsPendingStream(video);
     }

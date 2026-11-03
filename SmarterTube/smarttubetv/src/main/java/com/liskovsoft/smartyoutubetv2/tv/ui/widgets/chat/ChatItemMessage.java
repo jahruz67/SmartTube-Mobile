@@ -45,10 +45,10 @@ public class ChatItemMessage implements IMessage {
             CharSequence header = ServiceHelper.combineItems(
                     " " + Video.TERTIARY_TEXT_DELIM + " ",
                     commentItem.getAuthorName(),
-                    commentItem.getLikeCount() != null ? String.format("%s %s", commentItem.getLikeCount(), Helpers.THUMB_UP) : null,
+                    commentItem.getLikeCount() != null ? commentItem.getLikeCount() + " " + Helpers.THUMB_UP : null,
                     commentItem.getPublishedDate(),
                     commentItem.getReplyCount(),
-                    commentItem.isLiked() ? String.format("(%s)", context.getString(R.string.you_liked)) : null);
+                    commentItem.isLiked() ? "(" + context.getString(R.string.you_liked) + ")" : null);
             message.mText = TextUtils.concat(Utils.bold(header), "\n", Utils.createSmallNewLine(), commentItem.getMessage());
         }
         message.mAuthor = ChatItemAuthor.from(commentItem);
@@ -59,8 +59,10 @@ public class ChatItemMessage implements IMessage {
     }
 
     public static List<ChatItemMessage> fromSplit(Context context, CommentItem commentItem) {
-        if (shouldSplit(commentItem)) {
-            List<String> comments = Helpers.splitStringBySize(commentItem.getMessage(), getRealMaxLen(commentItem.getMessage()));
+        String text = commentItem != null ? commentItem.getMessage() : null;
+        int maxLength = Math.max(1, getRealMaxLen(text));
+        if (text != null && text.length() > maxLength) {
+            List<String> comments = Helpers.splitStringBySize(text, maxLength);
             List<ChatItemMessage> result = new ArrayList<>();
             for (int i = 0; i < comments.size(); i++) {
                 String prefix = i > 0 ? "..." : "";

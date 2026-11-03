@@ -24,6 +24,7 @@ import retrofit2.Call;
 
 public class VideoInfoService extends VideoInfoServiceBase {
     private static final String TAG = VideoInfoService.class.getSimpleName();
+    private static final long TRANSLATION_LANGUAGE_CACHE_TTL_MS = 6L * 60 * 60 * 1000;
     private static final AppClient IOS_CLIENT = AppClient.VISIONOS;
     private static final AppClient TV_CLIENT = AppClient.TV_DOWNGRADED;
     private static final AppClient WEB_CLIENT = AppClient.WEB_EMBED;
@@ -53,6 +54,7 @@ public class VideoInfoService extends VideoInfoServiceBase {
     private AppClient mNextClient = null;
     private boolean mUseAuth;
     private List<TranslationLanguage> mCachedTranslationLanguages;
+    private long mCachedTranslationLanguagesFetchTimeMs;
     private boolean mIsUnplayable;
 
     private VideoInfoService() {
@@ -261,7 +263,12 @@ public class VideoInfoService extends VideoInfoServiceBase {
         if (needMoreSubtitles(result)) {
             Log.d(TAG, "Enable full list of auto generated subtitles...");
 
-            if (mCachedTranslationLanguages == null || mCachedTranslationLanguages.size() < 100) {
+            long now = System.currentTimeMillis();
+            boolean cacheIsIncomplete = mCachedTranslationLanguages == null || mCachedTranslationLanguages.size() < 100;
+            boolean cacheNeedsRefresh = mCachedTranslationLanguagesFetchTimeMs == 0 ||
+                    now - mCachedTranslationLanguagesFetchTimeMs >= TRANSLATION_LANGUAGE_CACHE_TTL_MS;
+
+            if (cacheIsIncomplete && cacheNeedsRefresh) {
                 mUseAuth = false;
                 VideoInfo webInfo = null;
                 try {
@@ -271,6 +278,7 @@ public class VideoInfoService extends VideoInfoServiceBase {
                 }
                 if (webInfo != null) {
                     mCachedTranslationLanguages = webInfo.getTranslationLanguages();
+                    mCachedTranslationLanguagesFetchTimeMs = System.currentTimeMillis();
                 }
             }
 

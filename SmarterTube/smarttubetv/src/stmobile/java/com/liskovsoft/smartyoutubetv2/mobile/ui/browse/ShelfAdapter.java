@@ -78,8 +78,12 @@ public class ShelfAdapter extends RecyclerView.Adapter<ShelfAdapter.ViewHolder> 
                     mScrollStates.set(idx, new ScrollState());
                     adapter.setVideos(all);
                     notifyItemChanged(idx);
+                } else if (all.size() > oldCount) {
+                    adapter.appendVideos(all.subList(oldCount, all.size()));
                 } else {
-                    adapter.setVideosIncrementally(all);
+                    // Preserve the previous same-size refresh behavior. A real continuation
+                    // with new cards appends its tail through the ACTION_APPEND contract above.
+                    adapter.setVideos(all);
                 }
             }
             mGroups.set(idx, group);

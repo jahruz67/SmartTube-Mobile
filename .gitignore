@@ -5,3 +5,4 @@ __pycache__/
 # Local Windows/macOS metadata
 Thumbs.db
 .DS_Store
+reports

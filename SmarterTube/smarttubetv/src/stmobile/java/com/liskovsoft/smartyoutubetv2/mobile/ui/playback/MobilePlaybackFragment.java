@@ -134,6 +134,16 @@ public class MobilePlaybackFragment extends PlaybackFragment {
     /** Shorts strip sized from the available height and centred (wide portrait screens, #30). */
     private boolean mShortsFit;
     private String mLastVideoId;
+    private String mLinkedDescription;
+    private boolean mHasLinkedDescription;
+    private String mInfoSecondTitle;
+    private String mInfoSecondTitleFull;
+    private String mInfoAuthor;
+    private String mInfoDescription;
+    private String mInfoViewCount;
+    private String mInfoPublishedDate;
+    private boolean mInfoExpanded;
+    private boolean mHasInfoInputs;
     private VideoPlayerGlue mLastGlue;
     private boolean mLastCompact;
 
@@ -150,6 +160,7 @@ public class MobilePlaybackFragment extends PlaybackFragment {
     private ImageView mPortraitAvatarView;
     private String mAvatarVideoId;
     private String mAvatarUrl;
+    private ImageView mAvatarTarget;
 
     // Action rail buttons — resolved lazily from within the included layout.
     private ImageView mShortsLikeBtn;
@@ -280,6 +291,7 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         mSwipeEnabled = MobilePlayerStylePrefs.isSwipeGesturesEnabled(requireContext());
         updateShortsTabVisibility();
         applyMobileLayout();
+        bindAvatar(PlaybackPresenter.instance(getContext()).getVideo());
         if (mModernChrome != null) mModernChrome.start();
         updateSettingsButton();
         if (mResumeAfterSettings) {
@@ -355,9 +367,17 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         if (mSwipeToDismiss != null) mSwipeToDismiss.cancel();
         mSwipeToDismiss = null;
         if (mModernChrome != null) mModernChrome.destroy();
+        mModernChrome = null;
         clearLinkCards();
+        clearPlaybackImageTarget(mPortraitAvatarView);
+        clearPlaybackImageTarget(mShortsChannelBtn);
+        clearPlaybackImageTarget(mShortsNextPoster);
+        clearPlaybackImageTarget(mShortsPrevPoster);
         mAvatarVideoId = null;
         mAvatarUrl = null;
+        mAvatarTarget = null;
+        resetHeaderTextCache();
+        mPanel = null;
         super.onDestroyView();
     }
 
@@ -366,6 +386,7 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         if (mSwipeToDismiss != null) mSwipeToDismiss.cancel();
         super.onConfigurationChanged(newConfig);
         applyMobileLayout();
+        bindAvatar(PlaybackPresenter.instance(getContext()).getVideo());
     }
 
     /**
@@ -385,6 +406,7 @@ public class MobilePlaybackFragment extends PlaybackFragment {
                 ((MobilePlaybackActivity) activity).applyOrientationForCurrentVideo();
             }
             applyMobileLayout();
+            bindAvatar(video);
         }
     }
 
@@ -398,6 +420,7 @@ public class MobilePlaybackFragment extends PlaybackFragment {
             blockEngine(false);
         }
         applyMobileLayout();
+        bindAvatar(PlaybackPresenter.instance(getContext()).getVideo());
     }
 
     @Override
@@ -408,17 +431,7 @@ public class MobilePlaybackFragment extends PlaybackFragment {
             bindHeader(video);
         }
         applyMobileLayout();
-
-        // Keep the lockscreen notification header in sync with the current video.
-        // The MediaSession persists across video changes, so onMediaSessionCreated isn't
-        // re-fired — re-send it here so MediaNotificationService rebuilds from the
-        // new PlaybackPresenter.getVideo() value.
-        if (mSessionToken != null && video != null) {
-            Context ctx = getContext();
-            if (ctx != null) {
-                MediaNotificationService.start(ctx, mSessionToken);
-            }
-        }
+        bindAvatar(video);
 
         // Committed Short arrived: the exit animation parked the incoming poster at screen-centre
         // showing this video's thumbnail. Snap the live surface back to centre *underneath* the
@@ -431,6 +444,7 @@ public class MobilePlaybackFragment extends PlaybackFragment {
             if (drop != null) {
                 drop.animate().cancel();
                 drop.setVisibility(View.INVISIBLE);
+                clearPlaybackImageTarget(drop);
                 drop.setImageDrawable(null);
             }
             if (keep != null) {
@@ -445,30 +459,39 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         if (video == null) {
             return;
         }
+        String author = video.getAuthor();
+        CharSequence secondTitle = video.getSecondTitle();
 
         // New video: start with the description collapsed (but don't collapse on the periodic
         // metadata refreshes of the same video).
         if (!TextUtils.equals(mLastVideoId, video.videoId)) {
             mLastVideoId = video.videoId;
             clearLinkCards();
-            setDescriptionExpanded(false);
+            setDescriptionExpanded(false, video, author, secondTitle);
         }
-        bindAvatar(video);
-
-        mTitleView.setText(video.getTitleFull() != null ? video.getTitleFull() : "");
-        if (mModernChrome != null) mModernChrome.bindVideo(video);
-        mDescriptionView.setText(TextLinks.linkify(requireContext(), video.description,
-                ms -> setPositionMs(ms)));
-        mExpandView.setVisibility(TextUtils.isEmpty(video.description) ? View.GONE : View.VISIBLE);
-        refreshInfoLine(video);
+        if (mTitleView != null) mTitleView.setText(video.getTitleFull() != null ? video.getTitleFull() : "");
+        if (mDescriptionView != null
+                && (!mHasLinkedDescription || !TextUtils.equals(mLinkedDescription, video.description))) {
+            mLinkedDescription = video.description;
+            mHasLinkedDescription = true;
+            mDescriptionView.setText(TextLinks.linkify(requireContext(), video.description,
+                    ms -> setPositionMs(ms)));
+        }
+        if (mExpandView != null) {
+            mExpandView.setVisibility(TextUtils.isEmpty(video.description) ? View.GONE : View.VISIBLE);
+        }
+        refreshInfoLine(video, author, secondTitle);
         updateBellButton(video);
         loadLinkCards(video);
 
-        mChannelView.setText(video.getAuthor() != null ? video.getAuthor() : "");
-        mSubsView.setText(video.subscriberCount != null ? video.subscriberCount : "");
-        mViewsView.setText(extractViews(video));
-        // The stats line under the title carries views now (YouTube parity).
-        mViewsView.setVisibility(View.GONE);
+        if (mModernChrome != null) mModernChrome.bindVideo(video, author);
+        if (mChannelView != null) mChannelView.setText(author != null ? author : "");
+        if (mSubsView != null) mSubsView.setText(video.subscriberCount != null ? video.subscriberCount : "");
+        if (mViewsView != null) {
+            mViewsView.setText(extractViews(secondTitle, author));
+            // The stats line under the title carries views now (YouTube parity).
+            mViewsView.setVisibility(View.GONE);
+        }
         if (mPortraitLikeBtn != null) {
             mPortraitLikeBtn.setText(video.likeCount != null
                     ? Helpers.THUMB_UP + " " + video.likeCount : Helpers.THUMB_UP);
@@ -478,41 +501,46 @@ public class MobilePlaybackFragment extends PlaybackFragment {
                     ? Helpers.THUMB_DOWN + " " + video.dislikeCount : Helpers.THUMB_DOWN);
         }
 
-        bindShortsChrome(video);
+        bindShortsChrome(video, author);
     }
 
     /** Reuse the metadata already synchronized by SuggestionsController. */
     private void bindAvatar(Video video) {
+        if (video == null || getView() == null) {
+            return;
+        }
+        ImageView target = mLayoutState == 2 ? mShortsChannelBtn
+                : mLayoutState == 1 || mLayoutState == 3 ? mPortraitAvatarView : null;
         if (TextUtils.equals(mAvatarVideoId, video.videoId)
-                && TextUtils.equals(mAvatarUrl, video.authorImageUrl)) {
+                && TextUtils.equals(mAvatarUrl, video.authorImageUrl)
+                && mAvatarTarget == target) {
             return;
         }
         mAvatarVideoId = video.videoId;
         mAvatarUrl = video.authorImageUrl;
+        mAvatarTarget = target;
         if (mPortraitAvatarView != null) {
-            Glide.with(this).clear(mPortraitAvatarView);
+            clearPlaybackImageTarget(mPortraitAvatarView);
             mPortraitAvatarView.setVisibility(View.GONE);
         }
         if (mShortsChannelBtn != null) {
-            Glide.with(this).clear(mShortsChannelBtn);
+            clearPlaybackImageTarget(mShortsChannelBtn);
             mShortsChannelBtn.setImageResource(R.drawable.ic_shorts_channel);
         }
-        if (TextUtils.isEmpty(mAvatarUrl)) return;
-        if (mPortraitAvatarView != null) {
-            Glide.with(this).load(mAvatarUrl).circleCrop().into(mPortraitAvatarView);
-            mPortraitAvatarView.setVisibility(View.VISIBLE);
-        }
-        if (mShortsChannelBtn != null) {
-            Glide.with(this).load(mAvatarUrl).circleCrop().into(mShortsChannelBtn);
+        if (target != null && !TextUtils.isEmpty(mAvatarUrl)) {
+            Glide.with(this).load(mAvatarUrl).circleCrop().into(target);
+            if (target == mPortraitAvatarView) {
+                target.setVisibility(View.VISIBLE);
+            }
         }
     }
 
-    private void bindShortsChrome(Video video) {
+    private void bindShortsChrome(Video video, String author) {
         if (mShortsTitleView != null) {
             mShortsTitleView.setText(video.getTitle() != null ? video.getTitle() : "");
         }
         if (mShortsChannelView != null) {
-            mShortsChannelView.setText(video.getAuthor() != null ? video.getAuthor() : "");
+            mShortsChannelView.setText(author != null ? author : "");
         }
         if (mShortsLikeCount != null) {
             mShortsLikeCount.setText(video.likeCount != null ? video.likeCount : "");
@@ -575,9 +603,8 @@ public class MobilePlaybackFragment extends PlaybackFragment {
     }
 
     /** Views/date: the first non-author segment of "Author • views • date". */
-    private String extractViews(Video video) {
-        String second = Helpers.toString(video.getSecondTitle());
-        String author = video.getAuthor();
+    private String extractViews(CharSequence secondTitle, String author) {
+        String second = Helpers.toString(secondTitle);
         if (second != null) {
             for (String segment : second.split(Video.TERTIARY_TEXT_DELIM)) {
                 segment = segment.trim();
@@ -590,16 +617,38 @@ public class MobilePlaybackFragment extends PlaybackFragment {
     }
 
     private void setDescriptionExpanded(boolean expanded) {
-        if (mDescriptionView != null) {
-            mDescriptionView.setVisibility(expanded ? View.VISIBLE : View.GONE);
-            mExpandView.setText(expanded ? "▴" : "▾");
-            if (mLinkCards != null) {
-                mLinkCards.setVisibility(expanded && mLinkCards.getChildCount() > 0 ? View.VISIBLE : View.GONE);
-            }
-            Video video = PlaybackPresenter.instance(getContext()).getVideo();
-            if (expanded) loadLinkCards(video);
-            refreshInfoLine(video);
+        Video video = PlaybackPresenter.instance(getContext()).getVideo();
+        setDescriptionExpanded(expanded, video,
+                video != null ? video.getAuthor() : null,
+                video != null ? video.getSecondTitle() : null);
+    }
+
+    private void setDescriptionExpanded(boolean expanded, Video video, String author, CharSequence secondTitle) {
+        if (mDescriptionView == null) {
+            return;
         }
+        mDescriptionView.setVisibility(expanded ? View.VISIBLE : View.GONE);
+        if (mExpandView != null) {
+            mExpandView.setText(expanded ? "▴" : "▾");
+        }
+        if (mLinkCards != null) {
+            mLinkCards.setVisibility(expanded && mLinkCards.getChildCount() > 0 ? View.VISIBLE : View.GONE);
+        }
+        if (expanded) loadLinkCards(video);
+        refreshInfoLine(video, author, secondTitle);
+    }
+
+    private void resetHeaderTextCache() {
+        mLinkedDescription = null;
+        mHasLinkedDescription = false;
+        mInfoSecondTitle = null;
+        mInfoSecondTitleFull = null;
+        mInfoAuthor = null;
+        mInfoDescription = null;
+        mInfoViewCount = null;
+        mInfoPublishedDate = null;
+        mInfoExpanded = false;
+        mHasInfoInputs = false;
     }
 
     private static String[] secondTitleParts(CharSequence secondTitle) {
@@ -615,22 +664,43 @@ public class MobilePlaybackFragment extends PlaybackFragment {
      * count + absolute upload date + up to three hashtags, as YouTube shows them. Listing cards
      * order the second title author, views, age; the metadata one is author, age, views.
      */
-    private void refreshInfoLine(Video video) {
+    private void refreshInfoLine(Video video, String author, CharSequence secondTitle) {
         if (mInfoView == null || video == null) {
             return;
         }
 
         boolean expanded = mDescriptionView != null && mDescriptionView.getVisibility() == View.VISIBLE;
+        String secondTitleText = Helpers.toString(secondTitle);
+        String secondTitleFullText = Helpers.toString(video.getSecondTitleFull());
+        if (mHasInfoInputs
+                && TextUtils.equals(mInfoSecondTitle, secondTitleText)
+                && TextUtils.equals(mInfoSecondTitleFull, secondTitleFullText)
+                && TextUtils.equals(mInfoAuthor, author)
+                && TextUtils.equals(mInfoDescription, video.description)
+                && TextUtils.equals(mInfoViewCount, video.viewCount)
+                && TextUtils.equals(mInfoPublishedDate, video.publishedDate)
+                && mInfoExpanded == expanded) {
+            return;
+        }
+        mInfoSecondTitle = secondTitleText;
+        mInfoSecondTitleFull = secondTitleFullText;
+        mInfoAuthor = author;
+        mInfoDescription = video.description;
+        mInfoViewCount = video.viewCount;
+        mInfoPublishedDate = video.publishedDate;
+        mInfoExpanded = expanded;
+        mHasInfoInputs = true;
+
         String views = null;
         String age = null;
 
-        String[] card = secondTitleParts(video.getSecondTitle());
+        String[] card = secondTitleParts(secondTitleText);
         int a = card.length < 4 ? 0 : 1; // leading label (4K, Stream...) shifts the author
         if (card.length >= a + 3) {
             views = card[a + 1].trim();
             age = card[a + 2].trim();
         } else {
-            String[] meta = secondTitleParts(video.getSecondTitleFull());
+            String[] meta = secondTitleParts(secondTitleFullText);
             int m = meta.length < 4 ? 0 : 1;
             if (meta.length >= m + 3) {
                 age = meta[m + 1].trim();
@@ -638,7 +708,7 @@ public class MobilePlaybackFragment extends PlaybackFragment {
             }
         }
         if (views == null || views.isEmpty()) {
-            views = extractViews(video);
+            views = extractViews(secondTitle, author);
         }
 
         if (expanded) {
@@ -719,8 +789,18 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         mLinkCardsKey = null;
         mLinkCardsActions.clear();
         if (mLinkCards != null) {
+            for (int i = 0; i < mLinkCards.getChildCount(); i++) {
+                ImageView thumb = mLinkCards.getChildAt(i).findViewById(R.id.link_card_thumb);
+                clearPlaybackImageTarget(thumb);
+            }
             mLinkCards.removeAllViews();
             mLinkCards.setVisibility(View.GONE);
+        }
+    }
+
+    private void clearPlaybackImageTarget(ImageView target) {
+        if (target != null) {
+            Glide.with(this).clear(target);
         }
     }
 
@@ -2093,6 +2173,7 @@ public class MobilePlaybackFragment extends PlaybackFragment {
             poster.setVisibility(View.VISIBLE);
             Glide.with(this).load(url).into(poster);
         } else {
+            clearPlaybackImageTarget(poster);
             poster.setVisibility(View.INVISIBLE);
             poster.setImageDrawable(null);
         }
@@ -2100,10 +2181,14 @@ public class MobilePlaybackFragment extends PlaybackFragment {
 
     private void hideShortsPosters() {
         if (mShortsNextPoster != null) {
+            mShortsNextPoster.animate().cancel();
+            clearPlaybackImageTarget(mShortsNextPoster);
             mShortsNextPoster.setVisibility(View.INVISIBLE);
             mShortsNextPoster.setImageDrawable(null);
         }
         if (mShortsPrevPoster != null) {
+            mShortsPrevPoster.animate().cancel();
+            clearPlaybackImageTarget(mShortsPrevPoster);
             mShortsPrevPoster.setVisibility(View.INVISIBLE);
             mShortsPrevPoster.setImageDrawable(null);
         }
@@ -2239,6 +2324,7 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         poster.animate().cancel();
         poster.animate().alpha(0f).setDuration(150).withEndAction(() -> {
             poster.setVisibility(View.INVISIBLE);
+            clearPlaybackImageTarget(poster);
             poster.setImageDrawable(null);
             poster.setAlpha(1f);
         }).start();

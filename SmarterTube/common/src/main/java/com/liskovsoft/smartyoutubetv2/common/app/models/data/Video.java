@@ -344,24 +344,43 @@ public final class Video {
     }
 
     private String extractAuthor(String secondTitle) {
-        String result = null;
-
-        if (secondTitle != null) {
-            secondTitle = secondTitle.replace(TERTIARY_TEXT_DELIM + " LIVE", ""); // remove special marks
-            String[] split = secondTitle.split(TERTIARY_TEXT_DELIM);
-
-            if (split.length <= 1) {
-                result = secondTitle;
-            } else {
-                // First part may be a special label (4K, Stream, New etc)
-                // Two cases to detect label: 1) Description is long (4 items); 2) First item of info is too short (2 letters)
-                //result = split.length < 4 && split[0].trim().length() > 2 ? split[0] : split[1];
-                result = split.length < 4 ? split[0] : split[1];
-            }
+        if (secondTitle == null) {
+            return null;
         }
+        secondTitle = secondTitle.replace(TERTIARY_TEXT_DELIM + " LIVE", "");
+        return extractAuthor(secondTitle, secondTitle.split(TERTIARY_TEXT_DELIM));
+    }
+
+    private String extractAuthor(String normalized, String[] split) {
+        String result = split.length <= 1 ? normalized : split.length < 4 ? split[0] : split[1];
 
         // Skip subtitles starting with number of views (e.g. 1.4M views). Usually found in channel uploads.
-        return !TextUtils.isEmpty(result) && (!belongsToChannelUploads() || !Helpers.isNumeric(result.substring(0, 1))) ? result.trim() : null;
+        return !TextUtils.isEmpty(result) && (!belongsToChannelUploads()
+                || result.charAt(0) < '0' || result.charAt(0) > '9') ? result.trim() : null;
+    }
+
+    public static final class AuthorAndStats {
+        public final String author;
+        public final String stats;
+
+        private AuthorAndStats(String author, String stats) {
+            this.author = author;
+            this.stats = stats;
+        }
+    }
+
+    /** A bind-local snapshot; mutable Video metadata is never cached across updates. */
+    public AuthorAndStats getAuthorAndStats() {
+        CharSequence second = getSecondTitle();
+        if (second == null) {
+            return new AuthorAndStats(getAuthor(), null);
+        }
+        String normalized = second.toString().replace(TERTIARY_TEXT_DELIM + " LIVE", "");
+        String[] split = normalized.split(TERTIARY_TEXT_DELIM);
+        boolean sharedInput = (author == null || Helpers.startsWith(author, "@")) && hasVideo()
+                && TextUtils.equals(metadataSecondTitle != null ? metadataSecondTitle : secondTitle, second);
+        String displayAuthor = sharedInput ? extractAuthor(normalized, split) : getAuthor();
+        return new AuthorAndStats(displayAuthor, secondTitleAfterAuthor(split));
     }
 
     /**
@@ -375,6 +394,10 @@ public final class Video {
         }
 
         String[] split = second.toString().replace(TERTIARY_TEXT_DELIM + " LIVE", "").split(TERTIARY_TEXT_DELIM);
+        return secondTitleAfterAuthor(split);
+    }
+
+    private static String secondTitleAfterAuthor(String[] split) {
         int authorIdx = split.length < 4 ? 0 : 1;
         if (split.length <= 1 || split.length <= authorIdx + 1) {
             return null;

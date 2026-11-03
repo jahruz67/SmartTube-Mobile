@@ -35,6 +35,12 @@ public class ChannelPresenter extends BasePresenter<ChannelView> implements Vide
     private final List<List<MediaGroup>> mPendingGroups = new ArrayList<>();
     private Disposable mUpdateAction;
     private Disposable mScrollAction;
+    private Disposable mSortOptionsAction;
+    private Disposable mSortAction;
+    private Disposable mSearchAction;
+    private long mRequestGeneration;
+    private long mSortGeneration;
+    private long mSearchGeneration;
     private int mSortIdx;
     private Video mChannel;
 
@@ -170,6 +176,9 @@ public class ChannelPresenter extends BasePresenter<ChannelView> implements Vide
     }
 
     public void setChannelId(String channelId) {
+        if (!Helpers.equals(mChannelId, channelId)) {
+            disposeActions();
+        }
         mChannelId = channelId;
     }
 
@@ -182,7 +191,10 @@ public class ChannelPresenter extends BasePresenter<ChannelView> implements Vide
     }
 
     private void disposeActions() {
-        RxHelper.disposeActions(mUpdateAction, mScrollAction);
+        mRequestGeneration++;
+        mSortGeneration++;
+        mSearchGeneration++;
+        RxHelper.disposeActions(mUpdateAction, mScrollAction, mSortOptionsAction, mSortAction, mSearchAction);
         getServiceManager().disposeActions();
         mSortIdx = 0;
         mBrowseProcessor.dispose();
@@ -354,19 +366,31 @@ public class ChannelPresenter extends BasePresenter<ChannelView> implements Vide
     }
 
     public void onSearchSettingsClicked() {
-        Observable<List<MediaGroup>> sorting = getContentService().getChannelSortingOptionsObserve(getChannelId());
-        Disposable result = sorting.subscribe(
+        String channelId = getChannelId();
+        long generation = mRequestGeneration;
+        RxHelper.disposeActions(mSortOptionsAction);
+        Observable<List<MediaGroup>> sorting = getContentService().getChannelSortingOptionsObserve(channelId);
+        mSortOptionsAction = sorting.subscribe(
                 items -> {
+                    if (generation != mRequestGeneration || !Helpers.equals(channelId, getChannelId()) || getView() == null) {
+                        return;
+                    }
                     AppDialogPresenter dialogPresenter = AppDialogPresenter.instance(getContext());
                     List<OptionItem> options = new ArrayList<>();
                     int idx = 0;
                     for (MediaGroup group : items) {
                         final int tempIdx = idx;
                         options.add(UiOptionItem.from(group.getTitle(), item -> {
+                            if (generation != mRequestGeneration || !Helpers.equals(channelId, getChannelId())) {
+                                return;
+                            }
+                            RxHelper.disposeActions(mSortAction);
+                            long sortGeneration = ++mSortGeneration;
                             //dialogPresenter.closeDialog();
                             Observable<MediaGroup> continuation = getContentService().continueGroupObserve(group);
-                            Disposable result2 = continuation.subscribe(mediaGroup -> {
-                                if (getView() == null) {
+                            mSortAction = continuation.subscribe(mediaGroup -> {
+                                if (getView() == null || generation != mRequestGeneration
+                                        || sortGeneration != mSortGeneration || !Helpers.equals(channelId, getChannelId())) {
                                     return;
                                 }
 
@@ -377,7 +401,7 @@ public class ChannelPresenter extends BasePresenter<ChannelView> implements Vide
                                 getView().update(replace);
                                 //getView().setPosition(1);
                                 mSortIdx = tempIdx;
-                            });
+                            }, error -> Log.e(TAG, "Channel sort error: %s", error.getMessage()));
                         }, mSortIdx == idx));
                         idx++;
                     }
@@ -389,10 +413,15 @@ public class ChannelPresenter extends BasePresenter<ChannelView> implements Vide
     }
 
     public boolean onSearchSubmit(String query) {
-        Observable<MediaGroup> search = getContentService().getChannelSearchObserve(getChannelId(), query);
-        Disposable result = search.subscribe(
+        String channelId = getChannelId();
+        long generation = mRequestGeneration;
+        long searchGeneration = ++mSearchGeneration;
+        RxHelper.disposeActions(mSearchAction);
+        Observable<MediaGroup> search = getContentService().getChannelSearchObserve(channelId, query);
+        mSearchAction = search.subscribe(
                 items -> {
-                    if (getView() == null) {
+                    if (getView() == null || generation != mRequestGeneration
+                            || searchGeneration != mSearchGeneration || !Helpers.equals(channelId, getChannelId())) {
                         return;
                     }
 

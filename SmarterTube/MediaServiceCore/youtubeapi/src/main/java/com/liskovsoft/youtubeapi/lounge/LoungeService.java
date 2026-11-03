@@ -41,6 +41,7 @@ public class LoungeService {
     private final InfoManager mInfoManager;
     private final CommandManager mCommandManager;
     private final JsonPathTypeAdapter<CommandList> mLineSkipAdapter;
+    private final OkHttpClient mLongPollClient;
     private String mScreenName;
     private String mLoungeToken;
     private String mDeviceId;
@@ -57,6 +58,9 @@ public class LoungeService {
         mInfoManager = RetrofitHelper.create(InfoManager.class);
         mCommandManager = RetrofitHelper.create(CommandManager.class);
         mLineSkipAdapter = RetrofitHelper.adaptJsonPathSkip(CommandList.class);
+        mLongPollClient = new OkHttpClient.Builder()
+                .readTimeout(60_000, TimeUnit.MILLISECONDS)
+                .build();
     }
 
     public static LoungeService instance() {
@@ -170,20 +174,14 @@ public class LoungeService {
                 mSessionId,
                 mGSessionId);
         Request request = new Builder().url(url).build();
-        OkHttpClient.Builder builder = new OkHttpClient.Builder();
-
-        // No command during one minute could be a sign of hanged connection.
-        builder.readTimeout(60_000, TimeUnit.MILLISECONDS);
-
-        OkHttpClient client = builder.build();
 
         Log.d(TAG, "Starting read session...");
 
-        Response response = client.newCall(request).execute();
+        Response response = mLongPollClient.newCall(request).execute();
 
         InputStream in = response.body().byteStream();
         BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-        String result = "";
+        StringBuilder result = new StringBuilder();
         String line = "";
 
         // Skip initial commands: TYPE_SESSION_ID, TYPE_G_SESSION_ID, TYPE_LOUNGE_STATUS, TYPE_GET_NOW_PLAYING
@@ -195,24 +193,40 @@ public class LoungeService {
                 break;
             }
 
-            result += line + "\n";
+            result.append(line).append('\n');
 
-            boolean isLastLine = line.equals("]") && !result.endsWith("\"noop\"]\n]\n");
+            boolean isLastLine = line.equals("]") && !endsWith(result, "\"noop\"]\n]\n");
 
             if (isLastLine) {
-                Log.d(TAG, "New command: \n" + result);
+                String commandBatch = result.toString();
+                Log.d(TAG, "New command: \n" + commandBatch);
 
-                CommandList infos = toCommandInfos(result);
+                CommandList infos = toCommandInfos(commandBatch);
 
                 processCommands(infos, callback);
 
-                result = "";
+                result.setLength(0);
             }
         }
 
         Log.d(TAG, "Closing session...");
 
         response.body().close();
+    }
+
+    private static boolean endsWith(StringBuilder value, String suffix) {
+        int start = value.length() - suffix.length();
+        if (start < 0) {
+            return false;
+        }
+
+        for (int i = 0; i < suffix.length(); i++) {
+            if (value.charAt(start + i) != suffix.charAt(i)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private void processCommands(CommandList commandList, OnCommand callback) {

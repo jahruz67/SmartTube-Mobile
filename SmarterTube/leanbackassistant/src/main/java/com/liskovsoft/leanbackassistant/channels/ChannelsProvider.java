@@ -4,6 +4,8 @@ import android.annotation.TargetApi;
 import android.content.ComponentName;
 import android.content.ContentUris;
 import android.content.ContentValues;
+import android.content.ContentProviderOperation;
+import android.content.ContentProviderResult;
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -32,12 +34,16 @@ import com.liskovsoft.sharedutils.mylogger.Log;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.IdentityHashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 @SuppressWarnings("RestrictedApi")
 public class ChannelsProvider {
     private static final String TAG = ChannelsProvider.class.getSimpleName();
+    private static final int PREVIEW_BATCH_SIZE = 40;
+    private static volatile boolean sPreviewBatchSupported = true;
     private static final String SCHEME = "tvhomescreenchannels";
     private static final String APPS_LAUNCH_HOST = "com.google.android.tvhomescreenchannels";
     private static final String PLAY_VIDEO_ACTION_PATH = "playvideo";
@@ -301,12 +307,64 @@ public class ChannelsProvider {
 
         cleanupChannel(context, channelId);
 
+        if (sPreviewBatchSupported && publishProgramsBatch(context, channelId, clips)) {
+            return;
+        }
+        publishProgramsIndividually(context, channelId, clips);
+    }
+
+    private static void publishProgramsIndividually(Context context, long channelId, List<Clip> clips) {
         int weight = clips.size();
         for (int i = 0; i < clips.size(); ++i, --weight) {
             Clip clip = clips.get(i);
 
             publishProgram(context, clip, channelId, weight);
         }
+    }
+
+    private static boolean publishProgramsBatch(Context context, long channelId, List<Clip> clips) {
+        List<Clip> pending = new ArrayList<>();
+        ArrayList<ContentProviderOperation> operations = new ArrayList<>();
+        Map<Clip, Boolean> seen = new IdentityHashMap<>();
+        for (int i = 0; i < clips.size(); i++) {
+            Clip clip = clips.get(i);
+            if (clip.getProgramId() != -1 || clip.getVideoUrl() == null || seen.put(clip, true) != null) {
+                continue;
+            }
+            ContentValues values = createProgramBuilder(context, clip).setChannelId(channelId)
+                    .setWeight(clips.size() - i).build().toContentValues();
+            pending.add(clip);
+            operations.add(ContentProviderOperation.newInsert(PREVIEW_PROGRAMS_CONTENT_URI).withValues(values).build());
+        }
+        List<Long> ids = new ArrayList<>();
+        try {
+            for (int start = 0; start < operations.size(); start += PREVIEW_BATCH_SIZE) {
+                int end = Math.min(start + PREVIEW_BATCH_SIZE, operations.size());
+                ContentProviderResult[] results = context.getContentResolver().applyBatch(
+                        PREVIEW_PROGRAMS_CONTENT_URI.getAuthority(), new ArrayList<>(operations.subList(start, end)));
+                if (results == null || results.length != end - start) {
+                    throw new IllegalStateException("Incomplete preview publication result");
+                }
+                for (ContentProviderResult result : results) {
+                    if (result.uri == null || Uri.EMPTY.equals(result.uri)) {
+                        throw new IllegalStateException("Missing preview publication URI");
+                    }
+                    ids.add(ContentUris.parseId(result.uri));
+                }
+            }
+        } catch (Exception error) {
+            if (error instanceof UnsupportedOperationException) {
+                sPreviewBatchSupported = false;
+            }
+            Log.e(TAG, "Preview batch failed; rebuilding individually: %s", error.getMessage());
+            // A provider may have committed a prefix before throwing. Remove that prefix first.
+            cleanupChannel(context, channelId);
+            return false;
+        }
+        for (int i = 0; i < pending.size(); i++) {
+            pending.get(i).setProgramId(ids.get(i));
+        }
+        return true;
     }
 
     private static void cleanupChannel(Context context, long channelId) {
@@ -513,7 +571,7 @@ public class ChannelsProvider {
             }
 
             return true; // continue visiting
-        });
+        }, providerId);
 
         return myChannel.get();
     }
@@ -543,13 +601,23 @@ public class ChannelsProvider {
     }
     
     private static void visitChannels(Context context, ChannelVisitor visitor) {
-        Cursor cursor = context.getContentResolver().query(
-                TvContractCompat.Channels.CONTENT_URI,
-                CHANNEL_COLUMNS,
-                null,
-                null,
-                null
-        );
+        visitChannels(context, visitor, null);
+    }
+
+    private static void visitChannels(Context context, ChannelVisitor visitor, String providerId) {
+        Cursor cursor;
+        try {
+            cursor = context.getContentResolver().query(TvContractCompat.Channels.CONTENT_URI, CHANNEL_COLUMNS,
+                    providerId != null ? Channels.COLUMN_INTERNAL_PROVIDER_ID + " = ?" : null,
+                    providerId != null ? new String[]{providerId} : null, null);
+        } catch (IllegalArgumentException | UnsupportedOperationException | SecurityException error) {
+            if (providerId == null) {
+                throw error;
+            }
+            // Some TV providers forbid selection for third-party callers.
+            cursor = context.getContentResolver().query(
+                    TvContractCompat.Channels.CONTENT_URI, CHANNEL_COLUMNS, null, null, null);
+        }
 
         if (cursor != null) {
             try {

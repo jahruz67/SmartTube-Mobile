@@ -13,7 +13,9 @@ import com.liskovsoft.smartyoutubetv2.common.prefs.BlockedChannelData;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.ConcurrentModificationException;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class VideoGroup {
     /**
@@ -35,6 +37,7 @@ public class VideoGroup {
     private int mId;
     private String mTitle;
     private List<Video> mVideos;
+    private long mRevision;
     private MediaGroup mMediaGroup;
     private BrowseSection mSection;
     private int mPosition = -1;
@@ -71,13 +74,17 @@ public class VideoGroup {
     }
 
     public static VideoGroup from(List<Video> items, BrowseSection section) {
-        return from(items, section, extractGroupPosition(items));
+        Video topItem = findTopmostItemWithGroup(items);
+        return from(items, section, extractGroupPosition(topItem), topItem);
     }
 
     public static VideoGroup from(List<Video> items, BrowseSection section, int groupPosition) {
+        return from(items, section, groupPosition, findTopmostItemWithGroup(items));
+    }
+
+    private static VideoGroup from(List<Video> items, BrowseSection section, int groupPosition, Video topItem) {
         VideoGroup videoGroup = new VideoGroup();
         // Getting topmost element. Could help when syncing multi rows fragments.
-        Video topItem = findTopmostItemWithGroup(items);
         if (topItem != null && topItem.getGroup() != null) {
             videoGroup.mId = topItem.getGroup().getId();
             videoGroup.mTitle = topItem.getGroup().getTitle();
@@ -117,11 +124,7 @@ public class VideoGroup {
             return videoGroup;
         }
 
-        for (MediaItem item : mediaGroup.getMediaItems()) {
-            Video video = Video.from(item);
-
-            videoGroup.add(video);
-        }
+        videoGroup.addMediaItems(mediaGroup.getMediaItems());
 
         return videoGroup;
     }
@@ -138,11 +141,7 @@ public class VideoGroup {
             return baseGroup;
         }
 
-        for (MediaItem item : mediaGroup.getMediaItems()) {
-            Video video = Video.from(item);
-
-            baseGroup.add(video);
-        }
+        baseGroup.addMediaItems(mediaGroup.getMediaItems());
 
         baseGroup.mAction = ACTION_APPEND;
 
@@ -161,9 +160,7 @@ public class VideoGroup {
             return baseGroup;
         }
 
-        for (Video video : newGroup.getVideos()) {
-            baseGroup.add(video);
-        }
+        baseGroup.addVideos(newGroup.getVideos());
 
         baseGroup.mAction = ACTION_APPEND;
 
@@ -343,7 +340,8 @@ public class VideoGroup {
             return;
         }
 
-        mVideos = mVideos.subList(index, mVideos.size());
+        mVideos = new ArrayList<>(mVideos.subList(index, mVideos.size()));
+        mRevision++;
     }
 
     /**
@@ -383,6 +381,7 @@ public class VideoGroup {
         }
 
         mVideos.clear();
+        mRevision++;
     }
 
     public boolean contains(Video video) {
@@ -399,6 +398,10 @@ public class VideoGroup {
         }
 
         return mVideos.size();
+    }
+
+    public long getRevision() {
+        return mRevision;
     }
 
     public int indexOf(Video video) {
@@ -424,7 +427,9 @@ public class VideoGroup {
 
         try {
             // ConcurrentModificationException fix?
-            mVideos.remove(video);
+            if (mVideos.remove(video)) {
+                mRevision++;
+            }
         } catch (UnsupportedOperationException | ConcurrentModificationException e) { // read only collection
             e.printStackTrace();
         }
@@ -438,6 +443,32 @@ public class VideoGroup {
         }
 
         return true;
+    }
+
+    private void addMediaItems(List<MediaItem> items) {
+        Set<Video> seen = mVideos != null ? new HashSet<>(mVideos) : new HashSet<>();
+        for (MediaItem item : items) {
+            addUnique(Video.from(item), seen);
+        }
+    }
+
+    private void addVideos(List<Video> videos) {
+        Set<Video> seen = mVideos != null ? new HashSet<>(mVideos) : new HashSet<>();
+        for (Video video : videos) {
+            addUnique(video, seen);
+        }
+    }
+
+    private void addUnique(Video video, Set<Video> seen) {
+        if (seen.contains(video)) {
+            return;
+        }
+        int size = mVideos != null ? mVideos.size() : 0;
+        add(size, video);
+        // add may filter the item or update it from saved state; index only the inserted identity.
+        if (getSize() > size) {
+            seen.add(video);
+        }
     }
 
     public void add(Video video) {
@@ -473,6 +504,7 @@ public class VideoGroup {
         }
 
         mVideos.add(idx, video);
+        mRevision++;
     }
 
     private boolean isChannelBlocked(Video video) {

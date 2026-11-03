@@ -71,6 +71,7 @@ public final class DebugInfoManager implements Runnable, Player.EventListener {
     private boolean mStarted;
     private LinearLayout column1;
     private LinearLayout column2;
+    private int mRowIndex;
     private UhdHelper mUhdHelper;
     private final List<Pair<String, String>> mVideoInfo = new ArrayList<>();
     private final List<Pair<String, String>> mDisplayModeId = new ArrayList<>();
@@ -197,8 +198,7 @@ public final class DebugInfoManager implements Runnable, Player.EventListener {
 
     @SuppressLint("SetTextI18n")
     private void updateAndPost() {
-        column1.removeAllViews();
-        column2.removeAllViews();
+        mRowIndex = 0;
 
         updateRareChangedValues();
 
@@ -216,6 +216,11 @@ public final class DebugInfoManager implements Runnable, Player.EventListener {
         appendWebClientInfo();
         appendPlayerVersion();
         appendAccountInfo();
+
+        if (column1.getChildCount() > mRowIndex) {
+            column1.removeViews(mRowIndex, column1.getChildCount() - mRowIndex);
+            column2.removeViews(mRowIndex, column2.getChildCount() - mRowIndex);
+        }
 
         // Schedule next update
         mDebugViewGroup.removeCallbacks(this);
@@ -436,48 +441,32 @@ public final class DebugInfoManager implements Runnable, Player.EventListener {
     }
 
     private void appendRow(String name, boolean val) {
-        appendNameColumn(createTextView(name));
-        appendValueColumn(createTextView(val));
+        appendRow(name, String.valueOf(val));
     }
 
     private void appendRow(String name, CharSequence val) {
-        appendNameColumn(createTextView(name));
-        appendValueColumn(createTextView(val));
+        bindCell(column1, name, true);
+        bindCell(column2, val, false);
+        mRowIndex++;
     }
 
     private void appendRow(String name, int val) {
-        appendNameColumn(createTextView(name));
-        appendValueColumn(createTextView(val));
+        appendRow(name, String.valueOf(val));
     }
 
-    private void appendNameColumn(TextView content) {
-        content.setGravity(Gravity.END);
-        column1.addView(content);
-    }
-
-    private void appendValueColumn(TextView content) {
-        column2.addView(content);
-    }
-
-    private TextView createTextView(CharSequence name) {
-        TextView textView = new TextView(mContext);
-        textView.setText(name);
-        textView.setTextSize(TypedValue.COMPLEX_UNIT_PX, mTextSize);
-        return textView;
-    }
-
-    private TextView createTextView(boolean val) {
-        TextView textView = new TextView(mContext);
-        textView.setText(String.valueOf(val));
-        textView.setTextSize(TypedValue.COMPLEX_UNIT_PX, mTextSize);
-        return textView;
-    }
-
-    private TextView createTextView(int val) {
-        TextView textView = new TextView(mContext);
-        textView.setText(String.valueOf(val));
-        textView.setTextSize(TypedValue.COMPLEX_UNIT_PX, mTextSize);
-        return textView;
+    private void bindCell(LinearLayout column, CharSequence text, boolean name) {
+        TextView cell = (TextView) column.getChildAt(mRowIndex);
+        if (cell == null) {
+            cell = new TextView(mContext);
+            cell.setTextSize(TypedValue.COMPLEX_UNIT_PX, mTextSize);
+            if (name) {
+                cell.setGravity(Gravity.END);
+            }
+            column.addView(cell);
+        }
+        if (!android.text.TextUtils.equals(cell.getText(), text)) {
+            cell.setText(text);
+        }
     }
 
     private String toHumanReadable(int bitrate) {

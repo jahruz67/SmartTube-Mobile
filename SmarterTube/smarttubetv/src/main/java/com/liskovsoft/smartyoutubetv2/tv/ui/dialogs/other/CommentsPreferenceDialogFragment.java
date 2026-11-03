@@ -109,16 +109,11 @@ public class CommentsPreferenceDialogFragment extends LeanbackPreferenceDialogFr
                     return;
                 }
 
+                List<ChatItemMessage> messages = new java.util.ArrayList<>();
                 for (CommentItem commentItem : commentGroup.getComments()) {
-                    if (ChatItemMessage.shouldSplit(commentItem)) {
-                        List<ChatItemMessage> split = ChatItemMessage.fromSplit(view.getContext(), commentItem);
-                        for (ChatItemMessage splitItem : split) {
-                            appendMessage(adapter, splitItem);
-                        }
-                    } else {
-                        appendMessage(adapter, ChatItemMessage.from(view.getContext(), commentItem));
-                    }
+                    messages.addAll(ChatItemMessage.fromSplit(view.getContext(), commentItem));
                 }
+                appendMessages(adapter, messages);
                 if (adapter.getMessagesCount() == 0) { // No comments under the video
                     adapter.setLoadingMessage(mCommentsReceiver.getErrorMessage());
                 }
@@ -174,12 +169,16 @@ public class CommentsPreferenceDialogFragment extends LeanbackPreferenceDialogFr
         return view;
     }
 
-    private void appendMessage(MessagesListAdapter<ChatItemMessage> adapter, ChatItemMessage message) {
-        adapter.addToStart(message, false);
-
-        if (mFocusedMessage == null && IMessage.checkMessage(message)) {
-            mFocusedMessage = message;
-            adapter.setFocusedMessage(message);
+    private void appendMessages(MessagesListAdapter<ChatItemMessage> adapter, List<ChatItemMessage> messages) {
+        adapter.addAllToStart(messages, false);
+        if (mFocusedMessage == null) {
+            for (ChatItemMessage message : messages) {
+                if (IMessage.checkMessage(message)) {
+                    mFocusedMessage = message;
+                    adapter.setFocusedMessage(message);
+                    break;
+                }
+            }
         }
     }
 

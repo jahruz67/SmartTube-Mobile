@@ -27,7 +27,7 @@ public class FileUtils {
         }
 
         List<File> result = Arrays.asList(files);
-        Collections.sort(result, new FileComparator());
+        Collections.sort(result, new FileComparator(files));
         return result;
     }
 

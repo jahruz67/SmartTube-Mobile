@@ -189,6 +189,8 @@ public class TrackSelectorManager implements TrackSelectorCallback {
         //    renderer.selectedTrack = noVideoTrack;
         //}
 
+        MediaTrack candidate = null;
+        boolean allFormatsUnlocked = PlayerTweaksData.instance(mContext).isAllFormatsUnlocked();
         for (int groupIndex = 0; groupIndex < renderer.trackGroups.length; groupIndex++) {
             TrackGroup group = renderer.trackGroups.get(groupIndex);
             renderer.mediaTracks[groupIndex] = new MediaTrack[group.length];
@@ -196,7 +198,10 @@ public class TrackSelectorManager implements TrackSelectorCallback {
             for (int trackIndex = 0; trackIndex < group.length; trackIndex++) {
                 Format format = group.getFormat(trackIndex);
 
-                MediaTrack mediaTrack = MediaTrack.forRendererIndex(rendererIndex);
+                if (candidate == null) {
+                    candidate = MediaTrack.forRendererIndex(rendererIndex);
+                }
+                MediaTrack mediaTrack = candidate;
                 mediaTrack.format = format;
                 mediaTrack.groupIndex = groupIndex;
                 mediaTrack.trackIndex = trackIndex;
@@ -209,7 +214,7 @@ public class TrackSelectorManager implements TrackSelectorCallback {
                     continue;
                 }
 
-                if (!PlayerTweaksData.instance(mContext).isAllFormatsUnlocked() && !Utils.isFormatSupported(mediaTrack)) {
+                if (!allFormatsUnlocked && !Utils.isFormatSupported(mediaTrack)) {
                     continue;
                 }
 
@@ -217,6 +222,8 @@ public class TrackSelectorManager implements TrackSelectorCallback {
 
                 renderer.mediaTracks[groupIndex][trackIndex] = mediaTrack;
                 sortedTracks.add(mediaTrack);
+                // Accepted tracks escape into the renderer; only rejected scratch tracks are reused.
+                candidate = null;
             }
         }
 

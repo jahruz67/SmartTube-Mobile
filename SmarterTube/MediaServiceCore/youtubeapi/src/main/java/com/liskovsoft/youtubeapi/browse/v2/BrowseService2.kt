@@ -13,6 +13,9 @@ import com.liskovsoft.youtubeapi.common.models.impl.mediaitem.ShortsMediaItem
 import com.liskovsoft.youtubeapi.next.v2.gen.getItems
 import com.liskovsoft.youtubeapi.next.v2.gen.getContinuationToken
 import com.liskovsoft.youtubeapi.next.v2.gen.getShelves
+import java.util.concurrent.ExecutionException
+import java.util.concurrent.Executors
+import java.util.concurrent.Future
 
 internal open class BrowseService2 {
     private val mBrowseApi = RetrofitHelper.create(BrowseApi::class.java)
@@ -60,16 +63,31 @@ internal open class BrowseService2 {
         return RetrofitHelper.get(kidsResult)?.let {
             val result = mutableListOf<MediaGroup?>()
             it.getRootSection()?.let { result.add(KidsSectionMediaGroup(it, options)) }
-            it.getSections()?.forEach {
-                if (it?.getItems() == null && it?.getParams() != null) {
-                    val kidsResultNested = mBrowseApi.getBrowseResultKids(BrowseApiHelper.getKidsHomeQuery(it.getParams()!!))
-                    RetrofitHelper.get(kidsResultNested)?.getRootSection()?.let {
-                        result.add(KidsSectionMediaGroup(it, options))
+            val nestedSections = it.getSections().orEmpty().mapNotNull { section ->
+                if (section?.getItems() == null && section?.getParams() != null) {
+                    val params = section.getParams()!!
+                    nestedBrowseExecutor.submit<AnchoredSectionRenderer?> {
+                        val nestedCall = mBrowseApi.getBrowseResultKids(BrowseApiHelper.getKidsHomeQuery(params))
+                        RetrofitHelper.get(nestedCall)?.getRootSection()
                     }
+                } else {
+                    null
                 }
             }
 
+            nestedSections.forEach { future ->
+                awaitResult(future)?.let { result.add(KidsSectionMediaGroup(it, options)) }
+            }
+
             result
+        }
+    }
+
+    private fun <T> awaitResult(future: Future<T>): T? {
+        return try {
+            future.get()
+        } catch (e: ExecutionException) {
+            throw e.cause ?: e
         }
     }
 
@@ -611,5 +629,11 @@ internal open class BrowseService2 {
         }
 
         return Pair(combinedItems, combinedKey)
+    }
+
+    companion object {
+        private val nestedBrowseExecutor = Executors.newFixedThreadPool(4) { runnable ->
+            Thread(runnable, "kids-nested-browse").apply { isDaemon = true }
+        }
     }
 }

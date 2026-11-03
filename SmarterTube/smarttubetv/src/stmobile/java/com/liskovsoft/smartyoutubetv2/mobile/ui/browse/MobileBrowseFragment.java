@@ -491,9 +491,16 @@ public class MobileBrowseFragment extends Fragment implements BrowseView, MediaS
                 if (mShelfAdapter != null) {
                     mShelfAdapter.appendGroup(group);
                 } else if (mGridAdapter != null) {
-                    // Continuations carry the cumulative list; keep existing cards bound.
+                    // ACTION_APPEND carries the cumulative list. Its action is the continuation
+                    // contract, so pass only the tail and avoid revalidating the loaded prefix.
                     if (group.getAction() == VideoGroup.ACTION_APPEND) {
-                        mGridAdapter.setVideosIncrementally(group.getVideos());
+                        List<Video> videos = group.getVideos();
+                        int oldCount = mGridAdapter.getItemCount();
+                        if (videos != null && videos.size() > oldCount) {
+                            mGridAdapter.appendVideos(videos.subList(oldCount, videos.size()));
+                        } else {
+                            mGridAdapter.setVideos(videos);
+                        }
                     } else {
                         mGridAdapter.setVideos(group.getVideos());
                     }

@@ -3,17 +3,25 @@ package com.liskovsoft.smartyoutubetv2.common.app.models.playback.ui;
 import com.liskovsoft.mediaserviceinterfaces.data.ChatItem;
 
 public class ChatReceiverImpl implements ChatReceiver {
-    private Callback mCallback;
+    private volatile Callback mCallback;
 
     @Override
     public void addChatItem(ChatItem chatItem) {
-        if (mCallback != null) {
-            mCallback.onChatItem(chatItem);
+        Callback callback = mCallback;
+        if (callback != null) {
+            callback.onChatItem(chatItem);
         }
     }
 
     @Override
-    public void setCallback(Callback callback) {
+    public synchronized void setCallback(Callback callback) {
         mCallback = callback;
+    }
+
+    @Override
+    public synchronized void clearCallback(Callback owner) {
+        if (mCallback == owner) {
+            mCallback = null;
+        }
     }
 }
