@@ -22,8 +22,18 @@ New-Item -ItemType Directory -Path $reports -Force | Out-Null
 
 function Invoke-Checked {
     param([string]$Program, [string[]]$Arguments, [string]$Log)
-    & $Program @Arguments *> $Log
-    if ($LASTEXITCODE -ne 0) {
+    Get-Command $Program -ErrorAction Stop | Out-Null
+    $previousErrorAction = $ErrorActionPreference
+    try {
+        # Windows PowerShell wraps native stderr (including successful unittest
+        # output) as error records. The process exit code determines success.
+        $ErrorActionPreference = 'Continue'
+        & $Program @Arguments *> $Log
+        $commandExitCode = $LASTEXITCODE
+    } finally {
+        $ErrorActionPreference = $previousErrorAction
+    }
+    if ($commandExitCode -ne 0) {
         Get-Content -LiteralPath $Log -Tail 35
         throw "$Program failed; see $Log"
     }
