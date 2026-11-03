@@ -119,8 +119,7 @@ public class MobilePlaybackActivity extends PlaybackActivity {
 
     /** Collapse a downward swipe into the app's mini player while video is playing. */
     void minimizePlayback() {
-        if (mMiniPlayerPlaybackActive && mMobileFragment != null && mMobileFragment.getPlayWhenReady()
-                && !isInPipMode()) {
+        if (mMobileFragment != null && mMobileFragment.getPlayWhenReady() && !isInPipMode()) {
             MobileMiniPlayer.minimize(this);
             return;
         }

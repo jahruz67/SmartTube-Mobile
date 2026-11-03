@@ -23,14 +23,15 @@ public final class MobileMiniPlayer {
     private static TextView sTitleView;
     private static TextView sPlayPauseView;
     private static boolean sMinimized;
+    private static boolean sInitialSurfaceTransferPending;
 
     private MobileMiniPlayer() {}
 
     static void minimize(MobilePlaybackActivity activity) {
         sPlaybackActivity = activity;
         sMinimized = true;
+        sInitialSurfaceTransferPending = true;
         activity.getMobileFragment().blockEngine(true);
-        activity.getMobileFragment().detachVideoSurface();
         activity.showParentForMiniPlayer();
     }
 
@@ -45,12 +46,15 @@ public final class MobileMiniPlayer {
     static void restore(MobilePlaybackActivity activity) {
         if (sPlaybackActivity != activity) return;
         sMinimized = false;
+        sInitialSurfaceTransferPending = false;
         removeOverlay();
+        sPlaybackActivity = null;
     }
 
     static void onPlaybackFinished(MobilePlaybackActivity activity) {
         if (sPlaybackActivity != activity) return;
         sMinimized = false;
+        sInitialSurfaceTransferPending = false;
         removeOverlay();
         sPlaybackActivity = null;
     }
@@ -84,6 +88,10 @@ public final class MobileMiniPlayer {
         FrameLayout video = new FrameLayout(activity);
         bar.addView(video, new LinearLayout.LayoutParams(dp(activity, 160), height));
         fragment.moveVideoSurfaceTo(video);
+        if (sInitialSurfaceTransferPending && !fragment.getPlayWhenReady()) {
+            fragment.setPlayWhenReady(true);
+        }
+        sInitialSurfaceTransferPending = false;
         video.setOnClickListener(v -> expand(activity));
 
         Video current = PlaybackPresenter.instance(activity).getVideo();
@@ -156,6 +164,7 @@ public final class MobileMiniPlayer {
         MobilePlaybackActivity playback = sPlaybackActivity;
         if (playback == null) return;
         sMinimized = false;
+        sInitialSurfaceTransferPending = false;
         removeOverlay();
         MobilePlaybackFragment fragment = playback.getMobileFragment();
         if (fragment != null) {

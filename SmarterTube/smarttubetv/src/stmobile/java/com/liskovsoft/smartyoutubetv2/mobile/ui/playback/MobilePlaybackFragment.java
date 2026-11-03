@@ -128,17 +128,6 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         }
     }
 
-    void detachVideoSurface() {
-        ViewGroup surfaceRoot = getMobileSurfaceRoot();
-        if (surfaceRoot != null && surfaceRoot.getParent() instanceof ViewGroup) {
-            ((ViewGroup) surfaceRoot.getParent()).removeView(surfaceRoot);
-        }
-        View subtitles = getMobileSubtitleView();
-        if (subtitles != null && subtitles.getParent() instanceof ViewGroup) {
-            ((ViewGroup) subtitles.getParent()).removeView(subtitles);
-        }
-    }
-
     void restoreVideoSurface() {
         if (getView() == null) {
             return;
