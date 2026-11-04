@@ -50,6 +50,16 @@
     <!--    android:paddingEnd="56dp"-->
     <!--    android:visibility="gone" />-->
 
+    <ProgressBar
+        android:id="@+id/comments_loading"
+        style="@style/Widget.SmarterTube.LoadingIndicator"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_margin="16dp"
+        android:importantForAccessibility="no"
+        android:visibility="gone" />
+
     <com.stfalcon.chatkit.messages.MessagesList
         android:id="@+id/messagesList"
         android:layout_width="match_parent"

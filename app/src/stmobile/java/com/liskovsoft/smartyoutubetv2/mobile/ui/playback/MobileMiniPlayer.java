@@ -2,6 +2,7 @@ package com.liskovsoft.smartyoutubetv2.mobile.ui.playback;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.text.TextUtils;
@@ -10,6 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.Video;
@@ -23,6 +25,8 @@ public final class MobileMiniPlayer {
     private static View sOverlay;
     private static TextView sTitleView;
     private static TextView sPlayPauseView;
+    private static ProgressBar sLoadingSpinner;
+    private static boolean sLoading;
     private static boolean sMinimized;
     private static boolean sExpanding;
 
@@ -99,6 +103,12 @@ public final class MobileMiniPlayer {
         FrameLayout video = new FrameLayout(activity);
         bar.addView(video, new LinearLayout.LayoutParams(dp(activity, 112), height));
         video.setOnClickListener(v -> expand(activity));
+        sLoadingSpinner = new ProgressBar(activity, null, android.R.attr.progressBarStyleSmall);
+        sLoadingSpinner.setIndeterminate(true);
+        sLoadingSpinner.setIndeterminateTintList(ColorStateList.valueOf(Color.WHITE));
+        sLoadingSpinner.setContentDescription(activity.getString(R.string.wait_data_loading));
+        video.addView(sLoadingSpinner, new FrameLayout.LayoutParams(
+                dp(activity, 24), dp(activity, 24), Gravity.CENTER));
 
         Video current = PlaybackPresenter.instance(activity).getVideo();
         TextView title = new TextView(activity);
@@ -126,6 +136,7 @@ public final class MobileMiniPlayer {
         sHost = host;
         sOverlay = overlay;
         fragment.moveVideoSurfaceTo(video);
+        updateLoadingState(sLoading);
         updatePlaybackState(fragment.getMiniPlayerPlayWhenReady());
     }
 
@@ -152,6 +163,14 @@ public final class MobileMiniPlayer {
         }
         if (sPlayPauseView != null) {
             sPlayPauseView.setText(playing ? "Ⅱ" : "▶");
+        }
+    }
+
+    static void updateLoadingState(boolean loading) {
+        sLoading = loading;
+        if (sLoadingSpinner != null) {
+            sLoadingSpinner.setVisibility(loading ? View.VISIBLE : View.GONE);
+            if (loading) sLoadingSpinner.bringToFront();
         }
     }
 
@@ -187,6 +206,7 @@ public final class MobileMiniPlayer {
         sHost = null;
         sTitleView = null;
         sPlayPauseView = null;
+        sLoadingSpinner = null;
     }
 
     private static int dp(Activity activity, int value) {

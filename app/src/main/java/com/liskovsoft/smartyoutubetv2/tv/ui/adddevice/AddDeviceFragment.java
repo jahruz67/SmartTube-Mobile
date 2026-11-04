@@ -1,6 +1,7 @@
 package com.liskovsoft.smartyoutubetv2.tv.ui.adddevice;
 
 import android.os.Bundle;
+import android.view.ViewGroup;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -10,12 +11,14 @@ import androidx.leanback.widget.GuidedAction;
 import com.liskovsoft.smartyoutubetv2.common.app.presenters.AddDevicePresenter;
 import com.liskovsoft.smartyoutubetv2.common.app.views.AddDeviceView;
 import com.liskovsoft.smartyoutubetv2.tv.R;
+import com.liskovsoft.smartyoutubetv2.tv.ui.mod.leanback.misc.ProgressBarManager;
 
 import java.util.List;
 
 public class AddDeviceFragment extends GuidedStepSupportFragment implements AddDeviceView {
     private static final int CONTINUE = 2;
     private AddDevicePresenter mAddDevicePresenter;
+    private final ProgressBarManager mProgressBarManager = new ProgressBarManager();
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -29,7 +32,15 @@ public class AddDeviceFragment extends GuidedStepSupportFragment implements AddD
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
+        mProgressBarManager.setRootView((ViewGroup) getActivity().findViewById(android.R.id.content));
+        mProgressBarManager.show();
         mAddDevicePresenter.onViewInitialized();
+    }
+
+    @Override
+    public void onDestroyView() {
+        mProgressBarManager.hide();
+        super.onDestroyView();
     }
 
     @Override
@@ -40,6 +51,7 @@ public class AddDeviceFragment extends GuidedStepSupportFragment implements AddD
 
     @Override
     public void showCode(String userCode) {
+        mProgressBarManager.hide();
         setTitle(userCode);
     }
 

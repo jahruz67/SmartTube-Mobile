@@ -6,7 +6,6 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 
-import androidx.core.content.ContextCompat;
 import androidx.leanback.app.BrowseFragment;
 import androidx.leanback.app.VerticalGridFragment;
 
@@ -63,10 +62,7 @@ public final class ProgressBarManager {
 
     private static View createProgressBar(ViewGroup rootView, int position) {
         ProgressBar progressBarView = new ProgressBar(
-                rootView.getContext(), null, android.R.attr.progressBarStyleLarge);
-        progressBarView.setIndeterminate(true);
-        progressBarView.setIndeterminateDrawable(
-                ContextCompat.getDrawable(rootView.getContext(), R.drawable.progress_large_holo));
+                rootView.getContext(), null, 0, R.style.Widget_SmarterTube_LoadingIndicator);
 
         FrameLayout.LayoutParams progressBarParams = new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.WRAP_CONTENT,

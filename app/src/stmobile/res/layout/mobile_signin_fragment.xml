@@ -29,6 +29,14 @@
             android:textSize="22sp"
             android:textStyle="bold" />
 
+        <ProgressBar
+            android:id="@+id/signin_loading"
+            style="@style/Widget.SmarterTube.LoadingIndicator"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginTop="16dp"
+            android:importantForAccessibility="no" />
+
         <TextView
             android:id="@+id/signin_instructions"
             android:layout_width="match_parent"

@@ -3,6 +3,7 @@ package com.liskovsoft.smartyoutubetv2.tv.ui.signin;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
@@ -19,6 +20,7 @@ import com.liskovsoft.smartyoutubetv2.common.app.presenters.SignInPresenter;
 import com.liskovsoft.smartyoutubetv2.common.app.views.SignInView;
 import com.liskovsoft.smartyoutubetv2.common.utils.Utils;
 import com.liskovsoft.smartyoutubetv2.tv.R;
+import com.liskovsoft.smartyoutubetv2.tv.ui.mod.leanback.misc.ProgressBarManager;
 import com.liskovsoft.smartyoutubetv2.tv.util.ViewUtil;
 
 import java.util.List;
@@ -29,6 +31,7 @@ public class SignInFragment extends GuidedStepSupportFragment implements SignInV
     private static final int OPEN_BROWSER = 3;
     private SignInPresenter mSignInPresenter;
     private String mFullSignInUrl;
+    private final ProgressBarManager mProgressBarManager = new ProgressBarManager();
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -42,7 +45,15 @@ public class SignInFragment extends GuidedStepSupportFragment implements SignInV
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
+        mProgressBarManager.setRootView((ViewGroup) getActivity().findViewById(android.R.id.content));
+        mProgressBarManager.show();
         mSignInPresenter.onViewInitialized();
+    }
+
+    @Override
+    public void onDestroyView() {
+        mProgressBarManager.hide();
+        super.onDestroyView();
     }
 
     @Override
@@ -62,6 +73,7 @@ public class SignInFragment extends GuidedStepSupportFragment implements SignInV
     }
 
     private void setTitle(String userCode, String signInUrl, String fullSignInUrl) {
+        mProgressBarManager.hide();
         if (getContext() == null || TextUtils.isEmpty(userCode)) {
             return;
         }

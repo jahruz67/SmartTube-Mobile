@@ -2,6 +2,7 @@ package com.liskovsoft.smartyoutubetv2.common.app.views;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.ActivityOptions;
 import android.app.Fragment;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
@@ -421,7 +422,15 @@ public class ViewManager {
      */
     private void safeStartActivityInt(Context context, Intent intent) {
         try {
-            context.startActivity(intent);
+            if ((intent.getFlags() & Intent.FLAG_ACTIVITY_NO_ANIMATION) != 0) {
+                // Mini-player returns can be deferred; suppress the transition at the actual launch.
+                context.startActivity(intent, ActivityOptions.makeCustomAnimation(context, 0, 0).toBundle());
+                if (context instanceof Activity) {
+                    ((Activity) context).overridePendingTransition(0, 0);
+                }
+            } else {
+                context.startActivity(intent);
+            }
         } catch (IllegalArgumentException | ActivityNotFoundException | IndexOutOfBoundsException | NullPointerException | SecurityException e) {
             // NPE: Attempt to write to field 'boolean com.android.server.am.ActivityStack.mConfigWillChange' on a null object reference
             Log.e(TAG, "Error when starting activity: %s", e.getMessage());

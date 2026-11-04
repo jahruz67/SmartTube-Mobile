@@ -2,6 +2,7 @@ package com.liskovsoft.smartyoutubetv2.mobile.ui.playback;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.res.ColorStateList;
 import android.content.res.Configuration;
 import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
@@ -24,6 +25,7 @@ import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
@@ -33,8 +35,10 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import androidx.core.view.ViewCompat;
+import androidx.core.content.ContextCompat;
 
 import com.bumptech.glide.Glide;
+import com.google.android.exoplayer2.DefaultRenderersFactory;
 import com.liskovsoft.mediaserviceinterfaces.MediaItemService;
 import com.liskovsoft.mediaserviceinterfaces.data.MediaGroup;
 import com.liskovsoft.mediaserviceinterfaces.data.MediaItemMetadata;
@@ -98,6 +102,9 @@ public class MobilePlaybackFragment extends PlaybackFragment {
     private SurfaceHolder mAttachedVideoSurface;
     private boolean mVideoSurfaceTransferPending;
     private boolean mPlayAfterVideoSurfaceTransfer;
+    private ProgressBar mLoadingSpinner;
+    private boolean mLoadingRequested;
+    private boolean mBuffering;
     private MediaControllerCompat mMiniPlayerController;
     private final MediaControllerCompat.Callback mMiniPlayerCallback = new MediaControllerCompat.Callback() {
         @Override
@@ -107,13 +114,89 @@ public class MobilePlaybackFragment extends PlaybackFragment {
     };
 
     @Override
+    protected void configureProgressBar(ViewGroup root) {
+        mLoadingSpinner = new ProgressBar(root.getContext(), null, android.R.attr.progressBarStyleLarge);
+        mLoadingSpinner.setIndeterminate(true);
+        mLoadingSpinner.setIndeterminateTintList(ColorStateList.valueOf(
+                ContextCompat.getColor(root.getContext(), R.color.brand_accent)));
+        mLoadingSpinner.setContentDescription(getString(R.string.wait_data_loading));
+        int size = Math.round(40 * getResources().getDisplayMetrics().density);
+        root.addView(mLoadingSpinner, new FrameLayout.LayoutParams(size, size, Gravity.CENTER));
+        getProgressBarManager().setProgressBarView(mLoadingSpinner);
+        getProgressBarManager().setInitialDelay(0);
+    }
+
+    @Override
+    public void showProgressBar(boolean show) {
+        mLoadingRequested = show;
+        updateLoadingIndicator();
+    }
+
+    @Override
+    protected void onBufferingStateChanged(boolean start) {
+        mBuffering = start;
+        if (start) mLoadingRequested = false; // Metadata loading has handed off to the player.
+        updateLoadingIndicator();
+    }
+
+    @Override
+    protected void onError(int errorCode, CharSequence errorMessage) {
+        mBuffering = false;
+        mLoadingRequested = false;
+        mAwaitingShortsFrame = false;
+        mAwaitingShortsLoop = false;
+        mChromeHandler.removeCallbacks(mShortsFramePoll);
+        mChromeHandler.removeCallbacks(mShortsFrameTimeout);
+        mChromeHandler.removeCallbacks(mShortsLoopPoll);
+        mChromeHandler.removeCallbacks(mShortsLoopTimeout);
+        updateLoadingIndicator();
+        super.onError(errorCode, errorMessage);
+    }
+
+    private void updateLoadingIndicator() {
+        if (mLoadingSpinner == null) return;
+        boolean loading = mBuffering || (mLoadingRequested && !isPlaying())
+                || ((mAwaitingShortsFrame || mAwaitingShortsLoop) && getPlayWhenReady());
+        if (loading) {
+            mLoadingSpinner.bringToFront();
+            getProgressBarManager().show();
+        } else {
+            getProgressBarManager().hide();
+        }
+        MobileMiniPlayer.updateLoadingState(loading);
+    }
+
+    private void attachLoadingSpinner() {
+        if (mLoadingSpinner == null || mRoot == null || mLoadingSpinner.getParent() == mRoot) return;
+        ViewGroup parent = (ViewGroup) mLoadingSpinner.getParent();
+        int size = mLoadingSpinner.getLayoutParams().width;
+        parent.removeView(mLoadingSpinner);
+        ConstraintLayout.LayoutParams params = new ConstraintLayout.LayoutParams(size, size);
+        params.startToStart = params.endToEnd = R.id.playback_controls_fragment;
+        params.topToTop = params.bottomToBottom = R.id.playback_controls_fragment;
+        mRoot.addView(mLoadingSpinner, params);
+        updateLoadingIndicator();
+    }
+
+    @Override
     protected TextureViewWrapper createVideoSurfaceWrapper(ViewGroup root) {
         // Start with a transferable output so minimizing never replaces the decoder surface.
         mMobileVideoSurface = new TextureViewWrapper(getContext(), root, true);
         return mMobileVideoSurface;
     }
 
+    @Override
+    protected DefaultRenderersFactory createRenderersFactory() {
+        // Keep audio waiting for video readiness after seeks and retained-player source changes.
+        return super.createRenderersFactory().setAllowedVideoJoiningTimeMs(0);
+    }
+
     private void updateMiniPlayerPlaybackState(PlaybackStateCompat state) {
+        if (state != null && (state.getState() == PlaybackStateCompat.STATE_PLAYING
+                || state.getState() == PlaybackStateCompat.STATE_PAUSED)) {
+            mLoadingRequested = false;
+        }
+        updateLoadingIndicator();
         MobileMiniPlayer.updatePlaybackState(getMiniPlayerPlayWhenReady());
         Activity activity = getActivity();
         if (activity instanceof MobilePlaybackActivity) {
@@ -461,6 +544,7 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         applyMobileLayout();
         bindAvatar(PlaybackPresenter.instance(getContext()).getVideo());
         if (mModernChrome != null) mModernChrome.start();
+        updateLoadingIndicator();
         updateSettingsButton();
         if (mResumeAfterSettings) {
             // Back from the Settings screen that openAppSettings() paused us for.
@@ -528,6 +612,7 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         if (mSwipeToDismiss != null) mSwipeToDismiss.pause();
         mAwaitingShortsFrame = false;
         mAwaitingShortsLoop = false;
+        updateLoadingIndicator();
     }
 
     @Override
@@ -565,6 +650,15 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         mMobileSurfaceLayoutParams = null;
         mMobileSubtitleLayoutParams = null;
         mAttachedVideoSurface = null;
+        getProgressBarManager().hide();
+        if (mLoadingSpinner != null && mLoadingSpinner.getParent() instanceof ViewGroup) {
+            ((ViewGroup) mLoadingSpinner.getParent()).removeView(mLoadingSpinner);
+        }
+        mLoadingSpinner = null;
+        mLoadingRequested = false;
+        mBuffering = false;
+        mRoot = null;
+        MobileMiniPlayer.updateLoadingState(false);
         super.onDestroyView();
     }
 
@@ -1489,6 +1583,7 @@ public class MobilePlaybackFragment extends PlaybackFragment {
                     mAwaitingShortsFrame = false;
                     mChromeHandler.removeCallbacks(mShortsFramePoll);
                     mChromeHandler.removeCallbacks(mShortsFrameTimeout);
+                    updateLoadingIndicator();
                     prepareShortsPosters(); // load prev/next thumbnails for the filmstrip
                 }
                 if (mShortsSwipeDragging) {
@@ -1608,8 +1703,12 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         closeShortsPlaylistSheet();
         // Reset any in-progress swipe animation / pending frame wait.
         mAwaitingShortsFrame = false;
+        mAwaitingShortsLoop = false;
         mChromeHandler.removeCallbacks(mShortsFramePoll);
         mChromeHandler.removeCallbacks(mShortsFrameTimeout);
+        mChromeHandler.removeCallbacks(mShortsLoopPoll);
+        mChromeHandler.removeCallbacks(mShortsLoopTimeout);
+        updateLoadingIndicator();
         setShortsPageTranslation(0);
         hideShortsPosters();
 
@@ -2428,6 +2527,7 @@ public class MobilePlaybackFragment extends PlaybackFragment {
      */
     private void awaitShortsFrame() {
         mAwaitingShortsFrame = true;
+        updateLoadingIndicator();
         mChromeHandler.removeCallbacks(mShortsFramePoll);
         mChromeHandler.removeCallbacks(mShortsFrameTimeout);
         mChromeHandler.postDelayed(mShortsFramePoll, SHORTS_FRAME_POLL_MS);
@@ -2467,6 +2567,7 @@ public class MobilePlaybackFragment extends PlaybackFragment {
 
     private void awaitShortsLoopFrame() {
         mAwaitingShortsLoop = true;
+        updateLoadingIndicator();
         mChromeHandler.removeCallbacks(mShortsLoopPoll);
         mChromeHandler.removeCallbacks(mShortsLoopTimeout);
         mChromeHandler.postDelayed(mShortsLoopPoll, SHORTS_FRAME_POLL_MS);
@@ -2489,6 +2590,7 @@ public class MobilePlaybackFragment extends PlaybackFragment {
 
     private void finishShortsLoop() {
         mAwaitingShortsLoop = false;
+        updateLoadingIndicator();
         mChromeHandler.removeCallbacks(mShortsLoopPoll);
         mChromeHandler.removeCallbacks(mShortsLoopTimeout);
         fadeOutPoster(mShortsNextPoster);
@@ -2497,6 +2599,7 @@ public class MobilePlaybackFragment extends PlaybackFragment {
     /** New Short is rendering (or timed out): fade the covering poster away and warm the next one. */
     private void finishShortsTransition() {
         mAwaitingShortsFrame = false;
+        updateLoadingIndicator();
         mChromeHandler.removeCallbacks(mShortsFramePoll);
         mChromeHandler.removeCallbacks(mShortsFrameTimeout);
         fadeOutPoster(mShortsNextPoster);
@@ -2745,6 +2848,7 @@ public class MobilePlaybackFragment extends PlaybackFragment {
                         : activity::onBackPressed);
         mPinch = PinchZoom.create(activity, mPinchTarget);
         initCutoutGuard(activity);
+        attachLoadingSpinner();
 
         return true;
     }

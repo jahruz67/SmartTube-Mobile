@@ -170,9 +170,13 @@ public class PlaybackFragment extends SeekModePlaybackFragment implements Playba
 
         // We should use internal progress manager because it's used in many places like Exo engine etc.
         // ProgressBar.setRootView already called at this moment.
-        ProgressBarManager.setup(getProgressBarManager(), (ViewGroup) root);
+        configureProgressBar((ViewGroup) root);
 
         return root;
+    }
+
+    protected void configureProgressBar(ViewGroup root) {
+        ProgressBarManager.setup(getProgressBarManager(), root);
     }
 
     @Override
@@ -488,10 +492,14 @@ public class PlaybackFragment extends SeekModePlaybackFragment implements Playba
         DefaultTrackSelector trackSelector = new RestoreTrackSelector(new AdaptiveTrackSelection.Factory());
         mExoPlayerController.setTrackSelector(trackSelector);
 
-        DefaultRenderersFactory renderersFactory = new CustomOverridesRenderersFactory(getContext());
+        DefaultRenderersFactory renderersFactory = createRenderersFactory();
         mPlayer = mPlayerInitializer.createPlayer(getContext(), renderersFactory, trackSelector);
 
         mExoPlayerController.setPlayer(mPlayer);
+    }
+
+    protected DefaultRenderersFactory createRenderersFactory() {
+        return new CustomOverridesRenderersFactory(getContext());
     }
 
     private void createPlayerGlue() {

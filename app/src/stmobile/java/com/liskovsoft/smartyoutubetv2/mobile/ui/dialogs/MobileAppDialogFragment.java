@@ -54,6 +54,8 @@ public class MobileAppDialogFragment extends Fragment implements AppDialogView {
     private TextView mTitleView;
     private RecyclerView mList;
     private TextView mStatusView;
+    private View mStatusContainer;
+    private View mLoadingView;
     private View mRootFrame;
     private LinearLayout mContent;
     private View mHandle;
@@ -88,6 +90,8 @@ public class MobileAppDialogFragment extends Fragment implements AppDialogView {
 
         mTitleView = view.findViewById(R.id.dialog_title);
         mStatusView = view.findViewById(R.id.options_status);
+        mStatusContainer = view.findViewById(R.id.options_status_container);
+        mLoadingView = view.findViewById(R.id.options_loading);
         mRootFrame = view.findViewById(R.id.dialog_root_frame);
         mContent = view.findViewById(R.id.dialog_content);
         mHandle = view.findViewById(R.id.sheet_handle);
@@ -206,6 +210,7 @@ public class MobileAppDialogFragment extends Fragment implements AppDialogView {
         }
 
         if (mAdapter != null) {
+            showStatus(null);
             mAdapter.setCategories(categories, isExpandable);
             // A focused sub-dialog (one expandable category) that renders to just a handful of
             // rows — e.g. the Video speed slider opened from the player — reads better as a bottom
@@ -331,7 +336,7 @@ public class MobileAppDialogFragment extends Fragment implements AppDialogView {
         mList.removeOnScrollListener(mPaginationListener);
         mList.addOnScrollListener(mPaginationListener);
 
-        showStatus(receiver.getLoadingMessage());
+        showStatus(receiver.getLoadingMessage(), true);
 
         attachCommentsCallback(receiver);
 
@@ -476,15 +481,16 @@ public class MobileAppDialogFragment extends Fragment implements AppDialogView {
     };
 
     private void showStatus(String text) {
+        showStatus(text, false);
+    }
+
+    private void showStatus(String text, boolean loading) {
         if (mStatusView == null) {
             return;
         }
-        if (TextUtils.isEmpty(text)) {
-            mStatusView.setVisibility(View.GONE);
-        } else {
-            mStatusView.setText(text);
-            mStatusView.setVisibility(View.VISIBLE);
-        }
+        mStatusView.setText(text);
+        mLoadingView.setVisibility(loading ? View.VISIBLE : View.GONE);
+        mStatusContainer.setVisibility(loading || !TextUtils.isEmpty(text) ? View.VISIBLE : View.GONE);
     }
 
     /** Snapshot of the loaded comments so reopening the same video restores instantly. */

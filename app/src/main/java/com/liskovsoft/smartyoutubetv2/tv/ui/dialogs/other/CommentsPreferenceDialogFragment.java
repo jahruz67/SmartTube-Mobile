@@ -100,10 +100,13 @@ public class CommentsPreferenceDialogFragment extends LeanbackPreferenceDialogFr
         messagesList.requestFocus(); // hold focus even when there's no messages
         adapter.enableStackFromEnd(true);
         adapter.setLoadingMessage(mCommentsReceiver.getLoadingMessage());
+        View loadingView = view.findViewById(R.id.comments_loading);
+        loadingView.setVisibility(mBackupMessages == null ? View.VISIBLE : View.GONE);
 
         mCommentsReceiver.setCallback(new Callback() {
             @Override
             public void onCommentGroup(CommentGroup commentGroup) {
+                loadingView.setVisibility(View.GONE);
                 if (commentGroup == null || commentGroup.getComments() == null) {
                     adapter.setLoadingMessage(mCommentsReceiver.getErrorMessage());
                     return;
@@ -131,6 +134,7 @@ public class CommentsPreferenceDialogFragment extends LeanbackPreferenceDialogFr
 
             @Override
             public void onBackup(Backup backup) {
+                loadingView.setVisibility(View.GONE);
                 mBackupMessages = ((CommentsBackup) backup).backupMessages;
                 mFocusedMessage = ((CommentsBackup) backup).focusedMessage;
                 mCurrentGroup = ((CommentsBackup) backup).currentGroup;

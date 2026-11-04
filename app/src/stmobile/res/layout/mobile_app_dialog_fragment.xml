@@ -61,17 +61,34 @@
                 android:clipToPadding="false"
                 android:paddingBottom="16dp" />
 
-            <!-- Centered loading / empty / error message, used by the comments screen. -->
-            <TextView
-                android:id="@+id/options_status"
+            <!-- Centered loading / empty / error state, used by the comments screen. -->
+            <LinearLayout
+                android:id="@+id/options_status_container"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:padding="24dp"
                 android:gravity="center"
-                android:textColor="@color/mobile_text_secondary"
-                android:textSize="14sp"
-                android:visibility="gone" />
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <ProgressBar
+                    android:id="@+id/options_loading"
+                    style="@style/Widget.SmarterTube.LoadingIndicator"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_marginBottom="12dp"
+                    android:importantForAccessibility="no"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/options_status"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:textColor="@color/mobile_text_secondary"
+                    android:textSize="14sp" />
+            </LinearLayout>
         </FrameLayout>
     </LinearLayout>
 </FrameLayout>

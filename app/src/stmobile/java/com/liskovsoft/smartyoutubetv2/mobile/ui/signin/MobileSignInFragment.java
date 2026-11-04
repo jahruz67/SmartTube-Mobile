@@ -45,7 +45,8 @@ import com.liskovsoft.youtubeapi.service.YouTubeServiceManager;
  */
 public class MobileSignInFragment extends Fragment implements SignInView {
     private SignInPresenter mPresenter;
-    private View mTitleView;
+    private TextView mTitleView;
+    private View mLoadingView;
     private View mInstructionsView;
     private View mCodeLabelView;
     private TextView mCodeView;
@@ -90,6 +91,7 @@ public class MobileSignInFragment extends Fragment implements SignInView {
         super.onViewCreated(view, savedInstanceState);
 
         mTitleView = view.findViewById(R.id.signin_title);
+        mLoadingView = view.findViewById(R.id.signin_loading);
         mInstructionsView = view.findViewById(R.id.signin_instructions);
         mCodeLabelView = view.findViewById(R.id.signin_code_label);
         mCodeView = view.findViewById(R.id.signin_code);
@@ -146,6 +148,8 @@ public class MobileSignInFragment extends Fragment implements SignInView {
         }
 
         mAutoRetries = 0; // got a code — reset the budget for any later re-arm
+        mLoadingView.setVisibility(View.GONE);
+        mTitleView.setText(R.string.action_signin);
         hideError();
         mFullSignInUrl = fullSignInUrl != null
                 ? fullSignInUrl
@@ -155,6 +159,7 @@ public class MobileSignInFragment extends Fragment implements SignInView {
     }
 
     private void showError(@Nullable String message) {
+        mLoadingView.setVisibility(View.GONE);
         String safeMessage = message != null ? message : "";
         mErrorBody.setText(getString(R.string.mobile_signin_error_generic, safeMessage));
         mErrorBlock.setVisibility(View.VISIBLE);
@@ -191,6 +196,8 @@ public class MobileSignInFragment extends Fragment implements SignInView {
         mAutoRetries = 0; // manual retry restores the auto-retry budget
         mBrowserLaunched = false;
         hideError();
+        mTitleView.setText(R.string.signin_view_title);
+        mLoadingView.setVisibility(View.VISIBLE);
         mBrowserButton.setEnabled(false);
         mCodeView.setText("");
         mPresenter.onViewInitialized();

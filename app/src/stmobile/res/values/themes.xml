@@ -5,6 +5,8 @@
         <item name="colorPrimary">@color/brand_primary</item>
         <item name="colorPrimaryDark">@color/brand_primary_dark</item>
         <item name="colorAccent">@color/brand_accent</item>
+        <item name="android:progressBarStyle">@style/Widget.SmarterTube.LoadingIndicator</item>
+        <item name="android:progressBarStyleLarge">@style/Widget.SmarterTube.LoadingIndicator</item>
         <item name="android:windowBackground">@color/brand_primary</item>
         <item name="android:colorBackground">@color/brand_primary</item>
     </style>

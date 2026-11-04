@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Widget.SmarterTube.LoadingIndicator" parent="android:Widget.ProgressBar">
+        <item name="android:indeterminate">true</item>
+        <item name="android:indeterminateOnly">true</item>
+        <item name="android:indeterminateDrawable">@drawable/loading_spinner</item>
+        <item name="android:indeterminateTint">?android:attr/colorAccent</item>
+        <item name="android:indeterminateDuration">1000</item>
+        <item name="android:indeterminateBehavior">repeat</item>
+        <item name="android:interpolator">@android:anim/linear_interpolator</item>
+        <item name="android:minWidth">48dp</item>
+        <item name="android:maxWidth">48dp</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="android:maxHeight">48dp</item>
+        <item name="android:contentDescription">@string/loading</item>
+    </style>
+</resources>
