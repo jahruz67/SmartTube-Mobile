@@ -588,7 +588,9 @@ final class ModernPlayerChrome {
         mSheetTitle.setText(R.string.mobile_player_more);
         // First row leads back to the gear sheet this list was opened from.
         List<Action> rows = new ArrayList<>();
-        rows.add(new Action(R.id.action_mobile_back, mActivity.getString(R.string.mobile_player_back_to_settings)));
+        Action backRow = new Action(R.id.action_mobile_back, mActivity.getString(R.string.mobile_player_back_to_settings));
+        backRow.setIcon(ContextCompat.getDrawable(mActivity, R.drawable.ic_shorts_back));
+        rows.add(backRow);
         rows.addAll(mMoreActions);
         mSheetList.setAdapter(new ActionAdapter(rows));
         showSheet(Math.min(rows.size() * dp(SHEET_ROW_HEIGHT_DP), maxSheetListHeight()));

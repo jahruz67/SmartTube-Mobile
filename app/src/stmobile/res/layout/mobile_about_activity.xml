@@ -14,25 +14,13 @@
         android:gravity="center_vertical"
         android:background="@color/mobile_primary">
 
-        <TextView
+        <ImageButton
             android:id="@+id/btn_back"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
-            android:gravity="center"
-            android:text="←"
-            android:textColor="@color/mobile_text_primary"
-            android:textSize="22sp"
-            android:background="?android:attr/selectableItemBackground" />
+            style="@style/Widget.SmarterTube.Mobile.ToolbarBackButton" />
 
         <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginStart="4dp"
-            android:text="@string/mobile_about_title"
-            android:singleLine="true"
-            android:textColor="@color/mobile_text_primary"
-            android:textSize="18sp" />
+            style="@style/Widget.SmarterTube.Mobile.ToolbarTitle"
+            android:text="@string/mobile_about_title" />
     </LinearLayout>
 
     <ScrollView

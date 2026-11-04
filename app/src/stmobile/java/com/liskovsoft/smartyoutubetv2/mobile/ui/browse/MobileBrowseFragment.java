@@ -339,7 +339,7 @@ public class MobileBrowseFragment extends Fragment implements BrowseView, MediaS
             return;
         }
         BrowseSection section = mSectionAdapter.getItem(index);
-        // Home/Subscriptions navigation also comes from the player through the presenter.
+        // Primary section navigation can also come through the presenter.
         allowRetained = allowRetained || isPrimaryFeedSection(section.getId());
         BrowseSection current = mPresenter != null ? mPresenter.getCurrentSection() : null;
         if (allowRetained && mSectionSelected && current != null && current.getId() == section.getId()) {
@@ -373,7 +373,8 @@ public class MobileBrowseFragment extends Fragment implements BrowseView, MediaS
     }
 
     private static boolean isPrimaryFeedSection(int sectionId) {
-        return sectionId == MediaGroup.TYPE_HOME || sectionId == MediaGroup.TYPE_SUBSCRIPTIONS;
+        return sectionId == MediaGroup.TYPE_HOME || sectionId == MediaGroup.TYPE_SUBSCRIPTIONS
+                || sectionId == MediaGroup.TYPE_CHANNEL_UPLOADS;
     }
 
     private static boolean isRetainedSectionFresh(int sectionId, long loadedAt) {
@@ -394,7 +395,7 @@ public class MobileBrowseFragment extends Fragment implements BrowseView, MediaS
         int count = 0;
         for (VideoGroup group : mDisplayedGroups.values()) {
             count += group.getVideos().size();
-            // Large Home shelves and paginated subscriptions must survive tab switches.
+            // Primary sections must survive tab switches regardless of their item count.
             if (!isPrimaryFeedSection(sectionId) && count > RETAINED_VIDEO_LIMIT) {
                 return;
             }
@@ -477,7 +478,10 @@ public class MobileBrowseFragment extends Fragment implements BrowseView, MediaS
                     mRetainedSections.remove(group.getSection().getId());
                 }
                 mDisplayedGroups.clear();
-                mCurrentCacheable = true;
+                // Only retain the channel list, not the TV layout's secondary uploads grid.
+                mCurrentCacheable = group.getSection() == null
+                        || group.getSection().getType() != BrowseSection.TYPE_MULTI_GRID
+                        || group.getPosition() == 0;
                 mContentLoadedAt = SystemClock.elapsedRealtime();
                 if (!group.isEmpty()) {
                     mDisplayedGroups.put(group.getId(), group);

@@ -2738,7 +2738,7 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         initTapDetector(activity);
         mSwipe = SwipeGestures.create(activity);
         if (mSwipeToDismiss != null) mSwipeToDismiss.cancel();
-        mSwipeToDismiss = new SwipeToDismiss(activity.findViewById(android.R.id.content),
+        mSwipeToDismiss = new SwipeToDismiss(activity.findViewById(R.id.mobile_playback_root),
                 activity instanceof MobilePlaybackActivity
                         ? ((MobilePlaybackActivity) activity)::minimizePlayback
                         : activity::onBackPressed);

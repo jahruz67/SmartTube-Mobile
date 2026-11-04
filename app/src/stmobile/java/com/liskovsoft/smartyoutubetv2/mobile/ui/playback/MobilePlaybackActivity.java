@@ -13,6 +13,7 @@ import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.OrientationEventListener;
 import android.view.View;
+import android.view.ViewGroup;
 
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Lifecycle;
@@ -43,6 +44,7 @@ import com.liskovsoft.smartyoutubetv2.tv.ui.playback.PlaybackActivity;
  */
 public class MobilePlaybackActivity extends PlaybackActivity {
     private MobilePlaybackFragment mMobileFragment;
+    private PlaybackBackdrop mSwipeBackdrop;
     private boolean mMiniPlayerPlaybackActive;
     private boolean mFinishingMiniPlayer;
     // Full-screen button (#46): the orientation it forced, and a sensor watch that hands rotation
@@ -58,6 +60,11 @@ public class MobilePlaybackActivity extends PlaybackActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        ViewGroup content = findViewById(android.R.id.content);
+        mSwipeBackdrop = new PlaybackBackdrop(this);
+        content.addView(mSwipeBackdrop, 0, new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
 
         Fragment fragment =
                 getSupportFragmentManager().findFragmentByTag(getString(R.string.playback_tag));
@@ -425,6 +432,7 @@ public class MobilePlaybackActivity extends PlaybackActivity {
             MobileMiniPlayer.restore(this);
             mMobileFragment.blockEngine(false);
         }
+        mSwipeBackdrop.refresh();
         updateMiniPlayerParams();
         if (mForcedOrientation != ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED) {
             watchForMatchingOrientation();

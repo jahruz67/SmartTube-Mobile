@@ -508,7 +508,7 @@ public class BrowsePresenter extends BasePresenter<BrowseView> implements Sectio
         restoreSelectedItems(); // Don't place anywhere else
     }
 
-    /** Phone tab retention only: local/multi-grid sections must always load fresh. */
+    /** Phone tab retention only: Channels uses a single grid on the phone. */
     public boolean canRetainCurrentSection() {
         return canRetainSection(mCurrentSection) && !hasPendingActions();
     }
@@ -520,7 +520,8 @@ public class BrowsePresenter extends BasePresenter<BrowseView> implements Sectio
         }
         int type = section.getType();
         return type == BrowseSection.TYPE_ROW || type == BrowseSection.TYPE_GRID
-                || type == BrowseSection.TYPE_SHORTS_GRID;
+                || type == BrowseSection.TYPE_SHORTS_GRID
+                || (type == BrowseSection.TYPE_MULTI_GRID && section.getId() == MediaGroup.TYPE_CHANNEL_UPLOADS);
     }
 
     /** Restore the same source groups used by the phone's retained adapters and pagination. */
@@ -530,7 +531,8 @@ public class BrowsePresenter extends BasePresenter<BrowseView> implements Sectio
             return false;
         }
         for (VideoGroup group : groups) {
-            if (group.getSection() == null || group.getSection().getId() != sectionId) {
+            if (group.getSection() == null || group.getSection().getId() != sectionId
+                    || (section.getType() == BrowseSection.TYPE_MULTI_GRID && group.getPosition() != 0)) {
                 return false;
             }
         }

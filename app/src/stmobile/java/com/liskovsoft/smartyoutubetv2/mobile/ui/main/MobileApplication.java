@@ -35,6 +35,7 @@ import com.liskovsoft.smartyoutubetv2.mobile.ui.browse.MobileSettingsActivity;
 import com.liskovsoft.smartyoutubetv2.mobile.ui.channel.MobileChannelActivity;
 import com.liskovsoft.smartyoutubetv2.mobile.ui.channeluploads.MobileChannelUploadsActivity;
 import com.liskovsoft.smartyoutubetv2.mobile.ui.dialogs.MobileAppDialogActivity;
+import com.liskovsoft.smartyoutubetv2.mobile.ui.playback.PlaybackBackdrop;
 import com.liskovsoft.smartyoutubetv2.mobile.notifications.NotificationPollWorker;
 import com.liskovsoft.smartyoutubetv2.mobile.stats.StatsReporter;
 import com.liskovsoft.smartyoutubetv2.mobile.ui.playback.MobilePlaybackActivity;
@@ -102,6 +103,7 @@ public class MobileApplication extends MainApplication {
 
             @Override
             public void onActivityPaused(Activity activity) {
+                PlaybackBackdrop.rememberPage(activity);
                 if (!(activity instanceof MobileSettingsActivity) && !(activity instanceof MobileAppDialogActivity)) {
                     return;
                 }
