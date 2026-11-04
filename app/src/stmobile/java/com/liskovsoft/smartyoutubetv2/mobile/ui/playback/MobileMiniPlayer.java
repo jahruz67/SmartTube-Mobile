@@ -8,7 +8,6 @@ import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.DecelerateInterpolator;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -128,10 +127,6 @@ public final class MobileMiniPlayer {
         sOverlay = overlay;
         fragment.moveVideoSurfaceTo(video);
         updatePlaybackState(fragment.getMiniPlayerPlayWhenReady());
-        bar.setAlpha(0f);
-        bar.setTranslationY(dp(activity, 16));
-        bar.animate().alpha(1f).translationY(0f).setDuration(160)
-                .setInterpolator(new DecelerateInterpolator()).start();
     }
 
     public static void onHostDestroyed(Activity activity) {

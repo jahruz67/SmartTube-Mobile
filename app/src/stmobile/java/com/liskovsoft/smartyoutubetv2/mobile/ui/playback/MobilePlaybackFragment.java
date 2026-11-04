@@ -441,6 +441,7 @@ public class MobilePlaybackFragment extends PlaybackFragment {
     @Override
     public void onResume() {
         super.onResume();
+        if (mSwipeToDismiss != null) mSwipeToDismiss.cancel();
         // PiP across lock/unlock (#69): the shared onResume clears the engine block, but unlocking
         // the phone resumes this fragment while the PiP window is still up, so the next lock's
         // onStop released the player and the video stopped. Keep the block while in PiP;
@@ -524,7 +525,7 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         mChromeHandler.removeCallbacks(mShortsLoopPoll);
         mChromeHandler.removeCallbacks(mShortsLoopTimeout);
         if (mModernChrome != null) mModernChrome.stop();
-        if (mSwipeToDismiss != null) mSwipeToDismiss.cancel();
+        if (mSwipeToDismiss != null) mSwipeToDismiss.pause();
         mAwaitingShortsFrame = false;
         mAwaitingShortsLoop = false;
     }

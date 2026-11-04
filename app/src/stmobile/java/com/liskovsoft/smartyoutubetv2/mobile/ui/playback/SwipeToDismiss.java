@@ -8,7 +8,7 @@ import android.view.animation.DecelerateInterpolator;
 /** Watches normal touches, cancelling the player's gesture only when a downward drag takes over. */
 final class SwipeToDismiss {
     private static final float DISMISS_DISTANCE_DP = 128;
-    private static final float DRAG_RESISTANCE = 0.65f;
+    private static final float DRAG_RESISTANCE = 0.70f;
     private final View mContent;
     private final Runnable mDismiss;
     private final float mSlop;
@@ -16,6 +16,7 @@ final class SwipeToDismiss {
     private MotionEvent mDown;
     private boolean mDragging;
     private boolean mSettling;
+    private boolean mDismissing;
     private boolean mDiscardUntilUp;
 
     SwipeToDismiss(View content, Runnable dismiss) {
@@ -103,12 +104,9 @@ final class SwipeToDismiss {
     private void settle(boolean dismiss) {
         mSettling = true;
         if (dismiss) {
-            // Hand off while the video is still visible, without sliding it offscreen first.
+            // Keep the released position until the parent page covers the player.
+            mDismissing = true;
             mDismiss.run();
-            mContent.postOnAnimation(() -> {
-                mContent.setTranslationY(0);
-                mSettling = false;
-            });
             return;
         }
         mContent.animate().translationY(0)
@@ -119,10 +117,16 @@ final class SwipeToDismiss {
                 }).start();
     }
 
+    void pause() {
+        // Reset a completed handoff on resume, so pausing cannot flash the full player.
+        if (!mDismissing) cancel();
+    }
+
     void cancel() {
         mContent.animate().withEndAction(null).cancel();
         mContent.setTranslationY(0);
         mSettling = false;
+        mDismissing = false;
         mDiscardUntilUp = false;
         releaseDown();
     }
