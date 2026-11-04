@@ -63,6 +63,7 @@ import com.liskovsoft.smartyoutubetv2.mobile.ui.browse.MobileSettingsActivity;
 import com.liskovsoft.smartyoutubetv2.mobile.settings.MobilePlayerStylePrefs;
 import com.liskovsoft.smartyoutubetv2.tv.R;
 import com.liskovsoft.smartyoutubetv2.tv.ui.playback.PlaybackFragment;
+import com.liskovsoft.smartyoutubetv2.tv.ui.playback.mod.surface.TextureViewWrapper;
 import com.liskovsoft.smartyoutubetv2.tv.ui.playback.other.VideoPlayerGlue;
 import com.liskovsoft.youtubeapi.service.YouTubeServiceManager;
 import com.liskovsoft.youtubeapi.service.internal.MediaServiceData;
@@ -89,6 +90,7 @@ import io.reactivex.disposables.Disposable;
  * through the standard {@link PlaybackPresenter#onSuggestionItemClicked(Video)} path.
  */
 public class MobilePlaybackFragment extends PlaybackFragment {
+    private TextureViewWrapper mMobileVideoSurface;
     private ViewGroup mMobileSurfaceRoot;
     private View mMobileSubtitleView;
     private ViewGroup.LayoutParams mMobileSurfaceLayoutParams;
@@ -103,6 +105,13 @@ public class MobilePlaybackFragment extends PlaybackFragment {
             updateMiniPlayerPlaybackState(state);
         }
     };
+
+    @Override
+    protected TextureViewWrapper createVideoSurfaceWrapper(ViewGroup root) {
+        // Start with a transferable output so minimizing never replaces the decoder surface.
+        mMobileVideoSurface = new TextureViewWrapper(getContext(), root, true);
+        return mMobileVideoSurface;
+    }
 
     private void updateMiniPlayerPlaybackState(PlaybackStateCompat state) {
         MobileMiniPlayer.updatePlaybackState(getMiniPlayerPlayWhenReady());
@@ -197,8 +206,6 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         if (mMobileSurfaceLayoutParams == null) {
             mMobileSurfaceLayoutParams = surfaceRoot.getLayoutParams();
         }
-        // The old holder can remain valid until Android dispatches its destroy callback.
-        mAttachedVideoSurface = null;
         View subtitles = getMobileSubtitleView();
         if (subtitles != null && mMobileSubtitleLayoutParams == null) {
             mMobileSubtitleLayoutParams = subtitles.getLayoutParams();
@@ -224,7 +231,6 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         }
         if (surfaceRoot.getParent() != playbackRoot) {
             prepareVideoSurfaceTransfer();
-            mAttachedVideoSurface = null;
         }
         moveVideoView(surfaceRoot, playbackRoot, 0, mMobileSurfaceLayoutParams);
         View subtitles = getMobileSubtitleView();
@@ -534,6 +540,11 @@ public class MobilePlaybackFragment extends PlaybackFragment {
 
     @Override
     public void onDestroyView() {
+        mVideoSurfaceTransferPending = false;
+        if (mMobileVideoSurface != null) {
+            mMobileVideoSurface.release();
+            mMobileVideoSurface = null;
+        }
         if (mSwipeToDismiss != null) mSwipeToDismiss.cancel();
         mSwipeToDismiss = null;
         if (mModernChrome != null) mModernChrome.destroy();
@@ -553,7 +564,6 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         mMobileSurfaceLayoutParams = null;
         mMobileSubtitleLayoutParams = null;
         mAttachedVideoSurface = null;
-        mVideoSurfaceTransferPending = false;
         super.onDestroyView();
     }
 

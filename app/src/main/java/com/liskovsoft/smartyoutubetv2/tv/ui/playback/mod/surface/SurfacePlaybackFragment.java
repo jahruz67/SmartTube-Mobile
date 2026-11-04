@@ -39,9 +39,7 @@ public class SurfacePlaybackFragment extends PlaybackSupportFragment {
         if (root == null) {
             throw new IllegalStateException("Can't create root of SurfacePlaybackFragment");
         }
-        mVideoSurfaceWrapper = (PlayerTweaksData.instance(getContext()).isTextureViewEnabled() ||
-                PlayerData.instance(getContext()).getRotationAngle() != 0) ?
-                new TextureViewWrapper(getContext(), root) : new SurfaceViewWrapper(getContext(), root);
+        mVideoSurfaceWrapper = createVideoSurfaceWrapper(root);
         mVideoSurfaceRoot = root.findViewById(com.liskovsoft.smartyoutubetv2.tv.R.id.surface_root);
         mVideoSurfaceRoot.addView(mVideoSurfaceWrapper.getSurfaceView(), 0);
         mVideoSurfaceRoot.setAspectRatioListener((targetAspectRatio, naturalAspectRatio, aspectRatioMismatch) -> scaleIfNeeded());
@@ -49,6 +47,12 @@ public class SurfacePlaybackFragment extends PlaybackSupportFragment {
         mSubtitlesPadding = mLeanbackSubtitles.getPaddingLeft();
         setBackgroundType(PlaybackSupportFragment.BG_LIGHT);
         return root;
+    }
+
+    protected SurfaceWrapper createVideoSurfaceWrapper(ViewGroup root) {
+        return (PlayerTweaksData.instance(getContext()).isTextureViewEnabled() ||
+                PlayerData.instance(getContext()).getRotationAngle() != 0) ?
+                new TextureViewWrapper(getContext(), root) : new SurfaceViewWrapper(getContext(), root);
     }
 
     /**

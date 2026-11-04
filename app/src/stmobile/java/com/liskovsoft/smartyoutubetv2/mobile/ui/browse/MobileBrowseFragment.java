@@ -48,6 +48,7 @@ import com.liskovsoft.smartyoutubetv2.tv.R;
 import com.liskovsoft.youtubeapi.service.internal.MediaServiceData;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -65,6 +66,7 @@ public class MobileBrowseFragment extends Fragment implements BrowseView, MediaS
     private static final int RETAINED_SECTION_LIMIT = 3;
     private static final int RETAINED_VIDEO_LIMIT = 300;
     private static final long RETAINED_SECTION_TTL_MS = 3 * 60 * 1_000L;
+    private static final long RETAINED_FEED_TTL_MS = 3 * 60 * 60 * 1_000L;
     private final Map<Integer, SectionState> mRetainedSections = new LinkedHashMap<>();
     private final Map<Integer, VideoGroup> mDisplayedGroups = new LinkedHashMap<>();
     private BrowsePresenter mPresenter;
@@ -183,7 +185,6 @@ public class MobileBrowseFragment extends Fragment implements BrowseView, MediaS
                 return;
             }
             mSwipeRefreshing = true;
-            mRetainedSections.clear();
             mPresenter.refresh(false);
         });
 
@@ -338,6 +339,8 @@ public class MobileBrowseFragment extends Fragment implements BrowseView, MediaS
             return;
         }
         BrowseSection section = mSectionAdapter.getItem(index);
+        // Home/Subscriptions navigation also comes from the player through the presenter.
+        allowRetained = allowRetained || isPrimaryFeedSection(section.getId());
         BrowseSection current = mPresenter != null ? mPresenter.getCurrentSection() : null;
         if (allowRetained && mSectionSelected && current != null && current.getId() == section.getId()) {
             return;
@@ -353,7 +356,7 @@ public class MobileBrowseFragment extends Fragment implements BrowseView, MediaS
             mToolbarTitle.setText(section.getTitle());
         }
         if (allowRetained && retained != null
-                && SystemClock.elapsedRealtime() - retained.loadedAt < RETAINED_SECTION_TTL_MS
+                && isRetainedSectionFresh(section.getId(), retained.loadedAt)
                 && restoreSection(section, retained)) {
             return;
         }
@@ -369,31 +372,49 @@ public class MobileBrowseFragment extends Fragment implements BrowseView, MediaS
         }
     }
 
+    private static boolean isPrimaryFeedSection(int sectionId) {
+        return sectionId == MediaGroup.TYPE_HOME || sectionId == MediaGroup.TYPE_SUBSCRIPTIONS;
+    }
+
+    private static boolean isRetainedSectionFresh(int sectionId, long loadedAt) {
+        long ttl = isPrimaryFeedSection(sectionId) ? RETAINED_FEED_TTL_MS : RETAINED_SECTION_TTL_MS;
+        return SystemClock.elapsedRealtime() - loadedAt < ttl;
+    }
+
     private void retainCurrentSection() {
         if (!mSectionSelected || !mCurrentCacheable || mProgressShowing || mPresenter == null
                 || !mPresenter.canRetainCurrentSection() || mDisplayedGroups.isEmpty()
-                || mContentList == null || mContentList.getLayoutManager() == null
-                || SystemClock.elapsedRealtime() - mContentLoadedAt >= RETAINED_SECTION_TTL_MS) {
+                || mContentList == null || mContentList.getLayoutManager() == null) {
+            return;
+        }
+        int sectionId = mPresenter.getCurrentSection().getId();
+        if (!isRetainedSectionFresh(sectionId, mContentLoadedAt)) {
             return;
         }
         int count = 0;
         for (VideoGroup group : mDisplayedGroups.values()) {
             count += group.getVideos().size();
-            if (count > RETAINED_VIDEO_LIMIT) {
+            // Large Home shelves and paginated subscriptions must survive tab switches.
+            if (!isPrimaryFeedSection(sectionId) && count > RETAINED_VIDEO_LIMIT) {
                 return;
             }
         }
         if (count == 0) {
             return;
         }
-        int sectionId = mPresenter.getCurrentSection().getId();
         SectionState state = new SectionState(mGridAdapter, mShelfAdapter,
                 new ArrayList<>(mDisplayedGroups.values()), mPresenter.getCurrentVideo(),
                 mContentList.getLayoutManager().onSaveInstanceState(), mContentLoadedAt);
         mRetainedSections.remove(sectionId);
         mRetainedSections.put(sectionId, state);
         if (mRetainedSections.size() > RETAINED_SECTION_LIMIT) {
-            mRetainedSections.remove(mRetainedSections.keySet().iterator().next());
+            Iterator<Integer> sections = mRetainedSections.keySet().iterator();
+            while (sections.hasNext()) {
+                if (!isPrimaryFeedSection(sections.next())) {
+                    sections.remove();
+                    break;
+                }
+            }
         }
     }
 
@@ -451,8 +472,9 @@ public class MobileBrowseFragment extends Fragment implements BrowseView, MediaS
         }
         switch (group.getAction()) {
             case VideoGroup.ACTION_REPLACE:
-                if (!mSelectingSection) {
-                    mRetainedSections.clear();
+                if (!mSelectingSection && group.getSection() != null) {
+                    // Refreshing one feed must not discard the other feed's content.
+                    mRetainedSections.remove(group.getSection().getId());
                 }
                 mDisplayedGroups.clear();
                 mCurrentCacheable = true;
@@ -609,7 +631,7 @@ public class MobileBrowseFragment extends Fragment implements BrowseView, MediaS
         for (int i = 0; i < mSectionAdapter.getItemCount(); i++) {
             if (mSectionAdapter.getItem(i).getId() == sectionId) {
                 // Re-tapping the current tab scrolls up without discarding its feed.
-                // Explicit refresh and presenter-driven selections still reload normally.
+                // Pull-to-refresh still reloads the current feed.
                 BrowseSection current = mPresenter != null ? mPresenter.getCurrentSection() : null;
                 boolean alreadySelected = mSectionSelected && current != null && current.getId() == sectionId;
                 if (!alreadySelected) {
