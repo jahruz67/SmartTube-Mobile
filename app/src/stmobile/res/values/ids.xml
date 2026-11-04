@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <item name="mobile_loading_spinner" type="id" />
     <!-- Modern player sheet row that opens the app's Settings screen. -->
     <item name="action_mobile_app_settings" type="id" />
     <!-- Modern player sheet row that opens the second level of rarely used actions. -->

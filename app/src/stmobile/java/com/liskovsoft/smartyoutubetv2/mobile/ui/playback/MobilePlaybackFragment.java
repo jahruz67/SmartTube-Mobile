@@ -116,6 +116,7 @@ public class MobilePlaybackFragment extends PlaybackFragment {
     @Override
     protected void configureProgressBar(ViewGroup root) {
         mLoadingSpinner = new ProgressBar(root.getContext(), null, android.R.attr.progressBarStyleLarge);
+        mLoadingSpinner.setId(R.id.mobile_loading_spinner);
         mLoadingSpinner.setIndeterminate(true);
         mLoadingSpinner.setIndeterminateTintList(ColorStateList.valueOf(
                 ContextCompat.getColor(root.getContext(), R.color.brand_accent)));
@@ -143,12 +144,18 @@ public class MobilePlaybackFragment extends PlaybackFragment {
     protected void onError(int errorCode, CharSequence errorMessage) {
         mBuffering = false;
         mLoadingRequested = false;
+        boolean awaitingFrame = mAwaitingShortsFrame || mAwaitingShortsLoop;
         mAwaitingShortsFrame = false;
         mAwaitingShortsLoop = false;
         mChromeHandler.removeCallbacks(mShortsFramePoll);
         mChromeHandler.removeCallbacks(mShortsFrameTimeout);
         mChromeHandler.removeCallbacks(mShortsLoopPoll);
         mChromeHandler.removeCallbacks(mShortsLoopTimeout);
+        if (awaitingFrame) {
+            resetPageViewsToZero();
+            hideShortsPosters();
+            revealShortsChrome();
+        }
         updateLoadingIndicator();
         super.onError(errorCode, errorMessage);
     }
