@@ -3,6 +3,7 @@ package com.liskovsoft.smartyoutubetv2.mobile.ui.main;
 import android.app.Activity;
 import android.app.Application;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.view.ViewTreeObserver;
@@ -92,17 +93,24 @@ public class MobileApplication extends MainApplication {
         // No-op unless the user opted in (see StatsReporter).
         registerActivityLifecycleCallbacks(new ActivityStartedCallback() {
             @Override
+            public void onActivityCreated(Activity activity, Bundle savedInstanceState) {
+                disableScreenTransitions(activity);
+            }
+
+            @Override
             public void onActivityStarted(Activity activity) {
                 StatsReporter.onForeground(activity);
             }
 
             @Override
             public void onActivityResumed(Activity activity) {
+                disableScreenTransitions(activity);
                 reconcileNotificationsAfterFirstFrame(activity);
             }
 
             @Override
             public void onActivityPaused(Activity activity) {
+                disableScreenTransitions(activity);
                 PlaybackBackdrop.rememberPage(activity);
                 if (!(activity instanceof MobileSettingsActivity) && !(activity instanceof MobileAppDialogActivity)) {
                     return;
@@ -265,6 +273,15 @@ public class MobileApplication extends MainApplication {
         viewManager.register(ChannelView.class, MobileChannelActivity.class, MobileBrowseActivity.class);
         viewManager.register(ChannelUploadsView.class, MobileChannelUploadsActivity.class, MobileBrowseActivity.class);
         viewManager.register(WebBrowserView.class, WebBrowserActivity.class, MobileBrowseActivity.class);
+    }
+
+    private static void disableScreenTransitions(Activity activity) {
+        activity.getWindow().setWindowAnimations(0);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            activity.overrideActivityTransition(Activity.OVERRIDE_TRANSITION_OPEN, 0, 0);
+            activity.overrideActivityTransition(Activity.OVERRIDE_TRANSITION_CLOSE, 0, 0);
+        }
+        activity.overridePendingTransition(0, 0);
     }
 
     /** Lifecycle callbacks with empty defaults, so callers override only what they need. */

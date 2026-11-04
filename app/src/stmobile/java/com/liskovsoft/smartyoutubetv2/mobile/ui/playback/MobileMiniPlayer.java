@@ -1,6 +1,7 @@
 package com.liskovsoft.smartyoutubetv2.mobile.ui.playback;
 
 import android.app.Activity;
+import android.app.ActivityOptions;
 import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
@@ -189,7 +190,9 @@ public final class MobileMiniPlayer {
         if (sPlaybackActivity == null || sExpanding) return;
         sExpanding = true;
         activity.startActivity(new Intent(activity, MobilePlaybackActivity.class)
-                .addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT | Intent.FLAG_ACTIVITY_NO_ANIMATION));
+                .addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT | Intent.FLAG_ACTIVITY_NO_ANIMATION),
+                ActivityOptions.makeCustomAnimation(activity, 0, 0).toBundle());
+        activity.overridePendingTransition(0, 0);
     }
 
     private static void close() {
