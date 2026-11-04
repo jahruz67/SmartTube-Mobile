@@ -32,6 +32,12 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      - name: Set up Gradle caching
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          # Manual releases on a branch can refresh the cache for later builds.
+          cache-read-only: false
+
       - name: Configure repository release signing key
         run: |
           set -euo pipefail
@@ -59,7 +65,7 @@ jobs:
         run: |
           set -euo pipefail
           printf 'sdk.dir=%s\n' "$ANDROID_HOME" > local.properties
-          bash ./gradlew --no-daemon --console=plain --stacktrace :app:assembleStmobileRelease
+          bash ./gradlew --no-daemon --parallel --console=plain --stacktrace -PmobileUniversalApkOnly=true :app:assembleStmobileRelease
 
       - name: Prepare release assets
         run: |
