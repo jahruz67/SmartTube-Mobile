@@ -202,12 +202,7 @@ android {
             // Phone/portrait build. Co-installable alongside the TV build.
             // This is the shipped product; the TV flavors are upstream-sync only.
             isDefault true
-            // Explicit applicationId (NOT a suffix on upstream's app.smarttube) so the
-            // package identity is SmarterTube's own: it neither implies association with
-            // upstream SmartTube nor an "official" mobile release, and carries no platform
-            // qualifier (an Android package is implicitly the app; tablets included).
-            // Renamed from the legacy app.smarttube.mobile in the 2026-06 beta — a one-time
-            // clean break (the old id does NOT upgrade in place; see docs/upstream-merge.md).
+            // Independent mobile package; preserve it for in-place upgrades.
             applicationId "dev.smarttubemobile.unofficial"
             // Fall back to ststable for dependency modules that don't
             // declare an stmobile flavor.
@@ -217,16 +212,12 @@ android {
             // Phone-port versioning. Lives in the flavor (not defaultConfig) so
             // upstream merges don't conflict on versionCode/versionName lines.
             //
-            // versionName follows the SmarterTube beta-reset scheme (docs/VERSIONING.md):
+            // versionName format (docs/VERSIONING.md):
             //   v<app-semver>[-<channel>.<n>]+st<upstream-base>
-            // e.g. v0.4.0-beta.1+st31.93 — the SmarterTube product version is tracked
-            // separately from the upstream SmartTube base (+st31.93). The previous
-            // "<upstream>-mobile-<x.y>" names (e.g. 31.93-mobile-1.4) are LEGACY; the
-            // updater recognises and supersedes them (see SmarterTubeVersion).
+            // Product version ordering is independent of the upstream base metadata.
             //
-            // versionCode is INDEPENDENT of upstream's code and MUST increase by 1 past
-            // the last shipped fork release (Android rejects a lower code for in-place
-            // upgrade); this is what makes a beta-reset build supersede the legacy ones.
+            // versionCode is independent of upstream's code and must exceed the last
+            // shipped fork release for an in-place upgrade.
             versionCode = (project.findProperty('mobileVersionCode') ?: '23744').toInteger()
             versionName = (project.findProperty('mobileVersionName') ?: 'v1.0.0+st32.68')
         }

@@ -18,6 +18,6 @@ make this fork resemble upstream. Port the relevant behavior and account for eve
 upstream change. Preserve existing user edits.
 
 The current layout is defined by `settings.gradle` and `README.md`. Dependencies under
-`third_party/` are tracked vendored sources. Older inherited documents may still call
-them submodules or describe CodeSculptor's release identity; those descriptions are
-historical. Preserve this fork's package, signing, updater, and version contracts.
+`third_party/` are tracked vendored sources. Preserve this fork's package, signing,
+updater, and version contracts in `docs/VERSIONING.md` and
+`docs/UPDATER_COMPATIBILITY.md`.

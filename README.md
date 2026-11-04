@@ -11,7 +11,7 @@ third_party/      Required vendored media engine and Android library modules
 gradle/           Wrapper and shared dependency/SDK versions
 services/         Optional anonymous-statistics backend and its deployment instructions
 tools/            Upstream comparison, APK verification and its Python unit tests
-docs/             Version and updater compatibility contracts, inherited known issues
+docs/             Upstream integration, versioning and updater contracts
 .github/          Release workflow
 ```
 
@@ -99,17 +99,13 @@ Debug builds use the local Android debug certificate. Existing root `keystore.pr
 .\gradlew.bat :app:assembleStmobileRelease
 ```
 
-Release output: `app/build/outputs/apk/stmobile/release/`. The release workflow requires GitHub secrets `MOBILE_KEYSTORE_BASE64` (base64 of the existing key), `MOBILE_KEYSTORE_PASSWORD`, `MOBILE_KEY_ALIAS`, and `MOBILE_KEY_PASSWORD`. Signing material is ignored and must be backed up privately. The previously tracked local key has been preserved, but old Git history still contains it; history and signing identity were not rewritten.
+Release output: `app/build/outputs/apk/stmobile/release/`. The release workflow uses the repository key and environment settings under `.github/signing/`. Preserve that signing identity and keep a private backup. See [versioning](docs/VERSIONING.md) and [updater compatibility](docs/UPDATER_COMPATIBILITY.md) for the current release contracts; the phone update entry points are disabled.
 
-## Cleanup baseline
+## Known limitations
 
-The original checkout is recoverable through Git branch `cleanup-baseline-20261103` at `7d8970b`. Its mobile debug APK built successfully. All 61 app JVM tests passed; one of 18 common tests (`unlockCallbackStillRunsAfterSuspend`) failed because its setup did not create the dim overlay needed to notify the registry. The cleaned test explicitly creates that overlay and executes the intended callback before checking its queued unlock. Production screensaver behavior is unchanged.
+Device playback, authentication, background audio, PiP, and instrumentation execution still require runtime verification. The last recorded lint review reported 20 errors and 535 warnings; these are historical results, not checks of the current working tree.
 
-The cleanup moves the Android build to the repository root, groups dependencies under `third_party`, consolidates duplicate dependency sources and settings, and groups phone preference storage under `mobile.settings`. Inactive ExoPlayer extensions/demos, an unused Fragment fork, unapplied source overlays, duplicate standalone wrappers, historical reports and obsolete publishing assets were removed from the source tree. An abandoned sample test containing a hardcoded external proxy and an unbounded wait was removed; it tested its own proxy setup rather than application code. App resources, native libraries, component names, preference keys, versions, and supported ABIs are preserved.
-
-Verification on November 3, 2026: a clean build from a tracked-source archive succeeded, with 61 app and 18 common JVM tests passing and the instrumentation APK compiled. Another 6 shared utility tests, 4 offline API retry tests, and 3 Python tooling tests passed. All four APK signatures and package IDs were verified. The universal APK matches all 1,452 baseline manifest/resource/asset/native entries byte for byte; all 26,395 defined classes are retained after accounting for preference package moves.
-
-Remaining verification limits: Android Lint reports **20 existing errors and 535 warnings**, including back-navigation, TV manifest assumptions, custom views, opt-in annotations and tint usage. Every error location matches an unchanged baseline source line; these were not suppressed or repaired with behavioral changes. No device was connected. The available API 28 emulator requires unavailable hardware acceleration, and software mode never became usable, so instrumentation execution and runtime feature parity remain unverified.
+Inherited feature gaps include read-only comments, upload-feed notifications in place of YouTube's notification inbox, and no Chromecast sender. These limitations have not been rechecked for this fork. Older resolved-issue narratives and beta milestone reports remain recoverable in Git history.
 
 ## License and attribution
 

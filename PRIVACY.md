@@ -1,13 +1,13 @@
-# Privacy Policy — SmarterTube
+# Privacy Policy — SmartTube Mobile
 
-**Package ID:** `com.codesculptor.smartertube`  
-**Last updated:** September 2026
+**Package ID:** `dev.smarttubemobile.unofficial`  
+**Last updated:** November 3, 2026
 
 ---
 
 ## What this app is
 
-SmarterTube is a phone and tablet client for YouTube. It is a fork of [SmartTube](https://github.com/yuliskov/SmartTube) by yuliskov; the YouTube client engine is upstream's code, merged unchanged. This policy covers the SmarterTube fork (`com.codesculptor.smartertube`) only — not the upstream SmartTube TV build.
+SmartTube Mobile is a phone and tablet client for YouTube, derived from SmarterTube and [SmartTube](https://github.com/yuliskov/SmartTube). This policy covers this fork (`dev.smarttubemobile.unofficial`).
 
 ---
 
@@ -15,9 +15,9 @@ SmarterTube is a phone and tablet client for YouTube. It is a fork of [SmartTube
 
 **Nothing, unless you opt in to anonymous stats.**
 
-Releases up to v0.8.0-beta.1 don't include this feature and send nothing. Later releases ask you once, on the Home screen, whether to send anonymous stats. You can change your answer any time in **Settings → Anonymous stats**. If you say no, nothing is sent.
+The app asks you once, on the Home screen, whether to send anonymous stats. You can change your answer any time in **Settings → Anonymous stats**. If you say no, nothing is sent.
 
-If you opt in, the app sends the following to the developer's own server (a Cloudflare Worker whose source is in [`stats-worker/`](stats-worker/)):
+If you opt in, the app sends the following to the configured stats server (a Cloudflare Worker whose source is in [`services/stats-worker/`](services/stats-worker/)):
 
 | What | When | Contents |
 |---|---|---|
@@ -52,7 +52,7 @@ When enabled, the following features contact third-party APIs with the ID of the
 These services are independently operated and have their own privacy policies.
 
 ### Update check (GitHub)
-When the app opens (at most about twice a day), and when you tap **Check for updates** in About, it reads the public list of SmarterTube releases from GitHub's API (`api.github.com`) to see whether a newer version exists and to show the release notes. The request carries no account or personal identifiers; like any web request, GitHub sees your IP address. This is governed by [GitHub's Privacy Statement](https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement).
+The phone's About update button is hidden, and its launch update notices are disabled. The retained updater implementation can read public GitHub releases if enabled and configured; those requests carry no account or personal identifiers, but GitHub sees the requesting IP address. See [updater compatibility](docs/UPDATER_COMPATIBILITY.md) for the current configuration and [GitHub's Privacy Statement](https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement) for its handling of requests.
 
 ---
 
@@ -64,4 +64,4 @@ The optional stats contain no identifier, so nothing held by the developer can b
 
 ## Contact
 
-Open an issue at [github.com/CodeSculptor/SmarterTube](https://github.com/CodeSculptor/SmarterTube/issues).
+Open an issue at [SmartTube Mobile](https://github.com/jahruz67/SmartTube-Mobile/issues).

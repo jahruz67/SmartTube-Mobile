@@ -16,6 +16,9 @@ only an `origin` remote in the inspected checkout; no exact upstream source base
 has been established. `32.68` in `app/build.gradle` is declared version metadata,
 not proof that every upstream fix or dependency at that release is present.
 
+The local pre-cleanup fork is recoverable through branch `cleanup-baseline-20261103`
+at `7d8970b`. That is a fork checkpoint, not an original upstream commit ID.
+
 ## Inputs and persistent state
 
 [upstream-state.json](upstream-state.json) records source repositories, directory
@@ -117,11 +120,11 @@ a claim of runtime verification. Preserve each behavior or document its replacem
 | `settings.gradle`, `gradle/dependencies.gradle`, `app/build.gradle` | Self-contained vendored dependencies and `stmobile` flavor; keep phone Firebase isolation, local dependency versions/wiring, and source layout. |
 | `app/build.gradle`, `.github/workflows/release.yml`, `app/src/stmobile/java/com/liskovsoft/smartyoutubetv2/mobile/update/` | Package `dev.smarttubemobile.unofficial`, signing identity, preference/data continuity, monotonic mobile versionCode, and this fork's updater endpoints/assets. Never offer a TV APK as a phone update. |
 
-Historical `KNOWN_ISSUES.md`, `VERSIONING.md`, and `UPDATER_COMPATIBILITY.md` contain
-inherited SmarterTube history and verification claims. Check current source and the
-root README before treating those as this fork's current release state. In particular,
-the release workflow currently hardcodes `+st32.68` as well as the app's default
-version. Updating one string alone does not integrate an upstream release.
+Current release contracts are recorded in [VERSIONING.md](VERSIONING.md) and
+[UPDATER_COMPATIBILITY.md](UPDATER_COMPATIBILITY.md). The release workflow currently
+hardcodes `+st32.68` as well as the app's default version. Updating one string alone
+does not integrate an upstream release. Preserve the disabled phone update entry
+points until this fork's release discovery and compatibility are configured.
 
 ## Decision log
 
