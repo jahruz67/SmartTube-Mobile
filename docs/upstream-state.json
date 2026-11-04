@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "declared_smarttube_version": "32.68",
+  "provenance_note": "32.68 is declared in app/build.gradle; exact original upstream commits have not been established from the inspected local history. Null values are unknown. reviewed_through_commit records review coverage, not identical code or runtime verification.",
+  "mobile_ancestor": "https://github.com/CodeSculptor/SmarterTube",
+  "components": {
+    "smarttube": {
+      "repository": "https://github.com/yuliskov/SmartTube",
+      "source_baseline_commit": null,
+      "reviewed_through_commit": null,
+      "path_map": {
+        "smarttubetv": "app",
+        "common": "common",
+        "SharedModules": "third_party/SharedModules",
+        "MediaServiceCore": "third_party/MediaServiceCore",
+        "exoplayer-amzn-2.10.6": "third_party/exoplayer-amzn-2.10.6",
+        "chatkit": "third_party/chatkit",
+        "leanbackassistant": "third_party/leanbackassistant",
+        "leanback-1.0.0": "third_party/leanback-1.0.0",
+        "doubletapplayerview": "third_party/doubletapplayerview",
+        "filepicker-lib": "third_party/filepicker-lib",
+        "slidableactivity": "third_party/slidableactivity",
+        "gradle": "gradle",
+        "build.gradle": "build.gradle",
+        "settings.gradle": "settings.gradle",
+        "gradle.properties": "gradle.properties",
+        "gradlew": "gradlew",
+        "gradlew.bat": "gradlew.bat"
+      }
+    },
+    "mediaservicecore": {
+      "repository": "https://github.com/yuliskov/MediaServiceCore",
+      "source_baseline_commit": null,
+      "reviewed_through_commit": null,
+      "path_map": { "": "third_party/MediaServiceCore" }
+    },
+    "sharedmodules": {
+      "repository": "https://github.com/yuliskov/SharedModules",
+      "source_baseline_commit": null,
+      "reviewed_through_commit": null,
+      "path_map": { "": "third_party/SharedModules" }
+    },
+    "exoplayer": {
+      "repository": null,
+      "source_baseline_commit": null,
+      "reviewed_through_commit": null,
+      "path_map": { "": "third_party/exoplayer-amzn-2.10.6" }
+    }
+  }
+}

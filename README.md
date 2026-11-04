@@ -10,12 +10,20 @@ common/           Playback, presenters, models, networking and persistence
 third_party/      Required vendored media engine and Android library modules
 gradle/           Wrapper and shared dependency/SDK versions
 services/         Optional anonymous-statistics backend and its deployment instructions
-tools/            APK verification and its Python unit tests
+tools/            Upstream comparison, APK verification and its Python unit tests
 docs/             Version and updater compatibility contracts, inherited known issues
 .github/          Release workflow
 ```
 
 The source tree is self-contained. Vendored sources are ordinary tracked files; no Git submodule initialization or sibling checkout is required. Their original packages and licenses are retained. The modified Leanback widgets, media service, JavaScript engine, and ExoPlayer modules are required by the shared implementation even for the phone flavor. Upstream TV flavors remain available for compatibility; `stmobile` is the maintained application variant.
+
+## Reflecting upstream updates
+
+Follow [the upstream comparison workflow](docs/UPSTREAM_SYNC.md) to evaluate a
+SmartTube release against this fork's existing fixes. It includes source path
+mappings, independent dependency tracking, local safeguards, a decision log, and a
+read-only comparison helper. Exact original upstream commit IDs are currently
+unestablished; the declared `32.68` version alone does not establish complete parity.
 
 ## Build prerequisites
 
