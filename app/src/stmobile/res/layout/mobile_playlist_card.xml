@@ -44,12 +44,10 @@
 
         <ProgressBar
             android:id="@+id/card_progress"
-            style="?android:attr/progressBarStyleHorizontal"
+            style="@style/Widget.SmarterTube.Mobile.WatchedProgress"
             android:layout_width="match_parent"
             android:layout_height="3dp"
             android:layout_gravity="bottom"
-            android:max="100"
-            android:progressDrawable="@drawable/mobile_watched_progress"
             android:visibility="gone" />
 
         <!-- Video count (Video.badge, e.g. "20 videos") with a playlist glyph. -->

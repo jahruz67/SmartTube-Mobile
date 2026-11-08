@@ -365,7 +365,7 @@ public class VideoCardAdapter extends RecyclerView.Adapter<VideoCardAdapter.View
         boolean show = percent > 0 && !video.isShorts;
         // Explicit GONE branch: views are recycled.
         if (show) {
-            bar.setProgress(percent < 1 ? 1 : Math.min(100, Math.round(percent)));
+            bar.setProgress(percent < 1 ? 1 : Math.min(100, Math.round(percent)), false);
             bar.setVisibility(View.VISIBLE);
         } else {
             bar.setVisibility(View.GONE);
