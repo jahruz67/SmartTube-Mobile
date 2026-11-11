@@ -5,6 +5,7 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
+import android.view.MotionEvent;
 import android.widget.SeekBar;
 
 import com.liskovsoft.smartyoutubetv2.common.app.models.playback.ui.SeekBarSegment;
@@ -27,6 +28,7 @@ public class ModernSeekBar extends SeekBar {
     private final Paint mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final float mMinMarkPx;
     private final float mMarkHeightPx;
+    private boolean mTouchCanceled;
 
     private static final class Mark {
         final float start;
@@ -71,6 +73,16 @@ public class ModernSeekBar extends SeekBar {
 
     public boolean hasSegments() {
         return !mMarks.isEmpty();
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        mTouchCanceled = event.getActionMasked() == MotionEvent.ACTION_CANCEL;
+        return super.onTouchEvent(event);
+    }
+
+    boolean isTouchCanceled() {
+        return mTouchCanceled;
     }
 
     @Override

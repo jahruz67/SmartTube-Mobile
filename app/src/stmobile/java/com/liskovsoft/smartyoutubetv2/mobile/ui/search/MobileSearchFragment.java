@@ -12,6 +12,7 @@ import android.speech.RecognizerIntent;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.util.LruCache;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -61,7 +62,7 @@ public class MobileSearchFragment extends Fragment implements SearchView {
     private final ActivityResultLauncher<Intent> mVoiceSearch = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> onVoiceSearchResult(result.getResultCode(), result.getData()));
-    private static final long SUGGESTION_DELAY_MS = 250;
+    private static final long SUGGESTION_DELAY_MS = 150;
     private SearchPresenter mPresenter;
     private EditText mSearchInput;
     private RecyclerView mResultsList;
@@ -77,11 +78,13 @@ public class MobileSearchFragment extends Fragment implements SearchView {
     private TagAdapter mTagsAdapter;
     private MediaServiceSearchTagProvider mTagsProvider;
     private final Map<Integer, List<Video>> mGroups = new LinkedHashMap<>();
+    private final LruCache<String, List<Tag>> mSuggestionCache = new LruCache<>(20);
     private final Handler mUiHandler = new Handler(Looper.getMainLooper());
     private int mSuggestionGeneration;
     private String mSuggestionQuery;
     private String mSubmittedQuery;
     private boolean mProgressShowing;
+    private boolean mLoadingMore;
     private boolean mSwipeRefreshing;
     private boolean mReplaceOnNextResult;
     private boolean mWantSuggestions;
@@ -116,7 +119,10 @@ public class MobileSearchFragment extends Fragment implements SearchView {
                 getActivity().finish();
             }
         });
-        view.findViewById(R.id.btn_clear).setOnClickListener(v -> mSearchInput.setText(""));
+        view.findViewById(R.id.btn_clear).setOnClickListener(v -> {
+            mSearchInput.setText("");
+            focusSearchField();
+        });
         view.findViewById(R.id.btn_voice).setOnClickListener(v -> startVoiceRecognition());
 
         int span = getResources().getInteger(R.integer.mobile_grid_span);
@@ -127,6 +133,7 @@ public class MobileSearchFragment extends Fragment implements SearchView {
         mResultsList.addOnScrollListener(mScrollListener);
 
         mSwipeRefresh.setColorSchemeResources(R.color.brand_accent);
+        mSwipeRefresh.setEnabled(false);
         mSwipeRefresh.setProgressBackgroundColorSchemeResource(R.color.mobile_surface);
         mSwipeRefresh.setOnRefreshListener(() -> {
             // Re-run the last submitted query. Nothing to refresh while the user is still
@@ -171,30 +178,29 @@ public class MobileSearchFragment extends Fragment implements SearchView {
     public void onDestroyView() {
         mWantSuggestions = false;
         cancelSuggestions();
+        mSuggestionCache.evictAll();
         dismissSearchError();
         if (mSearchInput != null) {
             mSearchInput.removeTextChangedListener(mQueryWatcher);
         }
-        super.onDestroyView();
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        if (mPresenter != null) {
+        if (mPresenter != null && (mPresenter.getView() == null || mPresenter.getView() == this)) {
             mPresenter.onViewDestroyed();
         }
+        mProgressShowing = false;
+        mLoadingMore = false;
+        stopSwipeRefresh();
+        mTagsProvider = null;
+        mSearchInput = null;
+        mPresenter = null;
+        super.onDestroyView();
     }
 
     // ----- SearchView -----
 
     @Override
     public void updateSearch(VideoGroup group) {
-        if (group == null) {
+        if (group == null || getView() == null) {
             return;
-        }
-        if (mReplaceOnNextResult) {
-            clearResults();
         }
         switch (group.getAction()) {
             case VideoGroup.ACTION_REPLACE:
@@ -216,6 +222,9 @@ public class MobileSearchFragment extends Fragment implements SearchView {
         }
         if (group.isEmpty()) {
             return;
+        }
+        if (mReplaceOnNextResult) {
+            clearResults();
         }
         if (group.getAction() == VideoGroup.ACTION_APPEND && appendSearchResults(group)) {
             hideEmptyMessage();
@@ -253,6 +262,7 @@ public class MobileSearchFragment extends Fragment implements SearchView {
 
     @Override
     public void clearSearchTags() {
+        mSuggestionCache.evictAll();
         if (mTagsAdapter != null) {
             mTagsAdapter.clear();
         }
@@ -260,6 +270,7 @@ public class MobileSearchFragment extends Fragment implements SearchView {
 
     @Override
     public void removeSearchTag(Tag tag) {
+        mSuggestionCache.evictAll();
         if (mTagsAdapter != null) {
             mTagsAdapter.remove(tag);
         }
@@ -268,35 +279,49 @@ public class MobileSearchFragment extends Fragment implements SearchView {
     @Override
     public void setTagsProvider(MediaServiceSearchTagProvider provider) {
         cancelSuggestions();
+        mSuggestionCache.evictAll();
         mTagsProvider = provider;
     }
 
     @Override
     public void showProgressBar(boolean show) {
         mProgressShowing = show;
+        mLoadingMore = false;
         if (show) {
             hideEmptyMessage();
             dismissSearchError();
         }
-        // While pull-to-refresh is active the SwipeRefreshLayout spinner stands in for
-        // the centre bar; don't show both.
-        if (mProgressBar != null) {
-            mProgressBar.setVisibility(show && !mSwipeRefreshing ? View.VISIBLE : View.GONE);
-        }
-        if (mLoadingMoreProgress != null) {
-            mLoadingMoreProgress.setVisibility(View.GONE);
-        }
         if (!show) {
             stopSwipeRefresh();
         }
+        updateLoadingVisibility();
     }
 
     @Override
     public void showLoadingMore(boolean show) {
         mProgressShowing = show;
-        mLoadingMoreProgress.setVisibility(show ? View.VISIBLE : View.GONE);
+        mLoadingMore = show;
         if (show) {
             dismissSearchError();
+        }
+        updateLoadingVisibility();
+    }
+
+    private void updateLoadingVisibility() {
+        if (mProgressBar != null) {
+            mProgressBar.setVisibility(mProgressShowing && !mLoadingMore && !mSwipeRefreshing
+                    && !mWantSuggestions ? View.VISIBLE : View.GONE);
+        }
+        if (mLoadingMoreProgress != null) {
+            mLoadingMoreProgress.setVisibility(mLoadingMore && !mWantSuggestions ? View.VISIBLE : View.GONE);
+        }
+        if (mSwipeRefresh != null) {
+            mSwipeRefresh.setEnabled(mSearchSubmitted && !mWantSuggestions
+                    && (!mProgressShowing || mSwipeRefreshing));
+        }
+        if (mEmptyContainer != null && mSearchSubmitted && mGroups.isEmpty() && !mProgressShowing
+                && !TextUtils.isEmpty(mEmptyMessage.getText())) {
+            mEmptyContainer.setVisibility(mWantSuggestions ? View.GONE : View.VISIBLE);
         }
     }
 
@@ -316,6 +341,9 @@ public class MobileSearchFragment extends Fragment implements SearchView {
         if (mGroups.isEmpty()) {
             showEmptyMessage(getString(R.string.videos_loading_error));
             mRetryButton.setVisibility(View.VISIBLE);
+            return;
+        }
+        if (mWantSuggestions) {
             return;
         }
         dismissSearchError();
@@ -353,6 +381,9 @@ public class MobileSearchFragment extends Fragment implements SearchView {
 
     @Override
     public void startSearch(String searchText) {
+        if (mSearchInput == null) {
+            return;
+        }
         if (!TextUtils.isEmpty(searchText)) {
             mSuppressWatcher = true;
             mSearchInput.setText(searchText);
@@ -418,7 +449,7 @@ public class MobileSearchFragment extends Fragment implements SearchView {
     // ----- helpers -----
 
     private void submitSearch(String query) {
-        if (query == null) {
+        if (query == null || mSearchInput == null || mPresenter == null) {
             return;
         }
         query = query.trim();
@@ -431,6 +462,10 @@ public class MobileSearchFragment extends Fragment implements SearchView {
         hideKeyboard();
         mSearchInput.clearFocus();
         mSearchSubmitted = true;
+        if (mProgressShowing && !mSwipeRefreshing && TextUtils.equals(query, mSubmittedQuery)) {
+            updateLoadingVisibility();
+            return;
+        }
         mSubmittedQuery = query;
         mResultsList.scrollToPosition(0);
         mPresenter.onSearch(query);
@@ -486,13 +521,22 @@ public class MobileSearchFragment extends Fragment implements SearchView {
             return;
         }
         cancelSuggestions();
-        mTagsAdapter.clear();
-        mSuggestionsList.setVisibility(View.GONE);
+        // Keep the suggestion surface steady while the next query is debounced and loaded.
+        mSuggestionsList.setVisibility(View.VISIBLE);
         dismissSearchError();
-        if (mTagsProvider == null) {
+        hideEmptyMessage();
+        stopSwipeRefresh();
+        updateLoadingVisibility();
+        mSuggestionQuery = query;
+        List<Tag> cached = mSuggestionCache.get(query);
+        if (cached != null) {
+            mTagsAdapter.setTags(cached);
             return;
         }
-        mSuggestionQuery = query;
+        if (mTagsProvider == null) {
+            mTagsAdapter.clear();
+            return;
+        }
         int generation = mSuggestionGeneration;
         mUiHandler.postDelayed(() -> {
             if (generation != mSuggestionGeneration || !mWantSuggestions || getView() == null) {
@@ -503,9 +547,10 @@ public class MobileSearchFragment extends Fragment implements SearchView {
                         || generation != mSuggestionGeneration) {
                     return;
                 }
+                if (results != null) {
+                    mSuggestionCache.put(query, new ArrayList<>(results));
+                }
                 mTagsAdapter.setTags(results);
-                mSuggestionsList.setVisibility(
-                        mTagsAdapter.getItemCount() > 0 ? View.VISIBLE : View.GONE);
             }));
         }, SUGGESTION_DELAY_MS);
     }
@@ -531,17 +576,19 @@ public class MobileSearchFragment extends Fragment implements SearchView {
             if (mSuppressWatcher) {
                 return;
             }
-            if (s.length() == 0) {
+            String query = s.toString().trim();
+            if (query.isEmpty()) {
                 mWantSuggestions = false;
                 cancelSuggestions();
                 mSuggestionsList.setVisibility(View.GONE);
                 if (mTagsAdapter != null) {
                     mTagsAdapter.clear();
                 }
+                updateLoadingVisibility();
                 return;
             }
             mWantSuggestions = true;
-            loadSuggestions(s.toString());
+            loadSuggestions(query);
         }
     };
 
@@ -575,15 +622,16 @@ public class MobileSearchFragment extends Fragment implements SearchView {
     private final RecyclerView.OnScrollListener mScrollListener = new RecyclerView.OnScrollListener() {
         @Override
         public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
-            if (dy <= 0 || mProgressShowing || mResultsAdapter == null) {
+            if (dy <= 0 || mProgressShowing || mWantSuggestions || mResultsAdapter == null) {
                 return;
             }
             RecyclerView.LayoutManager lm = recyclerView.getLayoutManager();
             if (!(lm instanceof GridLayoutManager)) {
                 return;
             }
-            int lastVisible = ((GridLayoutManager) lm).findLastVisibleItemPosition();
-            if (lastVisible >= mResultsAdapter.getItemCount() - 4) {
+            GridLayoutManager grid = (GridLayoutManager) lm;
+            int lastVisible = grid.findLastVisibleItemPosition();
+            if (lastVisible >= mResultsAdapter.getItemCount() - grid.getSpanCount() * 3) {
                 Video last = mResultsAdapter.getLast();
                 if (last != null && mPresenter != null) {
                     mPresenter.onScrollEnd(last);
@@ -596,12 +644,16 @@ public class MobileSearchFragment extends Fragment implements SearchView {
         if (mSearchInput == null) {
             return;
         }
-        mSearchInput.requestFocus();
-        mSearchInput.post(() -> {
+        EditText input = mSearchInput;
+        input.requestFocus();
+        input.post(() -> {
+            if (getView() == null || mSearchInput != input || !input.hasFocus()) {
+                return;
+            }
             InputMethodManager imm = (InputMethodManager)
-                    mSearchInput.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                    input.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
             if (imm != null) {
-                imm.showSoftInput(mSearchInput, InputMethodManager.SHOW_IMPLICIT);
+                imm.showSoftInput(input, InputMethodManager.SHOW_IMPLICIT);
             }
         });
     }
@@ -618,7 +670,7 @@ public class MobileSearchFragment extends Fragment implements SearchView {
         if (mEmptyMessage != null) {
             mEmptyMessage.setText(message);
             mRetryButton.setVisibility(View.GONE);
-            mEmptyContainer.setVisibility(View.VISIBLE);
+            mEmptyContainer.setVisibility(mWantSuggestions ? View.GONE : View.VISIBLE);
         }
     }
 

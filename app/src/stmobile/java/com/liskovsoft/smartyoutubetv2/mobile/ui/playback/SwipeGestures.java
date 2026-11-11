@@ -51,6 +51,7 @@ final class SwipeGestures {
     private MotionEvent mDown;
     private boolean mVolume;
     private float mStartLevel;
+    private float mStartY;
     private int mAreaHeight;
 
     /** Returns null if the indicator isn't in the player layout. */
@@ -79,7 +80,7 @@ final class SwipeGestures {
         reset();
         mDown = MotionEvent.obtain(down);
         mVolume = down.getX() >= area.getWidth() / 2f;
-        mAreaHeight = area.getHeight();
+        mAreaHeight = Math.max(1, area.getHeight());
         mState = PENDING;
         return true;
     }
@@ -89,7 +90,7 @@ final class SwipeGestures {
         switch (event.getActionMasked()) {
             case MotionEvent.ACTION_MOVE: {
                 if (mState == SWIPING) {
-                    applyLevel(mStartLevel + (mDown.getY() - event.getY()) / (mAreaHeight * FULL_RANGE_FRACTION));
+                    applyLevel(mStartLevel + (mStartY - event.getY()) / (mAreaHeight * FULL_RANGE_FRACTION));
                     return true;
                 }
                 float dx = Math.abs(event.getX() - mDown.getX());
@@ -97,6 +98,7 @@ final class SwipeGestures {
                 if (dy > mSlop && dy > dx) {
                     mState = SWIPING;
                     mStartLevel = currentLevel();
+                    mStartY = event.getY();
                     showIndicator(mStartLevel);
                     return true;
                 }
@@ -132,6 +134,12 @@ final class SwipeGestures {
         if (swiping) {
             mHandler.postDelayed(mHideIndicator, INDICATOR_HIDE_MS);
         }
+    }
+
+    void destroy() {
+        reset();
+        mHandler.removeCallbacks(mHideIndicator);
+        mIndicator.setVisibility(View.GONE);
     }
 
     /** Hand the held DOWN and this event to the normal touch path. */

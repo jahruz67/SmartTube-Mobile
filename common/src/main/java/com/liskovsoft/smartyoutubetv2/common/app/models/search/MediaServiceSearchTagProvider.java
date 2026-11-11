@@ -34,7 +34,10 @@ public class MediaServiceSearchTagProvider implements SearchTagsProvider {
         mTagsAction = mContentService.getSearchTagsObserve(query)
                 .subscribe(
                         tags -> callback.onResults(Tag.from(tags)),
-                        error -> Log.e(TAG, "Result is empty. Just ignore it. Error msg: %s", error.getMessage())
+                        error -> {
+                            Log.e(TAG, "Unable to load search suggestions: %s", error.getMessage());
+                            callback.onResults(null);
+                        }
                 );
     }
 

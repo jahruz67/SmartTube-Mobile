@@ -466,6 +466,7 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         revealShortsChrome();
     };
     private boolean mShortsSwipeDragging;
+    private boolean mShortsTouchCanceled;
     private int     mDragThresholdPx; // initialised to 15dp in initShortsViews
     // Non-Shorts: the current gesture started on empty video while the controls were showing.
     private boolean mOverlayTapCandidate;
@@ -616,7 +617,9 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         mChromeHandler.removeCallbacks(mShortsLoopPoll);
         mChromeHandler.removeCallbacks(mShortsLoopTimeout);
         if (mModernChrome != null) mModernChrome.stop();
+        if (mSwipe != null) mSwipe.cancel();
         if (mSwipeToDismiss != null) mSwipeToDismiss.pause();
+        resetPinchZoom();
         mAwaitingShortsFrame = false;
         mAwaitingShortsLoop = false;
         updateLoadingIndicator();
@@ -640,6 +643,10 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         }
         if (mSwipeToDismiss != null) mSwipeToDismiss.cancel();
         mSwipeToDismiss = null;
+        if (mSwipe != null) mSwipe.destroy();
+        mSwipe = null;
+        resetPinchZoom();
+        mPinch = null;
         if (mModernChrome != null) mModernChrome.destroy();
         mModernChrome = null;
         clearLinkCards();
@@ -672,6 +679,8 @@ public class MobilePlaybackFragment extends PlaybackFragment {
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         if (mSwipeToDismiss != null) mSwipeToDismiss.cancel();
+        if (mSwipe != null) mSwipe.cancel();
+        resetPinchZoom();
         super.onConfigurationChanged(newConfig);
         applyMobileLayout();
         bindAvatar(PlaybackPresenter.instance(getContext()).getVideo());
@@ -1345,7 +1354,10 @@ public class MobilePlaybackFragment extends PlaybackFragment {
             case MotionEvent.ACTION_DOWN:
                 mStripDownX = event.getX();
                 mStripDownY = event.getY();
-                mStripDownInVideo = !isInPipMode() && event.getY() <= playerView.getBottom();
+                mStripDownInVideo = !isInPipMode()
+                        && viewContainsRaw(playerView, event.getRawX(), event.getRawY())
+                        && (!isOverlayShown() || !hitsPlayerControl(requireActivity().getWindow().getDecorView(),
+                                event.getRawX(), event.getRawY(), playerView.getWidth() * playerView.getHeight() / 2));
                 return false;
             case MotionEvent.ACTION_UP: {
                 boolean candidate = mStripDownInVideo;
@@ -1356,11 +1368,13 @@ public class MobilePlaybackFragment extends PlaybackFragment {
                 float minDy = 48 * getResources().getDisplayMetrics().density;
                 if (-dy > minDy && -dy > 2 * Math.abs(dx)
                         && getActivity() instanceof MobilePlaybackActivity) {
+                    cancelDismissTouch(event);
                     ((MobilePlaybackActivity) getActivity()).toggleFullscreen();
                     return true;
                 }
                 return false;
             }
+            case MotionEvent.ACTION_POINTER_DOWN:
             case MotionEvent.ACTION_CANCEL:
                 mStripDownInVideo = false;
                 return false;
@@ -1497,7 +1511,9 @@ public class MobilePlaybackFragment extends PlaybackFragment {
 
             case MotionEvent.ACTION_UP: {
                 boolean tap = mOverlayTapCandidate
-                        && event.getEventTime() - mTouchDownTime < 350;
+                        && event.getEventTime() - mTouchDownTime < 350
+                        && Math.abs(event.getX() - mSwipeRawStartX) <= mDragThresholdPx
+                        && Math.abs(event.getY() - mSwipeRawStartY) <= mDragThresholdPx;
                 mOverlayTapCandidate = false;
                 if (!tap) return false;
                 // Consume the UP (so no double-tap/tickle logic sees a stray UP and re-shows the
@@ -1514,6 +1530,7 @@ public class MobilePlaybackFragment extends PlaybackFragment {
                 return true;
             }
 
+            case MotionEvent.ACTION_POINTER_DOWN:
             case MotionEvent.ACTION_CANCEL:
                 mOverlayTapCandidate = false;
                 return false;
@@ -1572,7 +1589,25 @@ public class MobilePlaybackFragment extends PlaybackFragment {
             return true; // consume everything outside the sheet
         }
 
-        switch (event.getActionMasked()) {
+        int action = event.getActionMasked();
+        if (action == MotionEvent.ACTION_DOWN) {
+            mShortsTouchCanceled = false;
+        } else if (mShortsTouchCanceled) {
+            return true;
+        } else if (action == MotionEvent.ACTION_POINTER_DOWN) {
+            // A second finger must not move the pager's origin or leave a pending play/pause tap.
+            mShortsTouchCanceled = true;
+            mChromeHandler.removeCallbacks(mPendingShortsTap);
+            mLastShortsTapTime = 0;
+            cancelDismissTouch(event);
+            if (mShortsSwipeDragging) {
+                mShortsSwipeDragging = false;
+                animateShortsPageTo(0, this::hideShortsPosters);
+            }
+            return true;
+        }
+
+        switch (action) {
             case MotionEvent.ACTION_DOWN:
                 mSwipeRawStartY = event.getY();
                 mSwipeRawStartX = event.getX();

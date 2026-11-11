@@ -2,6 +2,7 @@ package com.liskovsoft.smartyoutubetv2.common.app.presenters;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.text.TextUtils;
 import com.liskovsoft.mediaserviceinterfaces.ContentService;
 import com.liskovsoft.mediaserviceinterfaces.data.MediaGroup;
 import com.liskovsoft.mediaserviceinterfaces.data.SearchOptions;
@@ -178,10 +179,22 @@ public class SearchPresenter extends BasePresenter<SearchView> implements VideoG
 
         getView().clearSearch();
 
-        mLoadAction = contentService.getSearchObserve(searchText,
-                mUploadDateOptions | mDurationOptions | mTypeOptions | mFeatureOptions | mSortingOptions)
+        int options = mUploadDateOptions | mDurationOptions | mTypeOptions | mFeatureOptions | mSortingOptions;
+        // Resolve lazy media lists on the request worker. Apply local UI state on the main thread.
+        mLoadAction = RxHelper.fromCallable(() -> {
+                    List<MediaGroup> mediaGroups = contentService.getSearch(searchText, options);
+                    if (mediaGroups != null) {
+                        for (MediaGroup mediaGroup : mediaGroups) {
+                            if (mediaGroup != null) mediaGroup.getMediaItems();
+                        }
+                    }
+                    return mediaGroups;
+                })
                 .subscribe(
                         mediaGroups -> {
+                            if (getView() == null) {
+                                return;
+                            }
                             Log.d(TAG, "Receiving results for '%s'", searchText);
                             for (MediaGroup mediaGroup : mediaGroups) {
                                 VideoGroup group = VideoGroup.from(mediaGroup);
@@ -207,7 +220,7 @@ public class SearchPresenter extends BasePresenter<SearchView> implements VideoG
     }
 
     private void continueGroup(VideoGroup group) {
-        if (RxHelper.isAnyActionRunning(mScrollAction)) {
+        if (RxHelper.isAnyActionRunning(mLoadAction, mScrollAction)) {
             return;
         }
 
@@ -215,17 +228,23 @@ public class SearchPresenter extends BasePresenter<SearchView> implements VideoG
             return;
         }
 
+        MediaGroup mediaGroup = group.getMediaGroup();
+        if (mediaGroup == null || TextUtils.isEmpty(mediaGroup.getNextPageKey())) {
+            return;
+        }
+
         Log.d(TAG, "continueGroup: start continue group: " + group.getTitle());
 
         getView().showLoadingMore(true);
-
-        MediaGroup mediaGroup = group.getMediaGroup();
 
         ContentService contentService = getContentService();
 
         mScrollAction = contentService.continueGroupObserve(mediaGroup)
                 .subscribe(
                         continueMediaGroup -> {
+                            if (getView() == null) {
+                                return;
+                            }
                             VideoGroup newGroup = VideoGroup.from(group, continueMediaGroup);
                             getView().updateSearch(newGroup);
                             mBrowseProcessor.process(newGroup);

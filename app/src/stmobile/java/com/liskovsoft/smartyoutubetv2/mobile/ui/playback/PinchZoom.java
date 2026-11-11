@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.SystemClock;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
@@ -100,7 +101,7 @@ final class PinchZoom {
             @Override
             public void onScaleEnd(ScaleGestureDetector detector) {
                 if (mScale < SNAP_TO_FIT) {
-                    reset(true);
+                    resetTransform(true);
                 }
             }
         });
@@ -144,7 +145,17 @@ final class PinchZoom {
 
     /** Back to the whole picture; {@code showLabel} says "Original" (a pinch out ended there). */
     void reset(boolean showLabel) {
+        if (mActive || mDetector.isInProgress()) {
+            long now = SystemClock.uptimeMillis();
+            MotionEvent cancel = MotionEvent.obtain(now, now, MotionEvent.ACTION_CANCEL, 0f, 0f, 0);
+            mDetector.onTouchEvent(cancel);
+            cancel.recycle();
+        }
         mActive = false;
+        resetTransform(showLabel);
+    }
+
+    private void resetTransform(boolean showLabel) {
         mScale = 1f;
         View video = mVideo;
         if (video != null) {

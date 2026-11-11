@@ -228,13 +228,14 @@ final class ModernPlayerChrome {
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
+                boolean commitSeek = mUserSeeking && !mSeek.isTouchCanceled();
                 long duration = mHost.getDurationMs();
-                if (duration > 0) {
+                if (duration > 0 && commitSeek) {
                     mHost.setPositionMs(duration * seekBar.getProgress() / SEEK_MAX);
                 }
                 mUserSeeking = false;
                 showPreview(false);
-                mHost.tickle();
+                if (commitSeek) mHost.tickle();
             }
         });
     }
