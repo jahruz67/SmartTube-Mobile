@@ -813,13 +813,14 @@ public class MobileBrowseFragment extends Fragment implements BrowseView, MediaS
      * Opens the drawer on an on-screen right-swipe. Registered on the outer content
      * RecyclerView, so it is consulted before the inner shelves: a shelf that can still
      * scroll toward its start keeps the gesture; a shelf already at its start (or a grid
-     * section with no horizontal scroller) yields it to open the menu.
+     * section with no horizontal scroller) yields a deliberate horizontal drag to the menu.
      */
     private final RecyclerView.OnItemTouchListener mSwipeToOpenMenu = new RecyclerView.OnItemTouchListener() {
         private float mDownX;
         private float mDownY;
         private boolean mDecided;
         private boolean mTriggered;
+        private float mOpenDistance;
 
         @Override
         public boolean onInterceptTouchEvent(@NonNull RecyclerView rv, @NonNull MotionEvent e) {
@@ -827,8 +828,10 @@ public class MobileBrowseFragment extends Fragment implements BrowseView, MediaS
                 case MotionEvent.ACTION_DOWN:
                     mDownX = e.getX();
                     mDownY = e.getY();
-                    mDecided = false;
+                    mDecided = mDrawer == null || !shelfAtStart(rv, mDownX, mDownY);
                     mTriggered = false;
+                    mOpenDistance = Math.max(48 * rv.getResources().getDisplayMetrics().density,
+                            ViewConfiguration.get(rv.getContext()).getScaledTouchSlop() * 3);
                     return false;
                 case MotionEvent.ACTION_MOVE:
                     if (mDecided) {
@@ -840,14 +843,24 @@ public class MobileBrowseFragment extends Fragment implements BrowseView, MediaS
                     if (Math.abs(dx) < slop * 2 && Math.abs(dy) < slop * 2) {
                         return false; // wait for a clear direction
                     }
+                    if (dx <= 0 || dx <= 2 * Math.abs(dy)) {
+                        mDecided = true;
+                        return false;
+                    }
+                    if (dx < mOpenDistance) {
+                        return false;
+                    }
                     mDecided = true;
-                    if (dx > 0 && dx > Math.abs(dy) && shelfAtStart(rv, mDownX, mDownY)) {
+                    if (mDrawer != null) {
                         mTriggered = true;
-                        if (mDrawer != null) {
-                            mDrawer.openDrawer(GravityCompat.START);
-                        }
+                        mDrawer.openDrawer(GravityCompat.START);
                     }
                     return mTriggered;
+                case MotionEvent.ACTION_POINTER_DOWN:
+                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_CANCEL:
+                    mDecided = true;
+                    return false;
                 default:
                     return false;
             }
@@ -860,7 +873,9 @@ public class MobileBrowseFragment extends Fragment implements BrowseView, MediaS
 
         @Override
         public void onRequestDisallowInterceptTouchEvent(boolean disallowIntercept) {
-            // no-op
+            if (disallowIntercept && !mTriggered) {
+                mDecided = true;
+            }
         }
     };
 

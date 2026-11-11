@@ -5,6 +5,7 @@ import android.content.Context;
 import android.text.TextUtils;
 import com.liskovsoft.mediaserviceinterfaces.ContentService;
 import com.liskovsoft.mediaserviceinterfaces.data.MediaGroup;
+import com.liskovsoft.mediaserviceinterfaces.data.MediaItem;
 import com.liskovsoft.mediaserviceinterfaces.data.SearchOptions;
 import com.liskovsoft.sharedutils.mylogger.Log;
 import com.liskovsoft.sharedutils.rx.RxHelper;
@@ -45,6 +46,29 @@ public class SearchPresenter extends BasePresenter<SearchView> implements VideoG
     private int mFeatureOptions;
     private int mSortingOptions;
     private Video mCurrentVideo;
+
+    private static final class PreparedSearchResult {
+        final MediaGroup mediaGroup;
+        final List<Video> videos = new ArrayList<>();
+
+        PreparedSearchResult(MediaGroup group) {
+            mediaGroup = group;
+            // These getters decode lazy metadata. Keep that work off the UI thread.
+            group.getTitle();
+            group.getNextPageKey();
+            List<MediaItem> items = group.getMediaItems();
+            if (items != null) {
+                for (MediaItem item : items) {
+                    Video video = Video.from(item);
+                    if (video != null) videos.add(video);
+                }
+            }
+        }
+
+        VideoGroup applyTo(VideoGroup group) {
+            return VideoGroup.fromPrepared(group, mediaGroup, videos);
+        }
+    }
 
     private SearchPresenter(Context context) {
         super(context);
@@ -180,8 +204,8 @@ public class SearchPresenter extends BasePresenter<SearchView> implements VideoG
         getView().clearSearch();
 
         int options = mUploadDateOptions | mDurationOptions | mTypeOptions | mFeatureOptions | mSortingOptions;
-        // Decode each section on the worker and deliver it without waiting for later sections.
-        mLoadAction = RxHelper.<MediaGroup>create(emitter -> {
+        // Decode each section, including its card metadata, before delivering it to the UI.
+        mLoadAction = RxHelper.<PreparedSearchResult>create(emitter -> {
                     List<MediaGroup> mediaGroups = contentService.getSearch(searchText, options);
                     if (mediaGroups == null) {
                         RxHelper.onError(emitter, "Search returned no data");
@@ -190,19 +214,20 @@ public class SearchPresenter extends BasePresenter<SearchView> implements VideoG
                     for (MediaGroup mediaGroup : mediaGroups) {
                         if (emitter.isDisposed()) return;
                         if (mediaGroup != null) {
-                            mediaGroup.getMediaItems();
-                            emitter.onNext(mediaGroup);
+                            PreparedSearchResult result = new PreparedSearchResult(mediaGroup);
+                            if (emitter.isDisposed()) return;
+                            emitter.onNext(result);
                         }
                     }
                     emitter.onComplete();
                 })
                 .subscribe(
-                        mediaGroup -> {
+                        result -> {
                             if (getView() == null) {
                                 return;
                             }
                             Log.d(TAG, "Receiving results for '%s'", searchText);
-                            VideoGroup group = VideoGroup.from(mediaGroup);
+                            VideoGroup group = result.applyTo(null);
                             startPlayFirstVideo(group);
                             getView().updateSearch(group);
                             mBrowseProcessor.process(group);
@@ -245,15 +270,14 @@ public class SearchPresenter extends BasePresenter<SearchView> implements VideoG
 
         mScrollAction = RxHelper.fromCallable(() -> {
                     MediaGroup continuation = contentService.continueGroup(mediaGroup);
-                    if (continuation != null) continuation.getMediaItems();
-                    return continuation;
+                    return continuation != null ? new PreparedSearchResult(continuation) : null;
                 })
                 .subscribe(
-                        continueMediaGroup -> {
+                        result -> {
                             if (getView() == null) {
                                 return;
                             }
-                            VideoGroup newGroup = VideoGroup.from(group, continueMediaGroup);
+                            VideoGroup newGroup = result.applyTo(group);
                             getView().updateSearch(newGroup);
                             mBrowseProcessor.process(newGroup);
                         },

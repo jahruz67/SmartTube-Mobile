@@ -461,12 +461,16 @@ public class MobilePlaybackFragment extends PlaybackFragment {
     // Double-tap to like: a single tap waits one double-tap window for a second tap before it
     // toggles pause. mLastShortsTapTime also chains further quick taps into more hearts.
     private long    mLastShortsTapTime;
+    private float   mLastShortsTapX;
+    private float   mLastShortsTapY;
     private final Runnable mPendingShortsTap = () -> {
         onShortsTap();
         revealShortsChrome();
     };
     private boolean mShortsSwipeDragging;
     private boolean mShortsTouchCanceled;
+    private boolean mShortsTouchStartedOnControl;
+    private boolean mShortsSwipeRejected;
     private boolean mShortsSheetTouchInside;
     private int     mDragThresholdPx; // initialised to 15dp in initShortsViews
     // Non-Shorts: the current gesture started on empty video while the controls were showing.
@@ -1360,6 +1364,15 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         }
         mTouchStartedInPlayer = false;
         mStripDownInVideo = false;
+        mChromeHandler.removeCallbacks(mPendingShortsTap);
+        mLastShortsTapTime = 0;
+        mShortsTouchCanceled = true;
+        mShortsTouchStartedOnControl = false;
+        if (mShortsSwipeDragging) {
+            mShortsSwipeDragging = false;
+            setShortsPageTranslation(0);
+            hideShortsPosters();
+        }
     }
 
     /**
@@ -1612,6 +1625,7 @@ public class MobilePlaybackFragment extends PlaybackFragment {
             mChromeHandler.removeCallbacks(mPendingShortsTap);
             mLastShortsTapTime = 0;
             cancelDismissTouch(event);
+            if (mShortsTouchStartedOnControl) revealShortsChrome();
             if (mShortsSwipeDragging) {
                 mShortsSwipeDragging = false;
                 animateShortsPageTo(0, this::hideShortsPosters);
@@ -1623,13 +1637,25 @@ public class MobilePlaybackFragment extends PlaybackFragment {
             case MotionEvent.ACTION_DOWN:
                 mSwipeRawStartY = event.getY();
                 mSwipeRawStartX = event.getX();
-                mTouchDownTime = android.os.SystemClock.uptimeMillis();
+                mTouchDownTime = event.getEventTime();
                 mShortsSwipeDragging = false;
+                mShortsSwipeRejected = false;
+                mShortsTouchStartedOnControl = hitsPlayerControl(requireActivity().getWindow().getDecorView(),
+                        event.getRawX(), event.getRawY(), getView().getWidth() * getView().getHeight() / 2);
+                // A second touch may become a drag or a control interaction. Do not pause mid-gesture.
+                mChromeHandler.removeCallbacks(mPendingShortsTap);
+                if (mShortsTouchStartedOnControl) mChromeHandler.removeCallbacks(mHideShortsChr);
                 return false; // let DOWN propagate so button OnClickListeners still work
 
             case MotionEvent.ACTION_MOVE: {
+                if (mShortsTouchStartedOnControl || mShortsSwipeRejected) return false;
                 float dy = event.getY() - mSwipeRawStartY;
                 float dx = event.getX() - mSwipeRawStartX;
+                if (!mShortsSwipeDragging && Math.abs(dx) > mDragThresholdPx && Math.abs(dx) >= Math.abs(dy)) {
+                    mShortsSwipeRejected = true;
+                    mLastShortsTapTime = 0;
+                    return false;
+                }
                 if (!mShortsSwipeDragging && Math.abs(dy) > mDragThresholdPx && Math.abs(dy) > Math.abs(dx)) {
                     // Activity-level interception does not send CANCEL to the child
                     // button/seek bar that received DOWN. End that interaction explicitly.
@@ -1642,6 +1668,7 @@ public class MobilePlaybackFragment extends PlaybackFragment {
                     }
                     mShortsSwipeDragging = true;
                     mChromeHandler.removeCallbacks(mPendingShortsTap);
+                    mLastShortsTapTime = 0;
                     mChromeHandler.removeCallbacks(mHideShortsChr);
                     setShortsChrome(false);
                     // Abandon any in-flight transition from a previous swipe before starting fresh.
@@ -1659,6 +1686,11 @@ public class MobilePlaybackFragment extends PlaybackFragment {
             }
 
             case MotionEvent.ACTION_UP: {
+                if (mShortsTouchStartedOnControl || mShortsSwipeRejected) {
+                    mLastShortsTapTime = 0;
+                    if (mShortsTouchStartedOnControl) revealShortsChrome();
+                    return false;
+                }
                 if (mShortsSwipeDragging) {
                     mShortsSwipeDragging = false;
                     onShortsSwipeReleased(event.getY() - mSwipeRawStartY);
@@ -1666,18 +1698,23 @@ public class MobilePlaybackFragment extends PlaybackFragment {
                 }
                 float dY = Math.abs(event.getY() - mSwipeRawStartY);
                 float dX = Math.abs(event.getX() - mSwipeRawStartX);
-                long dur = android.os.SystemClock.uptimeMillis() - mTouchDownTime;
+                long dur = event.getEventTime() - mTouchDownTime;
                 if (dY < mDragThresholdPx && dX < mDragThresholdPx && dur < 350) {
                     if (touchHitsButton(event.getRawX(), event.getRawY())) {
                         return false; // let normal dispatch fire the button's onClick
                     }
+                    cancelDismissTouch(event);
                     onShortsTapUp(event.getRawX(), event.getRawY());
                     return true;
                 }
+                mLastShortsTapTime = 0;
                 return false;
             }
 
             case MotionEvent.ACTION_CANCEL:
+                mChromeHandler.removeCallbacks(mPendingShortsTap);
+                mLastShortsTapTime = 0;
+                if (mShortsTouchStartedOnControl) revealShortsChrome();
                 if (mShortsSwipeDragging) {
                     mShortsSwipeDragging = false;
                     animateShortsPageTo(0, this::hideShortsPosters);
@@ -2197,8 +2234,15 @@ public class MobilePlaybackFragment extends PlaybackFragment {
      */
     private void onShortsTapUp(float x, float y) {
         long now = android.os.SystemClock.uptimeMillis();
-        boolean doubleTap = now - mLastShortsTapTime <= ViewConfiguration.getDoubleTapTimeout();
+        float dx = x - mLastShortsTapX;
+        float dy = y - mLastShortsTapY;
+        int slop = ViewConfiguration.get(requireContext()).getScaledDoubleTapSlop();
+        boolean doubleTap = mLastShortsTapTime > 0
+                && now - mLastShortsTapTime <= ViewConfiguration.getDoubleTapTimeout()
+                && dx * dx + dy * dy <= (float) slop * slop;
         mLastShortsTapTime = now;
+        mLastShortsTapX = x;
+        mLastShortsTapY = y;
         mChromeHandler.removeCallbacks(mPendingShortsTap);
         if (!doubleTap) {
             mChromeHandler.postDelayed(mPendingShortsTap, ViewConfiguration.getDoubleTapTimeout());

@@ -167,6 +167,20 @@ public class VideoGroup {
         return baseGroup;
     }
 
+    /** Apply worker-decoded items on the UI thread, where filtering and saved state are maintained. */
+    public static VideoGroup fromPrepared(VideoGroup baseGroup, MediaGroup mediaGroup, List<Video> videos) {
+        if (baseGroup == null) {
+            baseGroup = from((MediaGroup) null);
+            baseGroup.mTitle = mediaGroup != null ? mediaGroup.getTitle() : null;
+        }
+        baseGroup.mMediaGroup = mediaGroup;
+        if (videos != null) {
+            baseGroup.addVideos(videos);
+        }
+        baseGroup.mAction = ACTION_APPEND;
+        return baseGroup;
+    }
+
     public static VideoGroup fromChapters(List<ChapterItem> chapters, String title) {
         VideoGroup videoGroup = new VideoGroup();
         videoGroup.mTitle = title;

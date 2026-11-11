@@ -134,7 +134,9 @@ public class VideoCardAdapter extends RecyclerView.Adapter<VideoCardAdapter.View
         }
         int count = videos.size();
         mVideos.addAll(position, videos);
-        shiftIndexedPositions(position, count);
+        if (position < mVideos.size() - count) {
+            shiftIndexedPositions(position, count);
+        }
         for (int i = 0; i < count; i++) {
             addIndexedPosition(mVideos.get(position + i), position + i);
         }
