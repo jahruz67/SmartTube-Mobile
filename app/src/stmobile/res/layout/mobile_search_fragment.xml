@@ -93,15 +93,41 @@
             android:layout_gravity="center"
             android:visibility="gone" />
 
-        <TextView
-            android:id="@+id/empty_message"
+        <ProgressBar
+            android:id="@+id/loading_more_progress"
+            style="?android:attr/progressBarStyleSmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|center_horizontal"
+            android:layout_marginBottom="12dp"
+            android:background="@color/mobile_background"
+            android:visibility="gone" />
+
+        <LinearLayout
+            android:id="@+id/empty_container"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:padding="24dp"
-            android:gravity="center"
-            android:textColor="@color/mobile_text_secondary"
-            android:textSize="15sp"
-            android:visibility="gone" />
+            android:orientation="vertical"
+            android:gravity="center_horizontal"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/empty_message"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textColor="@color/mobile_text_secondary"
+                android:textSize="15sp" />
+
+            <Button
+                android:id="@+id/empty_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/mobile_search_retry"
+                android:visibility="gone" />
+        </LinearLayout>
     </FrameLayout>
 </LinearLayout>

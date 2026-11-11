@@ -22,7 +22,6 @@ import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -34,28 +33,22 @@ public class RxHelper {
     private static final String TAG = RxHelper.class.getSimpleName();
     private static @Nullable Scheduler sCachedScheduler;
 
-    private static Scheduler getCachedScheduler() {
+    private static synchronized Scheduler getCachedScheduler() {
         if (sCachedScheduler == null) {
-            // OLD CODE
-            // sCachedScheduler = Schedulers.from(Executors.newCachedThreadPool());
             int cores = Runtime.getRuntime().availableProcessors();
-            int corePoolSize = Math.max(2, Math.min(4, cores));
-            int maxPoolSize = Math.max(4, Math.min(8, cores * 2));
+            int poolSize = Math.max(4, Math.min(8, cores * 2));
 
-            // Bounded so maxPoolSize is actually reachable under load —
-            // an unbounded queue starves pool growth entirely.
-            int queueCapacity = corePoolSize * 4;
-
+            // Bound worker threads and queue excess work. Never run a network callback
+            // on its submitting thread, which may be Android's main thread.
             ThreadPoolExecutor executor = new ThreadPoolExecutor(
-                    corePoolSize,
-                    maxPoolSize,
+                    poolSize,
+                    poolSize,
                     60L,
                     TimeUnit.SECONDS,
-                    new LinkedBlockingQueue<>(queueCapacity),
-                    new ThreadPoolExecutor.CallerRunsPolicy()
+                    new LinkedBlockingQueue<>()
             );
             executor.allowCoreThreadTimeOut(true);
-            sCachedScheduler = Schedulers.from(executor);
+            sCachedScheduler = Schedulers.from(executor, true);
         }
 
         return sCachedScheduler;

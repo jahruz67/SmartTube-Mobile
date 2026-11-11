@@ -171,7 +171,7 @@ public class SearchPresenter extends BasePresenter<SearchView> implements VideoG
     private void loadSearchResult(String searchText) {
         Log.d(TAG, "Start search for '%s'", searchText);
 
-        disposeActions();
+        cancelActions();
         getView().showProgressBar(true);
 
         ContentService contentService = getContentService();
@@ -194,11 +194,13 @@ public class SearchPresenter extends BasePresenter<SearchView> implements VideoG
                             Log.e(TAG, "loadSearchData error: %s", error.getMessage());
                             if (getView() != null) {
                                 getView().showProgressBar(false);
+                                getView().showSearchError(false);
                             }
                         },
                         () -> {
                             if (getView() != null) {
                                 getView().showProgressBar(false);
+                                getView().onSearchCompleted();
                             }
                         }
                 );
@@ -215,7 +217,7 @@ public class SearchPresenter extends BasePresenter<SearchView> implements VideoG
 
         Log.d(TAG, "continueGroup: start continue group: " + group.getTitle());
 
-        getView().showProgressBar(true);
+        getView().showLoadingMore(true);
 
         MediaGroup mediaGroup = group.getMediaGroup();
 
@@ -231,12 +233,13 @@ public class SearchPresenter extends BasePresenter<SearchView> implements VideoG
                         error -> {
                             Log.e(TAG, "continueGroup error: %s", error.getMessage());
                             if (getView() != null) {
-                                getView().showProgressBar(false);
+                                getView().showLoadingMore(false);
+                                getView().showSearchError(true);
                             }
                         },
                         () -> {
                             if (getView() != null) {
-                                getView().showProgressBar(false);
+                                getView().showLoadingMore(false);
                             }
                         }
                 );
@@ -307,10 +310,16 @@ public class SearchPresenter extends BasePresenter<SearchView> implements VideoG
     }
 
     public void disposeActions() {
-        RxHelper.disposeActions(mLoadAction, mScrollAction);
+        cancelActions();
         if (getView() != null) {
             getView().showProgressBar(false);
         }
+    }
+
+    private void cancelActions() {
+        RxHelper.disposeActions(mLoadAction, mScrollAction);
+        mLoadAction = null;
+        mScrollAction = null;
         if (getSearchData().isSearchHistoryDisabled()) {
             MediaServiceManager.instance().clearSearchHistory();
         }

@@ -11,6 +11,11 @@ public interface SearchView {
     void removeSearchTag(Tag tag);
     void setTagsProvider(MediaServiceSearchTagProvider provider);
     void showProgressBar(boolean show);
+    default void showLoadingMore(boolean show) {
+        showProgressBar(show);
+    }
+    default void onSearchCompleted() {}
+    default void showSearchError(boolean loadingMore) {}
     void startSearch(String searchText);
     String getSearchText();
     void startVoiceRecognition();

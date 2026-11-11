@@ -141,10 +141,30 @@ public class VideoCardAdapter extends RecyclerView.Adapter<VideoCardAdapter.View
         notifyItemRangeInserted(position, videos.size());
     }
 
+    /** Replace one search group's slice without rebinding the other groups. */
+    public void replaceVideos(int position, int oldCount, List<Video> videos) {
+        mVideos.subList(position, position + oldCount).clear();
+        mVideos.addAll(position, videos);
+        rebuildPositionIndex();
+
+        int sharedCount = Math.min(oldCount, videos.size());
+        if (sharedCount > 0) {
+            notifyItemRangeChanged(position, sharedCount);
+        }
+        if (oldCount > sharedCount) {
+            notifyItemRangeRemoved(position + sharedCount, oldCount - sharedCount);
+        } else if (videos.size() > sharedCount) {
+            notifyItemRangeInserted(position + sharedCount, videos.size() - sharedCount);
+        }
+    }
+
     public void clear() {
+        int count = mVideos.size();
         mVideos.clear();
         mPositionsByVideo.clear();
-        notifyDataSetChanged();
+        if (count > 0) {
+            notifyItemRangeRemoved(0, count);
+        }
     }
 
     public void remove(List<Video> videos) {

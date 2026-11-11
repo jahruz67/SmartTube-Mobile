@@ -1266,8 +1266,9 @@ public class MobilePlaybackFragment extends PlaybackFragment {
                 && event.getY() > Math.max(48 * getResources().getDisplayMetrics().density, mCutoutBands.top)
                 && viewContainsRaw(playerView, event.getRawX(), event.getRawY())
                 && (mPinch == null || !mPinch.isZoomed())
-                // Keep volume/brightness on the landscape sides; the middle dismisses.
-                && !swipeCanStart(event, playerView)
+                // Landscape level swipes never turn into dismissal when controls appear
+                // or the finger starts near the middle or an edge.
+                && !usesLevelSwipes()
                 && (!isOverlayShown() || !hitsPlayerControl(requireActivity().getWindow().getDecorView(),
                         event.getRawX(), event.getRawY(), playerView.getWidth() * playerView.getHeight() / 2))) {
             mSwipeToDismiss.start(event);
@@ -1369,28 +1370,28 @@ public class MobilePlaybackFragment extends PlaybackFragment {
     }
 
     /**
-     * Swipes start only in the landscape full-screen player with the controls hidden, and not near
-     * an edge, where the system's own swipes (notification shade, back gesture) live.
+     * Level swipes avoid visible controls and the edges used by Android's own gestures.
      */
     private boolean swipeCanStart(MotionEvent down, View playerView) {
-        if (!mSwipeEnabled || mLayoutState != 0 || isInPipMode() || isOverlayShown()
-                || getResources().getConfiguration().orientation != Configuration.ORIENTATION_LANDSCAPE) {
+        if (!usesLevelSwipes() || (isOverlayShown()
+                && hitsPlayerControl(requireActivity().getWindow().getDecorView(), down.getRawX(), down.getRawY(),
+                        playerView.getWidth() * playerView.getHeight() / 2))) {
             return false;
         }
         float density = getResources().getDisplayMetrics().density;
         float edgeX = 32 * density;
         float edgeY = 48 * density;
         boolean volumeSide = down.getX() >= playerView.getWidth() / 2f;
-        // Reserve the middle for dismissal so volume/brightness cannot own the same DOWN.
-        if (mSwipeToDismiss != null
-                && Math.abs(down.getX() - playerView.getWidth() / 2f) < playerView.getWidth() * 0.15f) {
-            return false;
-        }
         if (!volumeSide && !MobilePlayerStylePrefs.isBrightnessSwipeEnabled(requireContext())) {
             return false; // "Volume only": the left half behaves as if swipes were off
         }
         return down.getX() > edgeX && down.getX() < playerView.getWidth() - edgeX
                 && down.getY() > edgeY && down.getY() < playerView.getHeight() - edgeY;
+    }
+
+    private boolean usesLevelSwipes() {
+        return mSwipe != null && mSwipeEnabled && mLayoutState == 0 && !isInPipMode()
+                && getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE;
     }
 
     /** Pinch to zoom works in the landscape full-screen player, controls showing or not. */
@@ -1581,7 +1582,17 @@ public class MobilePlaybackFragment extends PlaybackFragment {
 
             case MotionEvent.ACTION_MOVE: {
                 float dy = event.getY() - mSwipeRawStartY;
-                if (!mShortsSwipeDragging && Math.abs(dy) > mDragThresholdPx) {
+                float dx = event.getX() - mSwipeRawStartX;
+                if (!mShortsSwipeDragging && Math.abs(dy) > mDragThresholdPx && Math.abs(dy) > Math.abs(dx)) {
+                    // Activity-level interception does not send CANCEL to the child
+                    // button/seek bar that received DOWN. End that interaction explicitly.
+                    MotionEvent cancel = MotionEvent.obtain(event);
+                    cancel.setAction(MotionEvent.ACTION_CANCEL);
+                    try {
+                        requireActivity().getWindow().superDispatchTouchEvent(cancel);
+                    } finally {
+                        cancel.recycle();
+                    }
                     mShortsSwipeDragging = true;
                     mChromeHandler.removeCallbacks(mPendingShortsTap);
                     mChromeHandler.removeCallbacks(mHideShortsChr);
