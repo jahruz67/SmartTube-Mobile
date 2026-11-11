@@ -1,12 +1,14 @@
 package com.liskovsoft.smartyoutubetv2.mobile.ui.base;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.os.Bundle;
 
 import androidx.annotation.Nullable;
 import androidx.core.view.WindowCompat;
+import androidx.lifecycle.Lifecycle;
 
 import com.liskovsoft.smartyoutubetv2.common.misc.MotherActivity;
 import com.liskovsoft.smartyoutubetv2.mobile.ui.playback.MobileMiniPlayer;
@@ -28,6 +30,8 @@ import com.liskovsoft.smartyoutubetv2.tv.R;
  * force the corresponding bit.
  */
 public abstract class MobileActivity extends MotherActivity {
+    private boolean mFinishAfterParent;
+
     @Override
     protected void attachBaseContext(Context newBase) {
         super.attachBaseContext(applyThemeOverride(newBase));
@@ -106,6 +110,38 @@ public abstract class MobileActivity extends MotherActivity {
     }
 
     @Override
+    public void finish() {
+        if (mFinishAfterParent || isFinishing()) {
+            return;
+        }
+        if (registersInViewStack()) {
+            if (MobileMiniPlayer.isMinimized()
+                    && getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED)) {
+                if (!getViewManager().hasParentView(this)) {
+                    // Keep Home above the retained player when leaving the app.
+                    moveTaskToBack(true);
+                    return;
+                }
+                mFinishAfterParent = true;
+                getViewManager().startParentView(this, Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                return;
+            }
+            getViewManager().removeTop(this);
+        }
+        super.finish();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (mFinishAfterParent) {
+            // Parent launches can be deferred while the mini player's engine is blocked.
+            // Wait until it covers this screen so finishing cannot resume the hidden player.
+            super.finish();
+        }
+    }
+
+    @Override
     protected void onDestroy() {
         MobileMiniPlayer.onHostDestroyed(this);
         super.onDestroy();
@@ -128,7 +164,7 @@ public abstract class MobileActivity extends MotherActivity {
     }
 
     /**
-     * Whether this activity is a navigation destination that belongs in the ViewManager's
+     * Whether this activity is a registered navigation destination in the ViewManager's
      * activity stack. Transient overlays (the settings dialog) return {@code false}: adding them
      * makes them a Back target, so pressing Back on the player would relaunch the just-closed
      * dialog — the player's {@code finishReally() → startParentView()} walks this very stack and
@@ -136,7 +172,7 @@ public abstract class MobileActivity extends MotherActivity {
      * MotherActivity (no addTop), not LeanbackActivity.
      */
     protected boolean registersInViewStack() {
-        return true;
+        return getViewManager().getView(getClass()) != null;
     }
 
     @Override

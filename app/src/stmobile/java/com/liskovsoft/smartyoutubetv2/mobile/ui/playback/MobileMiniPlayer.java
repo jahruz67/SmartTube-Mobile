@@ -51,6 +51,10 @@ public final class MobileMiniPlayer {
         return sMinimized && sPlaybackActivity == activity;
     }
 
+    public static boolean isMinimized() {
+        return sMinimized && sPlaybackActivity != null;
+    }
+
     static void restore(MobilePlaybackActivity activity) {
         if (sPlaybackActivity != activity) return;
         MobilePlaybackFragment fragment = activity.getMobileFragment();
