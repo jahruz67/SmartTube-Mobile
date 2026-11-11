@@ -44,8 +44,11 @@ final class SwipeToDismiss {
             return true;
         }
         if (mSettling) {
-            // A new finger can land before snap-back finishes. Consume its whole sequence.
-            if (event.getActionMasked() == MotionEvent.ACTION_DOWN) mDiscardUntilUp = true;
+            // A fresh touch can interrupt snap-back instead of losing its whole gesture.
+            if (!mDismissing && event.getActionMasked() == MotionEvent.ACTION_DOWN) {
+                cancel();
+                return false;
+            }
             return true;
         }
         if (mDown == null) return false;
@@ -69,7 +72,7 @@ final class SwipeToDismiss {
                 float releaseX = Math.abs(event.getRawX() - mDown.getRawX());
                 // Fast swipes may reach UP without an intermediate MOVE being delivered.
                 boolean dismiss = releaseY >= mDistance && releaseY > 2 * releaseX;
-                if (!mDragging && !dismiss) {
+                if (!mDragging && !(releaseY > mSlop && releaseY > 2 * releaseX)) {
                     releaseDown();
                     return false;
                 }

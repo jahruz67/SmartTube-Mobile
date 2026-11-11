@@ -15,6 +15,7 @@ import com.liskovsoft.smartyoutubetv2.common.app.models.data.VideoGroup;
 import com.liskovsoft.smartyoutubetv2.common.app.models.playback.ui.OptionItem;
 import com.liskovsoft.smartyoutubetv2.common.app.models.playback.ui.UiOptionItem;
 import com.liskovsoft.smartyoutubetv2.common.app.models.search.MediaServiceSearchTagProvider;
+import com.liskovsoft.smartyoutubetv2.common.app.models.search.SearchRequest;
 import com.liskovsoft.smartyoutubetv2.common.app.models.search.vineyard.Tag;
 import com.liskovsoft.smartyoutubetv2.common.app.presenters.base.BasePresenter;
 import com.liskovsoft.smartyoutubetv2.common.app.presenters.dialogs.VideoActionPresenter;
@@ -204,8 +205,9 @@ public class SearchPresenter extends BasePresenter<SearchView> implements VideoG
         getView().clearSearch();
 
         int options = mUploadDateOptions | mDurationOptions | mTypeOptions | mFeatureOptions | mSortingOptions;
+        // Search must not queue behind unrelated browse or enrichment requests.
         // Decode each section, including its card metadata, before delivering it to the UI.
-        mLoadAction = RxHelper.<PreparedSearchResult>create(emitter -> {
+        mLoadAction = SearchRequest.<PreparedSearchResult>results(emitter -> {
                     List<MediaGroup> mediaGroups = contentService.getSearch(searchText, options);
                     if (mediaGroups == null) {
                         RxHelper.onError(emitter, "Search returned no data");
@@ -268,9 +270,17 @@ public class SearchPresenter extends BasePresenter<SearchView> implements VideoG
 
         ContentService contentService = getContentService();
 
-        mScrollAction = RxHelper.fromCallable(() -> {
+        mScrollAction = SearchRequest.<PreparedSearchResult>results(emitter -> {
                     MediaGroup continuation = contentService.continueGroup(mediaGroup);
-                    return continuation != null ? new PreparedSearchResult(continuation) : null;
+                    if (emitter.isDisposed()) return;
+                    if (continuation == null) {
+                        RxHelper.onError(emitter, "Search continuation returned no data");
+                        return;
+                    }
+                    PreparedSearchResult result = new PreparedSearchResult(continuation);
+                    if (emitter.isDisposed()) return;
+                    emitter.onNext(result);
+                    emitter.onComplete();
                 })
                 .subscribe(
                         result -> {

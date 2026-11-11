@@ -1402,6 +1402,11 @@ public class MobilePlaybackFragment extends PlaybackFragment {
                     ((MobilePlaybackActivity) getActivity()).toggleFullscreen();
                     return true;
                 }
+                // A short or sideways drag is still not a tap, even without a MOVE event.
+                if (Math.abs(dy) > mDragThresholdPx || Math.abs(dx) > mDragThresholdPx) {
+                    cancelDismissTouch(event);
+                    return true;
+                }
                 return false;
             }
             case MotionEvent.ACTION_POINTER_DOWN:
@@ -1657,26 +1662,7 @@ public class MobilePlaybackFragment extends PlaybackFragment {
                     return false;
                 }
                 if (!mShortsSwipeDragging && Math.abs(dy) > mDragThresholdPx && Math.abs(dy) > Math.abs(dx)) {
-                    // Activity-level interception does not send CANCEL to the child
-                    // button/seek bar that received DOWN. End that interaction explicitly.
-                    MotionEvent cancel = MotionEvent.obtain(event);
-                    cancel.setAction(MotionEvent.ACTION_CANCEL);
-                    try {
-                        requireActivity().getWindow().superDispatchTouchEvent(cancel);
-                    } finally {
-                        cancel.recycle();
-                    }
-                    mShortsSwipeDragging = true;
-                    mChromeHandler.removeCallbacks(mPendingShortsTap);
-                    mLastShortsTapTime = 0;
-                    mChromeHandler.removeCallbacks(mHideShortsChr);
-                    setShortsChrome(false);
-                    // Abandon any in-flight transition from a previous swipe before starting fresh.
-                    mAwaitingShortsFrame = false;
-                    mChromeHandler.removeCallbacks(mShortsFramePoll);
-                    mChromeHandler.removeCallbacks(mShortsFrameTimeout);
-                    updateLoadingIndicator();
-                    prepareShortsPosters(); // load prev/next thumbnails for the filmstrip
+                    beginShortsSwipe(event);
                 }
                 if (mShortsSwipeDragging) {
                     setShortsPageTranslation(dy);
@@ -1691,13 +1677,17 @@ public class MobilePlaybackFragment extends PlaybackFragment {
                     if (mShortsTouchStartedOnControl) revealShortsChrome();
                     return false;
                 }
+                float dY = Math.abs(event.getY() - mSwipeRawStartY);
+                float dX = Math.abs(event.getX() - mSwipeRawStartX);
+                // Fast swipes may be delivered as DOWN/UP without an intermediate MOVE.
+                if (!mShortsSwipeDragging && dY > mDragThresholdPx && dY > dX) {
+                    beginShortsSwipe(event);
+                }
                 if (mShortsSwipeDragging) {
                     mShortsSwipeDragging = false;
                     onShortsSwipeReleased(event.getY() - mSwipeRawStartY);
                     return true;
                 }
-                float dY = Math.abs(event.getY() - mSwipeRawStartY);
-                float dX = Math.abs(event.getX() - mSwipeRawStartX);
                 long dur = event.getEventTime() - mTouchDownTime;
                 if (dY < mDragThresholdPx && dX < mDragThresholdPx && dur < 350) {
                     if (touchHitsButton(event.getRawX(), event.getRawY())) {
@@ -1722,6 +1712,28 @@ public class MobilePlaybackFragment extends PlaybackFragment {
                 return false;
         }
         return false;
+    }
+
+    private void beginShortsSwipe(MotionEvent event) {
+        // Activity-level interception must explicitly cancel the child that received DOWN.
+        MotionEvent cancel = MotionEvent.obtain(event);
+        cancel.setAction(MotionEvent.ACTION_CANCEL);
+        try {
+            requireActivity().getWindow().superDispatchTouchEvent(cancel);
+        } finally {
+            cancel.recycle();
+        }
+        mShortsSwipeDragging = true;
+        mChromeHandler.removeCallbacks(mPendingShortsTap);
+        mLastShortsTapTime = 0;
+        mChromeHandler.removeCallbacks(mHideShortsChr);
+        setShortsChrome(false);
+        // Abandon any in-flight transition from a previous swipe before starting fresh.
+        mAwaitingShortsFrame = false;
+        mChromeHandler.removeCallbacks(mShortsFramePoll);
+        mChromeHandler.removeCallbacks(mShortsFrameTimeout);
+        updateLoadingIndicator();
+        prepareShortsPosters();
     }
 
     private boolean touchHitsButton(float rawX, float rawY) {
@@ -2787,6 +2799,60 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         return config.screenWidthDp * 16 > config.screenHeightDp * 10;
     }
 
+    /** Activate text only after a single-finger tap that ends on the same link or plain text. */
+    private View.OnTouchListener textTapListener(TextView textView, int slop, boolean scrollable,
+                                                Runnable onPlainTap) {
+        return new View.OnTouchListener() {
+            private float mDownX;
+            private float mDownY;
+            private boolean mTapCandidate;
+            private ClickableSpan mDownSpan;
+
+            @Override
+            public boolean onTouch(View view, MotionEvent event) {
+                switch (event.getActionMasked()) {
+                    case MotionEvent.ACTION_DOWN:
+                        mDownX = event.getRawX();
+                        mDownY = event.getRawY();
+                        mTapCandidate = true;
+                        mDownSpan = TextLinks.spanAt(textView, event);
+                        break;
+                    case MotionEvent.ACTION_MOVE:
+                        if (Math.abs(event.getRawX() - mDownX) > slop
+                                || Math.abs(event.getRawY() - mDownY) > slop) {
+                            mTapCandidate = false;
+                        }
+                        break;
+                    case MotionEvent.ACTION_POINTER_DOWN:
+                    case MotionEvent.ACTION_CANCEL:
+                        mTapCandidate = false;
+                        mDownSpan = null;
+                        break;
+                    case MotionEvent.ACTION_UP:
+                        boolean tap = mTapCandidate
+                                && Math.abs(event.getRawX() - mDownX) <= slop
+                                && Math.abs(event.getRawY() - mDownY) <= slop
+                                && event.getEventTime() - event.getDownTime()
+                                    < android.view.ViewConfiguration.getLongPressTimeout();
+                        mTapCandidate = false;
+                        if (tap) {
+                            ClickableSpan upSpan = TextLinks.spanAt(textView, event);
+                            if (mDownSpan != null && mDownSpan == upSpan) {
+                                mDownSpan.onClick(textView);
+                            } else if (mDownSpan == null && upSpan == null) {
+                                onPlainTap.run();
+                            }
+                        }
+                        mDownSpan = null;
+                        break;
+                    default:
+                        break;
+                }
+                return !scrollable;
+            }
+        };
+    }
+
     /**
      * The panel views are siblings of this fragment in the activity layout and don't exist yet
      * while the fragment itself is being inflated — resolve them lazily.
@@ -2851,51 +2917,12 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         // scroll gesture (ScrollingMovementMethod doesn't consume the ACTION_UP), so the opened
         // description closed as soon as the user scrolled it. Only collapse on a real tap.
         final int touchSlop = android.view.ViewConfiguration.get(activity).getScaledTouchSlop();
-        final float[] downXY = new float[2];
-        final boolean[] moved = new boolean[1];
-        final ClickableSpan[] downSpan = new ClickableSpan[1];
-        mDescriptionView.setOnTouchListener((v, event) -> {
-            switch (event.getActionMasked()) {
-                case android.view.MotionEvent.ACTION_DOWN:
-                    downXY[0] = event.getX();
-                    downXY[1] = event.getY();
-                    moved[0] = false;
-                    downSpan[0] = TextLinks.spanAt(mDescriptionView, event);
-                    break;
-                case android.view.MotionEvent.ACTION_MOVE:
-                    if (Math.abs(event.getX() - downXY[0]) > touchSlop
-                            || Math.abs(event.getY() - downXY[1]) > touchSlop) {
-                        moved[0] = true;
-                    }
-                    break;
-                case android.view.MotionEvent.ACTION_UP:
-                    if (!moved[0]) {
-                        // A tap on a link opens it; a tap anywhere else collapses the box.
-                        if (downSpan[0] != null && downSpan[0] == TextLinks.spanAt(mDescriptionView, event)) {
-                            downSpan[0].onClick(mDescriptionView);
-                        } else {
-                            setDescriptionExpanded(false);
-                        }
-                    }
-                    break;
-                default:
-                    break;
-            }
-            return false; // let the text view keep scrolling
-        });
+        mDescriptionView.setOnTouchListener(textTapListener(mDescriptionView, touchSlop, true,
+                () -> setDescriptionExpanded(false)));
 
         if (mInfoView != null) {
-            mInfoView.setOnTouchListener((v, event) -> {
-                if (event.getActionMasked() == android.view.MotionEvent.ACTION_UP) {
-                    ClickableSpan span = TextLinks.spanAt(mInfoView, event);
-                    if (span != null) {
-                        span.onClick(mInfoView);
-                    } else {
-                        setDescriptionExpanded(mDescriptionView.getVisibility() != View.VISIBLE);
-                    }
-                }
-                return true;
-            });
+            mInfoView.setOnTouchListener(textTapListener(mInfoView, touchSlop, false,
+                    () -> setDescriptionExpanded(mDescriptionView.getVisibility() != View.VISIBLE)));
         }
         if (mBellBtn != null) {
             mBellBtn.setOnClickListener(v -> showBellDialog());

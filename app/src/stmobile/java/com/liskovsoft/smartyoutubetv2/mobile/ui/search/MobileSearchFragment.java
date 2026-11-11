@@ -86,6 +86,7 @@ public class MobileSearchFragment extends Fragment implements SearchView {
     private String mSubmittedQuery;
     private boolean mProgressShowing;
     private boolean mLoadingMore;
+    private boolean mSearchFailed;
     private boolean mSwipeRefreshing;
     private boolean mReplaceOnNextResult;
     private boolean mWantSuggestions;
@@ -292,6 +293,7 @@ public class MobileSearchFragment extends Fragment implements SearchView {
         mProgressShowing = show;
         mLoadingMore = false;
         if (show) {
+            mSearchFailed = false;
             hideEmptyMessage();
             dismissSearchError();
         }
@@ -306,6 +308,7 @@ public class MobileSearchFragment extends Fragment implements SearchView {
         mProgressShowing = show;
         mLoadingMore = show;
         if (show) {
+            mSearchFailed = false;
             dismissSearchError();
         }
         updateLoadingVisibility();
@@ -341,6 +344,7 @@ public class MobileSearchFragment extends Fragment implements SearchView {
 
     @Override
     public void showSearchError(boolean loadingMore) {
+        mSearchFailed = true;
         mReplaceOnNextResult = false;
         if (mGroups.isEmpty()) {
             showEmptyMessage(getString(R.string.videos_loading_error));
@@ -365,7 +369,7 @@ public class MobileSearchFragment extends Fragment implements SearchView {
 
     private void retrySubmittedSearch() {
         if (mSubmittedQuery != null) {
-            submitSearch(mSubmittedQuery);
+            submitSearch(mSubmittedQuery, true);
         }
     }
 
@@ -453,6 +457,10 @@ public class MobileSearchFragment extends Fragment implements SearchView {
     // ----- helpers -----
 
     private void submitSearch(String query) {
+        submitSearch(query, false);
+    }
+
+    private void submitSearch(String query, boolean force) {
         if (query == null || mSearchInput == null || mPresenter == null) {
             return;
         }
@@ -466,12 +474,15 @@ public class MobileSearchFragment extends Fragment implements SearchView {
         hideKeyboard();
         mSearchInput.clearFocus();
         mSearchSubmitted = true;
-        if (mProgressShowing && !mSwipeRefreshing && TextUtils.equals(query, mSubmittedQuery)) {
+        if (!force && !mSwipeRefreshing && TextUtils.equals(query, mSubmittedQuery)
+                && (mProgressShowing || (!mSearchFailed && !mGroups.isEmpty()))) {
             updateLoadingVisibility();
             return;
         }
         mSubmittedQuery = query;
-        mResultsList.scrollToPosition(0);
+        if (!mSwipeRefreshing) {
+            mResultsList.scrollToPosition(0);
+        }
         mPresenter.onSearch(query);
     }
 
@@ -640,7 +651,7 @@ public class MobileSearchFragment extends Fragment implements SearchView {
     private final RecyclerView.OnScrollListener mScrollListener = new RecyclerView.OnScrollListener() {
         @Override
         public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
-            if (dy <= 0 || mProgressShowing || mWantSuggestions || mResultsAdapter == null) {
+            if (dy <= 0 || mProgressShowing || mSearchFailed || mWantSuggestions || mResultsAdapter == null) {
                 return;
             }
             RecyclerView.LayoutManager lm = recyclerView.getLayoutManager();

@@ -10,6 +10,9 @@ import com.liskovsoft.sharedutils.rx.RxHelper;
 import com.liskovsoft.youtubeapi.service.YouTubeServiceManager;
 import io.reactivex.disposables.Disposable;
 
+import java.util.Collections;
+import java.util.List;
+
 public class MediaServiceSearchTagProvider implements SearchTagsProvider {
     private static final String TAG = MediaServiceSearchTagProvider.class.getSimpleName();
     private final ContentService mContentService;
@@ -31,9 +34,20 @@ public class MediaServiceSearchTagProvider implements SearchTagsProvider {
             return;
         }
 
-        mTagsAction = mContentService.getSearchTagsObserve(query)
+        // Keep autocomplete independent of the shared browse worker queue.
+        mTagsAction = SearchRequest.<List<Tag>>suggestions(emitter -> {
+                    List<String> suggestions = mContentService.getSearchTags(query);
+                    if (emitter.isDisposed()) return;
+                    if (suggestions == null) {
+                        RxHelper.onError(emitter, "Search suggestions returned no data");
+                        return;
+                    }
+                    List<Tag> tags = Tag.from(suggestions);
+                    emitter.onNext(tags != null ? tags : Collections.emptyList());
+                    emitter.onComplete();
+                })
                 .subscribe(
-                        tags -> callback.onResults(Tag.from(tags)),
+                        callback::onResults,
                         error -> {
                             Log.e(TAG, "Unable to load search suggestions: %s", error.getMessage());
                             callback.onResults(null);
