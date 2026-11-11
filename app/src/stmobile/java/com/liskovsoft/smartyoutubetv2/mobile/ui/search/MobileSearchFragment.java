@@ -34,6 +34,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.google.android.material.snackbar.Snackbar;
+import com.liskovsoft.mediaserviceinterfaces.data.MediaGroup;
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.Video;
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.VideoGroup;
 import com.liskovsoft.smartyoutubetv2.common.app.models.search.MediaServiceSearchTagProvider;
@@ -228,6 +229,7 @@ public class MobileSearchFragment extends Fragment implements SearchView {
         }
         if (group.getAction() == VideoGroup.ACTION_APPEND && appendSearchResults(group)) {
             hideEmptyMessage();
+            updateLoadingVisibility();
             return;
         }
         List<Video> previous = mGroups.get(group.getId());
@@ -239,6 +241,7 @@ public class MobileSearchFragment extends Fragment implements SearchView {
             mResultsAdapter.replaceVideos(offset, previous.size(), group.getVideos());
         }
         hideEmptyMessage();
+        updateLoadingVisibility();
     }
 
     @Override
@@ -258,6 +261,7 @@ public class MobileSearchFragment extends Fragment implements SearchView {
             mResultsAdapter.clear();
         }
         hideEmptyMessage();
+        updateLoadingVisibility();
     }
 
     @Override
@@ -309,7 +313,7 @@ public class MobileSearchFragment extends Fragment implements SearchView {
 
     private void updateLoadingVisibility() {
         if (mProgressBar != null) {
-            mProgressBar.setVisibility(mProgressShowing && !mLoadingMore && !mSwipeRefreshing
+            mProgressBar.setVisibility(mProgressShowing && mGroups.isEmpty() && !mLoadingMore && !mSwipeRefreshing
                     && !mWantSuggestions ? View.VISIBLE : View.GONE);
         }
         if (mLoadingMoreProgress != null) {
@@ -350,7 +354,7 @@ public class MobileSearchFragment extends Fragment implements SearchView {
         mErrorSnackbar = Snackbar.make(mResultsList, R.string.videos_loading_error, Snackbar.LENGTH_INDEFINITE)
                 .setAction(R.string.mobile_search_retry, v -> {
                     if (loadingMore) {
-                        Video last = mResultsAdapter.getLast();
+                        Video last = getLastPageableVideo();
                         if (last != null && mPresenter != null) mPresenter.onScrollEnd(last);
                     } else {
                         retrySubmittedSearch();
@@ -516,6 +520,20 @@ public class MobileSearchFragment extends Fragment implements SearchView {
         return offset;
     }
 
+    private Video getLastPageableVideo() {
+        Video candidate = null;
+        for (List<Video> videos : mGroups.values()) {
+            if (videos.isEmpty()) continue;
+            Video last = videos.get(videos.size() - 1);
+            VideoGroup group = last.getGroup();
+            MediaGroup mediaGroup = group != null ? group.getMediaGroup() : null;
+            if (mediaGroup != null && !TextUtils.isEmpty(mediaGroup.getNextPageKey())) {
+                candidate = last;
+            }
+        }
+        return candidate;
+    }
+
     private void loadSuggestions(String query) {
         if (query.equals(mSuggestionQuery)) {
             return;
@@ -632,7 +650,7 @@ public class MobileSearchFragment extends Fragment implements SearchView {
             GridLayoutManager grid = (GridLayoutManager) lm;
             int lastVisible = grid.findLastVisibleItemPosition();
             if (lastVisible >= mResultsAdapter.getItemCount() - grid.getSpanCount() * 3) {
-                Video last = mResultsAdapter.getLast();
+                Video last = getLastPageableVideo();
                 if (last != null && mPresenter != null) {
                     mPresenter.onScrollEnd(last);
                 }

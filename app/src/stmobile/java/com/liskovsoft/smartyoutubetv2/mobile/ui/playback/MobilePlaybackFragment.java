@@ -467,9 +467,14 @@ public class MobilePlaybackFragment extends PlaybackFragment {
     };
     private boolean mShortsSwipeDragging;
     private boolean mShortsTouchCanceled;
+    private boolean mShortsSheetTouchInside;
     private int     mDragThresholdPx; // initialised to 15dp in initShortsViews
     // Non-Shorts: the current gesture started on empty video while the controls were showing.
     private boolean mOverlayTapCandidate;
+    private boolean mTouchStartedInPlayer;
+    private boolean mTouchStartedWithOverlay;
+    private boolean mTouchStartedOnControl;
+    private final int[] mTouchLocation = new int[2];
 
     // While committing a swipe, the incoming poster stays on screen covering the (loading) surface
     // until the new video is actually rendering — eliminates the black flash. A timeout is the
@@ -512,9 +517,6 @@ public class MobilePlaybackFragment extends PlaybackFragment {
     private boolean mSwipeEnabled;
     // Pinch to zoom in the landscape player (#85): fit <-> fill via the player's resize mode.
     private PinchZoom mPinch;
-    // Set once a pinch changed the resize mode, so leaving the landscape player puts the saved one back.
-    // Set while SwipeGestures replays a held touch through the normal path, so it isn't re-captured.
-    private boolean mReplayingTouch;
     // Display-cutout bands that cover the ends of an edge (#47, see CutoutGuard).
     private androidx.core.graphics.Insets mCutoutBands = androidx.core.graphics.Insets.NONE;
     // Hides the Shorts chrome (action rail + back button + seek bar). Only ever scheduled when
@@ -609,6 +611,7 @@ public class MobilePlaybackFragment extends PlaybackFragment {
 
     @Override
     public void onPause() {
+        cancelPendingPlayerTouch();
         super.onPause();
         mChromeHandler.removeCallbacks(mHideShortsChr);
         mChromeHandler.removeCallbacks(mPendingShortsTap);
@@ -617,7 +620,6 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         mChromeHandler.removeCallbacks(mShortsLoopPoll);
         mChromeHandler.removeCallbacks(mShortsLoopTimeout);
         if (mModernChrome != null) mModernChrome.stop();
-        if (mSwipe != null) mSwipe.cancel();
         if (mSwipeToDismiss != null) mSwipeToDismiss.pause();
         resetPinchZoom();
         mAwaitingShortsFrame = false;
@@ -678,8 +680,8 @@ public class MobilePlaybackFragment extends PlaybackFragment {
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
+        cancelPendingPlayerTouch();
         if (mSwipeToDismiss != null) mSwipeToDismiss.cancel();
-        if (mSwipe != null) mSwipe.cancel();
         resetPinchZoom();
         super.onConfigurationChanged(newConfig);
         applyMobileLayout();
@@ -1250,7 +1252,7 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         View playerView = getView();
         if (playerView == null) return false;
 
-        if (mSwipeToDismiss != null && !mReplayingTouch && mSwipeToDismiss.isActive()
+        if (mSwipeToDismiss != null && mSwipeToDismiss.isActive()
                 && mSwipeToDismiss.handle(event, this::cancelDismissTouch)) {
             return true;
         }
@@ -1265,11 +1267,18 @@ public class MobilePlaybackFragment extends PlaybackFragment {
             return handleShortsTouchEvent(event);
         }
 
-        if (mLayoutState == 3 && !viewContainsRaw(playerView, event.getRawX(), event.getRawY())) {
+        if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
+            mTouchStartedInPlayer = viewContainsRaw(playerView, event.getRawX(), event.getRawY());
+            mTouchStartedWithOverlay = isOverlayShown();
+            mTouchStartedOnControl = mTouchStartedInPlayer && mTouchStartedWithOverlay
+                    && hitsPlayerControl(requireActivity().getWindow().getDecorView(),
+                            event.getRawX(), event.getRawY(), playerView.getWidth() * playerView.getHeight() / 2);
+        }
+        if (!mTouchStartedInPlayer) {
             return false;
         }
 
-        if (mSwipeToDismiss != null && !mReplayingTouch
+        if (mSwipeToDismiss != null
                 && event.getActionMasked() == MotionEvent.ACTION_DOWN && !isInPipMode()
                 // Leave a generous top band for Android's status/notification shade, even when hidden.
                 && event.getY() > Math.max(48 * getResources().getDisplayMetrics().density, mCutoutBands.top)
@@ -1278,8 +1287,7 @@ public class MobilePlaybackFragment extends PlaybackFragment {
                 // Landscape level swipes never turn into dismissal when controls appear
                 // or the finger starts near the middle or an edge.
                 && !usesLevelSwipes()
-                && (!isOverlayShown() || !hitsPlayerControl(requireActivity().getWindow().getDecorView(),
-                        event.getRawX(), event.getRawY(), playerView.getWidth() * playerView.getHeight() / 2))) {
+                && !mTouchStartedOnControl) {
             mSwipeToDismiss.start(event);
         }
 
@@ -1291,32 +1299,32 @@ public class MobilePlaybackFragment extends PlaybackFragment {
 
         // Pinch to zoom (#85): watches every touch in the landscape player; at the second finger the
         // pinch takes the gesture over and whatever the first finger started is cancelled.
-        if (mPinch != null && !mReplayingTouch) {
+        if (mPinch != null) {
             if (mPinch.isActive()) {
                 return mPinch.handle(event);
             }
-            if (pinchCanWatch() && mPinch.watch(event)) {
-                cancelForPinch(event);
+            if (pinchCanWatch() && !mTouchStartedOnControl && mPinch.watch(event)) {
+                cancelDismissTouch(event);
                 return true;
             }
         }
 
-        // Landscape swipe gestures (#48): a touch that may become a volume/brightness swipe is held
-        // back, then either swiped or replayed through the paths below.
-        if (mSwipe != null && !mReplayingTouch) {
+        // Watch landscape level swipes without delaying tap or double-tap detection.
+        if (mSwipe != null) {
             if (mSwipe.isActive()) {
-                return mSwipe.handle(event, this::replayTouch);
+                return mSwipe.handle(event, this::dispatchPlayerTouch);
             }
             if (event.getActionMasked() == MotionEvent.ACTION_DOWN && swipeCanStart(event, playerView)) {
-                return mSwipe.start(event, playerView);
+                return mSwipe.start(event, playerView, this::dispatchPlayerTouch);
             }
         }
 
-        // Non-Shorts, controls showing: a tap on empty video hides them (#39).
-        if (isOverlayShown()) return handleOverlayShownTouch(event, playerView);
+        return handlePlayerTouch(event, playerView);
+    }
 
-        // Non-Shorts: original phantom-tap guard.
-        if (event.getY() > playerView.getBottom()) return false;
+    private boolean handlePlayerTouch(MotionEvent event, View playerView) {
+        // Keep the original handler even if controls fade in or out during this gesture.
+        if (mTouchStartedWithOverlay) return handleOverlayShownTouch(event, playerView);
         // Tap to pause style (#46): a tap plays/pauses and a double tap seeks, via our own detector
         // (upstream's path shows the controls on touch-down, before a tap can be told apart).
         if (mStyle.tapTogglesPlayback() && mTapDetector != null) {
@@ -1336,12 +1344,22 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         cancel.setAction(MotionEvent.ACTION_CANCEL);
         try {
             if (mSwipe != null && mSwipe.isActive()) mSwipe.cancel();
-            replayTouch(cancel);
-            requireActivity().getWindow().superDispatchTouchEvent(cancel);
-            return true;
+            return dispatchPlayerTouch(cancel);
         } finally {
             cancel.recycle();
         }
+    }
+
+    private void cancelPendingPlayerTouch() {
+        long now = android.os.SystemClock.uptimeMillis();
+        MotionEvent cancel = MotionEvent.obtain(now, now, MotionEvent.ACTION_CANCEL, 0f, 0f, 0);
+        try {
+            cancelDismissTouch(cancel);
+        } finally {
+            cancel.recycle();
+        }
+        mTouchStartedInPlayer = false;
+        mStripDownInVideo = false;
     }
 
     /**
@@ -1356,8 +1374,7 @@ public class MobilePlaybackFragment extends PlaybackFragment {
                 mStripDownY = event.getY();
                 mStripDownInVideo = !isInPipMode()
                         && viewContainsRaw(playerView, event.getRawX(), event.getRawY())
-                        && (!isOverlayShown() || !hitsPlayerControl(requireActivity().getWindow().getDecorView(),
-                                event.getRawX(), event.getRawY(), playerView.getWidth() * playerView.getHeight() / 2));
+                        && !mTouchStartedOnControl;
                 return false;
             case MotionEvent.ACTION_UP: {
                 boolean candidate = mStripDownInVideo;
@@ -1387,20 +1404,21 @@ public class MobilePlaybackFragment extends PlaybackFragment {
      * Level swipes avoid visible controls and the edges used by Android's own gestures.
      */
     private boolean swipeCanStart(MotionEvent down, View playerView) {
-        if (!usesLevelSwipes() || (isOverlayShown()
-                && hitsPlayerControl(requireActivity().getWindow().getDecorView(), down.getRawX(), down.getRawY(),
-                        playerView.getWidth() * playerView.getHeight() / 2))) {
+        if (!usesLevelSwipes() || mTouchStartedOnControl) {
             return false;
         }
         float density = getResources().getDisplayMetrics().density;
         float edgeX = 32 * density;
         float edgeY = 48 * density;
-        boolean volumeSide = down.getX() >= playerView.getWidth() / 2f;
+        playerView.getLocationOnScreen(mTouchLocation);
+        float x = down.getRawX() - mTouchLocation[0];
+        float y = down.getRawY() - mTouchLocation[1];
+        boolean volumeSide = x >= playerView.getWidth() / 2f;
         if (!volumeSide && !MobilePlayerStylePrefs.isBrightnessSwipeEnabled(requireContext())) {
             return false; // "Volume only": the left half behaves as if swipes were off
         }
-        return down.getX() > edgeX && down.getX() < playerView.getWidth() - edgeX
-                && down.getY() > edgeY && down.getY() < playerView.getHeight() - edgeY;
+        return x > edgeX && x < playerView.getWidth() - edgeX
+                && y > edgeY && y < playerView.getHeight() - edgeY;
     }
 
     private boolean usesLevelSwipes() {
@@ -1414,24 +1432,6 @@ public class MobilePlaybackFragment extends PlaybackFragment {
                 && getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE;
     }
 
-    /**
-     * A pinch just began: a held swipe is dropped (its DOWN never reached anything else);
-     * otherwise the normal path and the view tree (controls showing: buttons, seek bar), which
-     * have seen the first finger, get a CANCEL so no tap, double-tap seek or button press comes
-     * out of it.
-     */
-    private void cancelForPinch(MotionEvent event) {
-        if (mSwipe != null && mSwipe.isActive()) {
-            mSwipe.cancel();
-            return;
-        }
-        MotionEvent cancel = MotionEvent.obtain(event);
-        cancel.setAction(MotionEvent.ACTION_CANCEL);
-        replayTouch(cancel);
-        requireActivity().getWindow().superDispatchTouchEvent(cancel);
-        cancel.recycle();
-    }
-
     /** PinchZoom's target: the video view (the aspect-ratio frame holding the surface). */
     private final PinchZoom.Target mPinchTarget = () -> getView() != null ? getView().findViewById(R.id.surface_root) : null;
 
@@ -1442,14 +1442,20 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         }
     }
 
-    /** SwipeGestures hands back a touch that wasn't a swipe: run it through the normal path. */
-    private boolean replayTouch(MotionEvent event) {
-        mReplayingTouch = true;
-        try {
-            return interceptPlayerTouch(event);
-        } finally {
-            mReplayingTouch = false;
+    /** Deliver routed events once, including the view tree when controls own the gesture. */
+    private boolean dispatchPlayerTouch(MotionEvent event) {
+        View playerView = getView();
+        if (playerView == null || getActivity() == null) return true;
+        if (event.getActionMasked() == MotionEvent.ACTION_CANCEL) {
+            mOverlayTapCandidate = false;
+            if (mTapDetector != null) mTapDetector.onTouchEvent(event);
+            super.onDispatchTouchEvent(event);
+            requireActivity().getWindow().superDispatchTouchEvent(event);
+        } else if (!handlePlayerTouch(event, playerView)) {
+            onDispatchTouchEvent(event);
+            requireActivity().getWindow().superDispatchTouchEvent(event);
         }
+        return true;
     }
 
     /**
@@ -1569,7 +1575,10 @@ public class MobilePlaybackFragment extends PlaybackFragment {
         // Profile sheet open: taps on the sheet reach its row / handle listeners; a tap anywhere
         // else dismisses it. The pager and play-toggle stay disabled while the sheet is up.
         if (mShortsProfileSheet != null && mShortsProfileSheet.getVisibility() == View.VISIBLE) {
-            if (viewContainsRaw(mShortsProfileSheet, event.getRawX(), event.getRawY())) {
+            if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
+                mShortsSheetTouchInside = viewContainsRaw(mShortsProfileSheet, event.getRawX(), event.getRawY());
+            }
+            if (mShortsSheetTouchInside) {
                 return false; // let the sheet handle it
             }
             if (event.getActionMasked() == MotionEvent.ACTION_UP) {
@@ -1580,7 +1589,10 @@ public class MobilePlaybackFragment extends PlaybackFragment {
 
         // Same treatment for the "Save to playlist" panel.
         if (mShortsPlaylistSheet != null && mShortsPlaylistSheet.getVisibility() == View.VISIBLE) {
-            if (viewContainsRaw(mShortsPlaylistSheet, event.getRawX(), event.getRawY())) {
+            if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
+                mShortsSheetTouchInside = viewContainsRaw(mShortsPlaylistSheet, event.getRawX(), event.getRawY());
+            }
+            if (mShortsSheetTouchInside) {
                 return false; // let the sheet handle it (including its internal scroll)
             }
             if (event.getActionMasked() == MotionEvent.ACTION_UP) {
@@ -1689,10 +1701,9 @@ public class MobilePlaybackFragment extends PlaybackFragment {
 
     private boolean viewContainsRaw(View v, float rawX, float rawY) {
         if (v == null || v.getVisibility() != View.VISIBLE) return false;
-        int[] loc = new int[2];
-        v.getLocationOnScreen(loc);
-        return rawX >= loc[0] && rawX <= loc[0] + v.getWidth()
-            && rawY >= loc[1] && rawY <= loc[1] + v.getHeight();
+        v.getLocationOnScreen(mTouchLocation);
+        return rawX >= mTouchLocation[0] && rawX <= mTouchLocation[0] + v.getWidth()
+                && rawY >= mTouchLocation[1] && rawY <= mTouchLocation[1] + v.getHeight();
     }
 
     /** Re-evaluate and apply strip vs full-screen layout. Safe to call at any time. */

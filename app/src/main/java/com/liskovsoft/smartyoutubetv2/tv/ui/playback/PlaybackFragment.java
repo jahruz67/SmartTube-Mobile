@@ -121,6 +121,7 @@ public class PlaybackFragment extends SeekModePlaybackFragment implements Playba
     private MediaSessionCompat mMediaSession;
     private MediaSessionConnector mMediaSessionConnector;
     private DoubleTapPlayerAdapter mDoubleTapPlayerAdapter;
+    private boolean mDoubleTapTouchActive;
     private YouTubeOverlay mYouTubeOverlay;
     private Boolean mIsControlsShownPreviously;
     private Video mPendingFocus;
@@ -262,7 +263,15 @@ public class PlaybackFragment extends SeekModePlaybackFragment implements Playba
     }
 
     public void onDispatchTouchEvent(MotionEvent event) {
-        if (mDoubleTapPlayerAdapter != null && !isOverlayShown()) {
+        int action = event.getActionMasked();
+        if (action == MotionEvent.ACTION_DOWN) {
+            mDoubleTapTouchActive = !isOverlayShown();
+        }
+        boolean handleDoubleTap = mDoubleTapTouchActive || action == MotionEvent.ACTION_CANCEL;
+        if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
+            mDoubleTapTouchActive = false;
+        }
+        if (mDoubleTapPlayerAdapter != null && handleDoubleTap) {
             boolean handled = mDoubleTapPlayerAdapter.onTouchEvent(event);
 
             if (handled)

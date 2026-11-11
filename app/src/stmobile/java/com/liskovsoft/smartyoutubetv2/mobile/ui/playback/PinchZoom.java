@@ -21,7 +21,7 @@ import java.util.Locale;
  * moved as a view transform, clamped so the picture never pulls away from a screen edge it covers;
  * a short label shows the zoom level.
  *
- * A pinch starts at the second finger. Everything the first finger already started (a held swipe,
+ * A pinch starts at the second finger. Everything the first finger already started (a swipe,
  * the tap-to-show path) is cancelled by the caller, and the rest of the gesture, up to the last
  * finger lifting, belongs to the pinch.
  */
@@ -158,6 +158,7 @@ final class PinchZoom {
     private void resetTransform(boolean showLabel) {
         mScale = 1f;
         View video = mVideo;
+        mVideo = null;
         if (video != null) {
             video.setScaleX(1f);
             video.setScaleY(1f);

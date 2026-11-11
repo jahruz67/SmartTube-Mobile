@@ -180,28 +180,32 @@ public class SearchPresenter extends BasePresenter<SearchView> implements VideoG
         getView().clearSearch();
 
         int options = mUploadDateOptions | mDurationOptions | mTypeOptions | mFeatureOptions | mSortingOptions;
-        // Resolve lazy media lists on the request worker. Apply local UI state on the main thread.
-        mLoadAction = RxHelper.fromCallable(() -> {
+        // Decode each section on the worker and deliver it without waiting for later sections.
+        mLoadAction = RxHelper.<MediaGroup>create(emitter -> {
                     List<MediaGroup> mediaGroups = contentService.getSearch(searchText, options);
-                    if (mediaGroups != null) {
-                        for (MediaGroup mediaGroup : mediaGroups) {
-                            if (mediaGroup != null) mediaGroup.getMediaItems();
+                    if (mediaGroups == null) {
+                        RxHelper.onError(emitter, "Search returned no data");
+                        return;
+                    }
+                    for (MediaGroup mediaGroup : mediaGroups) {
+                        if (emitter.isDisposed()) return;
+                        if (mediaGroup != null) {
+                            mediaGroup.getMediaItems();
+                            emitter.onNext(mediaGroup);
                         }
                     }
-                    return mediaGroups;
+                    emitter.onComplete();
                 })
                 .subscribe(
-                        mediaGroups -> {
+                        mediaGroup -> {
                             if (getView() == null) {
                                 return;
                             }
                             Log.d(TAG, "Receiving results for '%s'", searchText);
-                            for (MediaGroup mediaGroup : mediaGroups) {
-                                VideoGroup group = VideoGroup.from(mediaGroup);
-                                startPlayFirstVideo(group);
-                                getView().updateSearch(group);
-                                mBrowseProcessor.process(group);
-                            }
+                            VideoGroup group = VideoGroup.from(mediaGroup);
+                            startPlayFirstVideo(group);
+                            getView().updateSearch(group);
+                            mBrowseProcessor.process(group);
                         },
                         error -> {
                             Log.e(TAG, "loadSearchData error: %s", error.getMessage());
@@ -239,7 +243,11 @@ public class SearchPresenter extends BasePresenter<SearchView> implements VideoG
 
         ContentService contentService = getContentService();
 
-        mScrollAction = contentService.continueGroupObserve(mediaGroup)
+        mScrollAction = RxHelper.fromCallable(() -> {
+                    MediaGroup continuation = contentService.continueGroup(mediaGroup);
+                    if (continuation != null) continuation.getMediaItems();
+                    return continuation;
+                })
                 .subscribe(
                         continueMediaGroup -> {
                             if (getView() == null) {

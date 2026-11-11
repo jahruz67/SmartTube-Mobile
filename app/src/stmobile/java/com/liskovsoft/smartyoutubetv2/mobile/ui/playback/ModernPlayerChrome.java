@@ -125,6 +125,7 @@ final class ModernPlayerChrome {
     private boolean mLandscape;
     private List<Action> mMoreActions = new ArrayList<>();
     private boolean mUserSeeking;
+    private boolean mSheetTouchInside;
     private androidx.core.graphics.Insets mCutoutBands = androidx.core.graphics.Insets.NONE;
 
     /** Returns null if the chrome views aren't in the player layout. */
@@ -504,12 +505,14 @@ final class ModernPlayerChrome {
 
     /** Touch routing while the sheet is open: the card handles its own touches; a tap outside closes. */
     boolean handleSheetTouch(MotionEvent event) {
-        mSheetCard.getLocationOnScreen(mSheetCardLocation);
-        boolean inside = event.getRawX() >= mSheetCardLocation[0]
-                && event.getRawX() <= mSheetCardLocation[0] + mSheetCard.getWidth()
-                && event.getRawY() >= mSheetCardLocation[1]
-                && event.getRawY() <= mSheetCardLocation[1] + mSheetCard.getHeight();
-        if (inside) {
+        if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
+            mSheetCard.getLocationOnScreen(mSheetCardLocation);
+            mSheetTouchInside = event.getRawX() >= mSheetCardLocation[0]
+                    && event.getRawX() <= mSheetCardLocation[0] + mSheetCard.getWidth()
+                    && event.getRawY() >= mSheetCardLocation[1]
+                    && event.getRawY() <= mSheetCardLocation[1] + mSheetCard.getHeight();
+        }
+        if (mSheetTouchInside) {
             return false;
         }
         if (event.getActionMasked() == MotionEvent.ACTION_UP) {

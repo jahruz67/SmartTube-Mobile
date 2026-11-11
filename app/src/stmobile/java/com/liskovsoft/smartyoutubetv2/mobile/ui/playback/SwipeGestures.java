@@ -19,14 +19,12 @@ import com.liskovsoft.smartyoutubetv2.tv.R;
  * Swipe gestures in the landscape player (#48): a vertical swipe on the right half changes the
  * media volume, on the left half this window's brightness, with a small level indicator.
  *
- * The player shows its controls the moment a finger goes down (upstream's tickle), so a touch
- * that might become a swipe holds its DOWN back. If it turns into a vertical drag it's a swipe and
- * nothing else sees it; otherwise (a tap, a double tap, a sideways drag) the held DOWN and the
- * rest of the gesture are replayed through the normal touch path, with their original timestamps,
- * so tap-to-show, double-tap seek and Tap to pause behave exactly as before.
+ * The normal touch path sees events immediately so double-tap timers stay accurate. A clear
+ * vertical drag cancels that path before taking over volume or brightness. Other gestures
+ * continue normally, without replaying delayed events or sending a second DOWN.
  */
 final class SwipeGestures {
-    /** Re-dispatches an event through the player's normal (non-swipe) touch handling. */
+    /** Dispatches an event through the player's normal (non-swipe) touch handling. */
     interface Router {
         boolean route(MotionEvent event);
     }
@@ -53,6 +51,10 @@ final class SwipeGestures {
     private float mStartLevel;
     private float mStartY;
     private int mAreaHeight;
+    private int mMaxVolume;
+    private int mVolumeIndex;
+    private boolean mVolumeFixed;
+    private final int[] mAreaLocation = new int[2];
 
     /** Returns null if the indicator isn't in the player layout. */
     static SwipeGestures create(Activity activity) {
@@ -70,22 +72,23 @@ final class SwipeGestures {
         mHideIndicator = () -> mIndicator.setVisibility(View.GONE);
     }
 
-    /** Whether a touch sequence is being held back or swiped. */
+    /** Whether a touch sequence is being watched or swiped. */
     boolean isActive() {
         return mState != IDLE;
     }
 
-    /** A DOWN in the swipe area: hold it until the gesture shows what it is. */
-    boolean start(MotionEvent down, View area) {
+    /** Watch a DOWN in the swipe area while letting taps start on time. */
+    boolean start(MotionEvent down, View area, Router router) {
         reset();
         mDown = MotionEvent.obtain(down);
-        mVolume = down.getX() >= area.getWidth() / 2f;
+        area.getLocationOnScreen(mAreaLocation);
+        mVolume = down.getRawX() >= mAreaLocation[0] + area.getWidth() / 2f;
         mAreaHeight = Math.max(1, area.getHeight());
         mState = PENDING;
-        return true;
+        return router.route(down);
     }
 
-    /** The rest of a held or swiping gesture. */
+    /** The rest of a watched or swiping gesture. */
     boolean handle(MotionEvent event, Router router) {
         switch (event.getActionMasked()) {
             case MotionEvent.ACTION_MOVE: {
@@ -96,38 +99,68 @@ final class SwipeGestures {
                 float dx = Math.abs(event.getX() - mDown.getX());
                 float dy = Math.abs(event.getY() - mDown.getY());
                 if (dy > mSlop && dy > dx) {
-                    mState = SWIPING;
-                    mStartLevel = currentLevel();
-                    mStartY = event.getY();
-                    showIndicator(mStartLevel);
+                    beginSwipe(event, router);
                     return true;
                 }
                 if (dx > mSlop) {
-                    return replay(event, router); // a sideways drag: not ours
+                    return forward(event, router); // a sideways drag: not ours
                 }
-                return true;
+                return router.route(event);
             }
-            case MotionEvent.ACTION_UP:
+            case MotionEvent.ACTION_UP: {
+                if (mState == PENDING) {
+                    float dx = Math.abs(event.getX() - mDown.getX());
+                    float dy = Math.abs(event.getY() - mDown.getY());
+                    // A fast release can arrive without a MOVE. It must not become a tap.
+                    if (dy > mSlop && dy > dx) {
+                        beginSwipe(event, router);
+                    } else if (dx > mSlop) {
+                        reset();
+                        return cancelRoute(event, router);
+                    }
+                }
                 if (mState == SWIPING) {
+                    applyLevel(mStartLevel + (mStartY - event.getY()) / (mAreaHeight * FULL_RANGE_FRACTION));
                     reset();
                     mHandler.postDelayed(mHideIndicator, INDICATOR_HIDE_MS);
                     return true;
                 }
-                return replay(event, router); // a tap (or the second tap of a double tap)
+                return forward(event, router);
+            }
             case MotionEvent.ACTION_POINTER_DOWN:
                 if (mState == PENDING) {
-                    return replay(event, router); // multi-touch isn't a swipe
+                    return forward(event, router); // multi-touch isn't a swipe
                 }
                 return true;
             case MotionEvent.ACTION_CANCEL:
+                boolean pending = mState == PENDING;
                 cancel();
-                return true;
+                return !pending || router.route(event);
             default:
                 return true;
         }
     }
 
-    /** Drop a held or swiping gesture without replaying it (a pinch took over). */
+    private void beginSwipe(MotionEvent event, Router router) {
+        cancelRoute(event, router);
+        mState = SWIPING;
+        mStartLevel = currentLevel();
+        mStartY = mDown.getY();
+        mIndicatorIcon.setImageResource(mVolume ? R.drawable.ic_swipe_volume : R.drawable.ic_swipe_brightness);
+        applyLevel(mStartLevel + (mStartY - event.getY()) / (mAreaHeight * FULL_RANGE_FRACTION));
+    }
+
+    private boolean cancelRoute(MotionEvent event, Router router) {
+        MotionEvent cancel = MotionEvent.obtain(event);
+        cancel.setAction(MotionEvent.ACTION_CANCEL);
+        try {
+            return router.route(cancel);
+        } finally {
+            cancel.recycle();
+        }
+    }
+
+    /** Stop watching or swiping (the caller cancels the normal path when another gesture takes over). */
     void cancel() {
         boolean swiping = mState == SWIPING;
         reset();
@@ -142,13 +175,8 @@ final class SwipeGestures {
         mIndicator.setVisibility(View.GONE);
     }
 
-    /** Hand the held DOWN and this event to the normal touch path. */
-    private boolean replay(MotionEvent event, Router router) {
-        MotionEvent down = mDown;
-        mDown = null;
-        mState = IDLE;
-        router.route(down);
-        down.recycle();
+    private boolean forward(MotionEvent event, Router router) {
+        reset();
         return router.route(event);
     }
 
@@ -162,8 +190,10 @@ final class SwipeGestures {
 
     private float currentLevel() {
         if (mVolume) {
-            int max = mAudio != null ? mAudio.getStreamMaxVolume(AudioManager.STREAM_MUSIC) : 0;
-            return max > 0 ? (float) mAudio.getStreamVolume(AudioManager.STREAM_MUSIC) / max : 0f;
+            mVolumeFixed = mAudio == null || mAudio.isVolumeFixed();
+            mMaxVolume = mAudio != null ? mAudio.getStreamMaxVolume(AudioManager.STREAM_MUSIC) : 0;
+            mVolumeIndex = mAudio != null ? mAudio.getStreamVolume(AudioManager.STREAM_MUSIC) : 0;
+            return mMaxVolume > 0 ? (float) mVolumeIndex / mMaxVolume : 0f;
         }
         float window = mActivity.getWindow().getAttributes().screenBrightness;
         if (window >= 0) {
@@ -177,27 +207,31 @@ final class SwipeGestures {
     private void applyLevel(float level) {
         level = Math.max(0f, Math.min(1f, level));
         if (mVolume) {
-            if (mAudio != null && !mAudio.isVolumeFixed()) {
-                int max = mAudio.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
-                int index = Math.round(level * max);
-                if (index != mAudio.getStreamVolume(AudioManager.STREAM_MUSIC)) {
+            if (!mVolumeFixed && mAudio != null) {
+                int index = Math.round(level * mMaxVolume);
+                if (index != mVolumeIndex) {
                     mAudio.setStreamVolume(AudioManager.STREAM_MUSIC, index, 0); // our own indicator, no system UI
+                    mVolumeIndex = index;
                 }
-                level = max > 0 ? (float) index / max : level;
             }
+            level = mMaxVolume > 0 ? (float) mVolumeIndex / mMaxVolume : 0f;
         } else {
             WindowManager.LayoutParams attrs = mActivity.getWindow().getAttributes();
-            attrs.screenBrightness = Math.max(MIN_BRIGHTNESS, level);
-            mActivity.getWindow().setAttributes(attrs);
+            level = Math.max(MIN_BRIGHTNESS, level);
+            if (attrs.screenBrightness != level) {
+                attrs.screenBrightness = level;
+                mActivity.getWindow().setAttributes(attrs);
+            }
         }
         showIndicator(level);
     }
 
     private void showIndicator(float level) {
         mHandler.removeCallbacks(mHideIndicator);
-        mIndicatorIcon.setImageResource(mVolume ? R.drawable.ic_swipe_volume : R.drawable.ic_swipe_brightness);
         mIndicatorLevel.setProgress(Math.round(level * 100));
-        mIndicator.setVisibility(View.VISIBLE);
-        mIndicator.bringToFront();
+        if (mIndicator.getVisibility() != View.VISIBLE) {
+            mIndicator.setVisibility(View.VISIBLE);
+            mIndicator.bringToFront();
+        }
     }
 }
