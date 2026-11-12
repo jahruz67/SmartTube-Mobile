@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "declared_smarttube_version": "32.68",
-  "provenance_note": "32.68 is declared in app/build.gradle; exact original upstream commits have not been established from the inspected local history. Null values are unknown. reviewed_through_commit records review coverage, not identical code or runtime verification.",
+  "declared_smarttube_version": "32.74",
+  "provenance_note": "Exact inherited baselines were recovered from the original SmarterTube import: merge commit 73e6073c2ad070be6698170368fab865ad34e87d explicitly merged SmartTube 3d6aa1614241187f7c388d5f374e6f83b8579494 as 32.68; reports/BUILD_PROVENANCE.txt pins MediaServiceCore 05feeb7e7889ab0243e9d44cb06bc8a7d3f066b6 and SharedModules 799cfae8a2f5c609b99e87fc673fc62de1c0199a. The imported SmarterTube checkout is pinned at 3b780e9a8ac62ba59c90d090fa46d87210c45525. reviewed_through_commit records review coverage, not identical code or runtime verification.",
   "mobile_ancestor": "https://github.com/CodeSculptor/SmarterTube",
   "components": {
     "smarttube": {
       "repository": "https://github.com/yuliskov/SmartTube",
-      "source_baseline_commit": null,
-      "reviewed_through_commit": null,
+      "source_baseline_commit": "3d6aa1614241187f7c388d5f374e6f83b8579494",
+      "reviewed_through_commit": "ab04c75fa1ea19604cfb8a3dc6d5dfb719f0ec53",
       "path_map": {
         "smarttubetv": "app",
         "common": "common",
@@ -30,14 +30,14 @@
     },
     "mediaservicecore": {
       "repository": "https://github.com/yuliskov/MediaServiceCore",
-      "source_baseline_commit": null,
-      "reviewed_through_commit": null,
+      "source_baseline_commit": "05feeb7e7889ab0243e9d44cb06bc8a7d3f066b6",
+      "reviewed_through_commit": "b3d561f53cedca04d642b6e7f914f19b4536ce69",
       "path_map": { "": "third_party/MediaServiceCore" }
     },
     "sharedmodules": {
       "repository": "https://github.com/yuliskov/SharedModules",
-      "source_baseline_commit": null,
-      "reviewed_through_commit": null,
+      "source_baseline_commit": "799cfae8a2f5c609b99e87fc673fc62de1c0199a",
+      "reviewed_through_commit": "5b6b5d1d3ba670e3f89edef1d1394a7562251f2c",
       "path_map": { "": "third_party/SharedModules" }
     },
     "exoplayer": {

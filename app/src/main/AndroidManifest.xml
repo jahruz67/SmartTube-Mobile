@@ -60,6 +60,13 @@
         tools:replace="android:theme,android:allowBackup"
         tools:ignore="GoogleAppIndexingWarning,LockedOrientationActivity,UnusedAttribute,DiscouragedApi">
 
+        <!-- The translucent library theme can crash on Android 8 when requesting orientation. -->
+        <activity
+            android:name="com.jakewharton.processphoenix.PhoenixActivity"
+            android:theme="@android:style/Theme.Black.NoTitleBar"
+            tools:replace="android:theme"
+            tools:ignore="MissingClass" />
+
         <!-- Lazy WorkManager init. See MainApplication#getWorkManagerConfiguration -->
         <provider
             android:name="androidx.startup.InitializationProvider"

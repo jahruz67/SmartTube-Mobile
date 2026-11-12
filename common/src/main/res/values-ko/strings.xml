@@ -758,4 +758,6 @@
     <plurals name="seconds">
         <item quantity="other">%s 초</item>
     </plurals>
+  <string name="remote_control_dial">YouTube 전송 목록에 표시 (DIAL)</string>
+  <string name="live_edge">생방송에 뒤처지지 않기</string>
 </resources>

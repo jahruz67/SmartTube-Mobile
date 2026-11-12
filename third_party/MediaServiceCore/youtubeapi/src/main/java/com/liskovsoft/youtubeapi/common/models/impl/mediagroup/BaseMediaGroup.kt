@@ -18,17 +18,9 @@ internal abstract class BaseMediaGroup(private val options: MediaGroupOptions): 
     }
     // TODO: remove the filter when yt will able to mark shorts longer than one minute
     private val legacyFilter: ((ItemWrapper) -> Boolean) = { item ->
-        if (options.removeShorts &&
-                (options.groupType == MediaGroup.TYPE_HISTORY || options.groupType == MediaGroup.TYPE_HOME)) {
-            val title = item.getTitle()
-            title != null && YouTubeHelper.isShorts(
-                    title,
-                    ServiceHelper.timeTextToMillis(item.getLengthText() ?: item.getBadgeText()),
-                    item.getThumbnails()?.getOptimalResThumbnailUrl(),
-                    options.enableLegacyUI)
-        } else {
-            false
-        }
+        options.removeShorts
+                && (options.groupType == MediaGroup.TYPE_HISTORY || options.groupType == MediaGroup.TYPE_HOME)
+                && YouTubeHelper.isShorts(WrapperMediaItem(item), options.enableLegacyUI)
     }
     private var _titleItem: String? = null
         get() = field ?: titleItem

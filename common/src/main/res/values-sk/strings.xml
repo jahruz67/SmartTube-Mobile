@@ -764,4 +764,6 @@
         <item quantity="many">%s sekundy</item>
         <item quantity="other">%s sekúnd</item>
     </plurals>
+    <string name="remote_control_dial">Zobraziť v zozname zariadení na prenos YouTube (DIAL)</string>
+    <string name="live_edge">Nezaostávať za živým vysielaním</string>
 </resources>

@@ -755,9 +755,11 @@
   <plurals name="hours">
         <item quantity="one">%s ساعة</item>
         <item quantity="other">%s ساعة</item>
-  </plurals>
+    </plurals>
   <plurals name="seconds">
-      <item quantity="one">%s ثانية</item>
-      <item quantity="other">%s ثانية</item>
-  </plurals>
+        <item quantity="one">%s ثانية</item>
+        <item quantity="other">%s ثانية</item>
+    </plurals>
+  <string name="remote_control_dial">عرض في قائمة البث في يوتيوب (DIAL)</string>
+  <string name="live_edge">عدم التأخر عن البث المباشر</string>
 </resources>

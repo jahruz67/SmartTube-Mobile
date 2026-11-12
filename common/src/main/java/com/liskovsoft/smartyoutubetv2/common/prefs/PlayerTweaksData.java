@@ -110,7 +110,8 @@ public class PlayerTweaksData implements ProfileChangeListener {
     private boolean mIsDontResizeVideoToFitDialogEnabled;
     private boolean mIsSuggestionsHorizontallyScrolled;
     private boolean mIsQueueRespectsPlaybackMode;
-    private boolean mIsSabrLiveEnabled;
+    private boolean mIsLegacySabrLiveEnabled;
+    private boolean mIsLiveEdgeEnabled;
     private final Runnable mPersistDataInt = this::persistDataInt;
 
     private PlayerTweaksData(Context context) {
@@ -693,13 +694,23 @@ public class PlayerTweaksData implements ProfileChangeListener {
         persistData();
     }
 
-    public boolean isSabrLiveEnabled() {
-        return mIsSabrLiveEnabled;
+    public boolean isLiveEdgeEnabled() {
+        return mIsLiveEdgeEnabled;
     }
 
-    public void setSabrLiveEnabled(boolean enable) {
-        mIsSabrLiveEnabled = enable;
+    public void setLiveEdgeEnabled(boolean enable) {
+        mIsLiveEdgeEnabled = enable;
         persistData();
+    }
+
+    public void migrateLegacySabrLiveSetting(MediaServiceData mediaServiceData) {
+        if (!mIsLegacySabrLiveEnabled) {
+            return;
+        }
+
+        mediaServiceData.setSabrLiveEnabled(true);
+        mIsLegacySabrLiveEnabled = false;
+        persistNow();
     }
 
     private void restoreData() {
@@ -773,7 +784,8 @@ public class PlayerTweaksData implements ProfileChangeListener {
         mIsQuickSkipVideosAltEnabled = Helpers.parseBoolean(split, 58, false);
         mIsAudioTimeStretchingEnabled = Helpers.parseBoolean(split, 59, true);
         mIsQueueRespectsPlaybackMode = Helpers.parseBoolean(split, 60, false);
-        mIsSabrLiveEnabled = Helpers.parseBoolean(split, 61, false);
+        mIsLegacySabrLiveEnabled = Helpers.parseBoolean(split, 61, false);
+        mIsLiveEdgeEnabled = Helpers.parseBoolean(split, 62, false);
 
         updateDefaultValues();
     }
@@ -801,7 +813,9 @@ public class PlayerTweaksData implements ProfileChangeListener {
                 mIsUnsafeAudioFormatsEnabled, null, mIsLoopShortsEnabled, mIsQuickSkipShortsEnabled, mIsRememberPositionOfLiveVideosEnabled,
                 mIsOculusQuestFixEnabled, null, mIsExtraLongSpeedListEnabled, mIsQuickSkipVideosEnabled, mIsNetworkErrorFixingDisabled, mIsCommentsPlacedLeft,
                 null, mIsAudioFocusEnabled, mIsDontResizeVideoToFitDialogEnabled, mIsSuggestionsHorizontallyScrolled,
-                mIsQuickSkipShortsAltEnabled, mIsQuickSkipVideosAltEnabled, mIsAudioTimeStretchingEnabled, mIsQueueRespectsPlaybackMode, mIsSabrLiveEnabled
+                mIsQuickSkipShortsAltEnabled, mIsQuickSkipVideosAltEnabled, mIsAudioTimeStretchingEnabled, mIsQueueRespectsPlaybackMode,
+                mIsLegacySabrLiveEnabled,
+                mIsLiveEdgeEnabled
                 ));
     }
 

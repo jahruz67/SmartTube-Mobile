@@ -760,4 +760,6 @@
         <item quantity="one">%s saniyə</item>
         <item quantity="other">%s saniyə</item>
     </plurals>
+    <string name="remote_control_dial">YouTube yayım siyahısında göstər (DIAL)</string>
+    <string name="live_edge">Canlı yayımdan geri qalmamaq</string>
 </resources>

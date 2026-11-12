@@ -758,4 +758,6 @@
     <plurals name="seconds">
         <item quantity="other">%s giây</item>
     </plurals>
+  <string name="remote_control_dial">Hiển thị trong danh sách truyền của YouTube (DIAL)</string>
+  <string name="live_edge">Không bị chậm so với phát trực tiếp</string>
 </resources>

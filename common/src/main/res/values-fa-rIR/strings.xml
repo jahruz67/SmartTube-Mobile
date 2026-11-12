@@ -760,4 +760,6 @@
         <item quantity="one">%s ثانیه</item>
         <item quantity="other">%s ثانیه</item>
     </plurals>
+  <string name="remote_control_dial">نمایش در فهرست پخش یوتیوب (DIAL)</string>
+  <string name="live_edge">عقب نماندن از پخش زنده</string>
 </resources>

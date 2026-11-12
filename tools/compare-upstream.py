@@ -35,7 +35,7 @@ def commit(checkout: Path, ref: str) -> str:
 
 
 def changes(checkout: Path, base: str, target: str):
-    raw = git(checkout, 'diff', '--raw', '--no-abbrev', '--no-renames',
+    raw = git(checkout, 'diff', '--raw', '-z', '--no-abbrev', '--no-renames',
               '--no-ext-diff', '--no-textconv', base, target, '--')
     fields = raw.split(b'\0')
     for index in range(0, len(fields) - 1, 2):

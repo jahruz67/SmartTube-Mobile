@@ -760,4 +760,6 @@
         <item quantity="one">%s sekondë</item>
         <item quantity="other">%s sekonda</item>
     </plurals>
+  <string name="remote_control_dial">Shfaq në listën e transmetimit të YouTube (DIAL)</string>
+  <string name="live_edge">Mos mbetu pas transmetimit live</string>
 </resources>

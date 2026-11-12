@@ -760,4 +760,6 @@
         <item quantity="one">%s δευτερόλεπτο</item>
         <item quantity="other">%s δευτερόλεπτα</item>
     </plurals>
+  <string name="remote_control_dial">Εμφάνιση στη λίστα μετάδοσης του YouTube (DIAL)</string>
+  <string name="live_edge">Να μη μένει πίσω από τη ζωντανή μετάδοση</string>
 </resources>

@@ -758,4 +758,6 @@
     <plurals name="seconds">
         <item quantity="other">%s detik</item>
     </plurals>
+  <string name="remote_control_dial">Tampilkan di daftar transmisi YouTube (DIAL)</string>
+  <string name="live_edge">Jangan tertinggal dari siaran langsung</string>
 </resources>

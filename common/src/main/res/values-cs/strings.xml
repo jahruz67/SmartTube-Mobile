@@ -760,6 +760,8 @@
         <item quantity="one">%s sekunda</item>
         <item quantity="other">%s sekund</item>
     </plurals>
+    <string name="remote_control_dial">Zobrazit v seznamu zařízení pro přenos YouTube (DIAL)</string>
+    <string name="live_edge">Nezaostávat za živým vysíláním</string>
 </resources>
 
 

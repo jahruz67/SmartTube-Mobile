@@ -1029,7 +1029,7 @@ public class PlaybackFragment extends SeekModePlaybackFragment implements Playba
 
         long liveDurationMs = getVideo() != null ? getVideo().getLiveDurationMs() : 0;
 
-        if (durationMs > Video.MAX_LIVE_DURATION_MS && liveDurationMs != 0) {
+        if (durationMs > Video.MAX_LIVE_DURATION_MS && liveDurationMs > 0) {
             durationMs = liveDurationMs;
         }
 

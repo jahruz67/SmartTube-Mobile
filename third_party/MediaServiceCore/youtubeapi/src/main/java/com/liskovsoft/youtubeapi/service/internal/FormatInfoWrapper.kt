@@ -61,6 +61,11 @@ internal object FormatInfoWrapper {
     }
 
     @JvmStatic
+    fun allowRestrictedVideos(allow: Boolean) {
+        getVideoInfoService().allowRestrictedVideos(allow)
+    }
+
+    @JvmStatic
     fun invalidateCache() {
         mCachedFormatInfo = null
     }
@@ -131,6 +136,8 @@ internal object FormatInfoWrapper {
         }
 
         checkSigned()
+
+        AppService.instance().resetClientPlaybackNonce() // history/pot fix: unique value per each format info
 
         val videoInfo = getVideoInfoService().getVideoInfo(videoId, clickTrackingParams)
 

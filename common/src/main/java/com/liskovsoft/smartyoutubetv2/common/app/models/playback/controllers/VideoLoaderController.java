@@ -255,7 +255,9 @@ public class VideoLoaderController extends BasePlayerController {
         Utils.post(mShowProgressBar);
         disposeActions();
 
+        getPlayerTweaksData().migrateLegacySabrLiveSetting(getMediaServiceData());
         ServiceManager service = YouTubeServiceManager.instance();
+        service.allowRestrictedVideos(!getGeneralData().isChildModeEnabled());
         MediaItemService mediaItemManager = service.getMediaItemService();
         mFormatInfoAction = mediaItemManager.getFormatInfoObserve(video.videoId)
                 .subscribe(this::processFormatInfo,
@@ -520,7 +522,7 @@ public class VideoLoaderController extends BasePlayerController {
     }
 
     private boolean preferSabrLive(MediaItemFormatInfo formatInfo) {
-        return getPlayerTweaksData().isSabrLiveEnabled() && formatInfo.isLive() && formatInfo.containsSabrFormats();
+        return getMediaServiceData().isSabrLiveEnabled() && formatInfo.isLive() && formatInfo.containsSabrFormats();
     }
 
     private boolean acceptDashLive(MediaItemFormatInfo formatInfo) {

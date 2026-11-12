@@ -53,6 +53,7 @@ public class VideoInfoService extends VideoInfoServiceBase {
     @Nullable
     private AppClient mNextClient = null;
     private boolean mUseAuth;
+    private boolean mIsRestrictedVideosAllowed = true;
     private List<TranslationLanguage> mCachedTranslationLanguages;
     private long mCachedTranslationLanguagesFetchTimeMs;
     private boolean mIsUnplayable;
@@ -76,7 +77,7 @@ public class VideoInfoService extends VideoInfoServiceBase {
 
         AppService.instance().resetClientPlaybackNonce(); // history fix: unique value per each video info
 
-        mUseAuth = true;
+        mUseAuth = mIsRestrictedVideosAllowed;
 
         VideoInfo result = firstPlayable(videoId, clickTrackingParams);
 
@@ -147,6 +148,10 @@ public class VideoInfoService extends VideoInfoServiceBase {
 
     public void switchNextSubtitle() {
         CaptionTrack.sFormat = Helpers.getNextValue(CaptionTrack.CaptionFormat.values(), CaptionTrack.sFormat);
+    }
+
+    public void allowRestrictedVideos(boolean allow) {
+        mIsRestrictedVideosAllowed = allow;
     }
 
     public void resetClient() {

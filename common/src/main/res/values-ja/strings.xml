@@ -758,4 +758,6 @@
     <plurals name="seconds">
         <item quantity="other">%s 秒</item>
     </plurals>
+    <string name="remote_control_dial">YouTubeのキャストリストに表示 (DIAL)</string>
+    <string name="live_edge">ライブ配信に遅れない</string>
 </resources>

@@ -51,7 +51,7 @@ jobs:
           set -euo pipefail
           # Preserve the package ID. Every new run supersedes the previous run and legacy 23743 builds.
           echo "ORG_GRADLE_PROJECT_mobileVersionCode=$((100000 + GITHUB_RUN_NUMBER))" >> "$GITHUB_ENV"
-          echo "ORG_GRADLE_PROJECT_mobileVersionName=v1.0.${GITHUB_RUN_NUMBER}+st32.68" >> "$GITHUB_ENV"
+          echo "ORG_GRADLE_PROJECT_mobileVersionName=v1.0.${GITHUB_RUN_NUMBER}+st32.74" >> "$GITHUB_ENV"
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3

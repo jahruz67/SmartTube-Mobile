@@ -11,10 +11,9 @@ does not establish correctness. Runtime confidence still requires device checks.
 This fork already separates most phone UI into `app/src/stmobile/`, but also changes
 shared presenters and vendors its dependencies as ordinary files. Cleanup commit
 `3b27cdd` moved the old `SmarterTube/smarttubetv/` tree to `app/` and dependencies to
-`third_party/`. Upstream paths therefore need mapping before comparison. There is
-only an `origin` remote in the inspected checkout; no exact upstream source baseline
-has been established. `32.68` in `app/build.gradle` is declared version metadata,
-not proof that every upstream fix or dependency at that release is present.
+`third_party/`. Upstream paths therefore need mapping before comparison. The exact
+SmartTube source baseline is established below from the original import merge; the
+release decision log tracks what was ported into the phone fork.
 
 The local pre-cleanup fork is recoverable through branch `cleanup-baseline-20261103`
 at `7d8970b`. That is a fork checkpoint, not an original upstream commit ID.
@@ -121,21 +120,31 @@ a claim of runtime verification. Preserve each behavior or document its replacem
 | `app/build.gradle`, `.github/workflows/release.yml`, `app/src/stmobile/java/com/liskovsoft/smartyoutubetv2/mobile/update/` | Package `dev.smarttubemobile.unofficial`, signing identity, preference/data continuity, monotonic mobile versionCode, and this fork's updater endpoints/assets. Never offer a TV APK as a phone update. |
 
 Current release contracts are recorded in [VERSIONING.md](VERSIONING.md) and
-[UPDATER_COMPATIBILITY.md](UPDATER_COMPATIBILITY.md). The release workflow currently
-hardcodes `+st32.68` as well as the app's default version. Updating one string alone
+[UPDATER_COMPATIBILITY.md](UPDATER_COMPATIBILITY.md). The release workflow hardcodes
+the mobile `+st` metadata as well as the app's default version. Updating one string alone
 does not integrate an upstream release. Preserve the disabled phone update entry
 points until this fork's release discovery and compatibility are configured.
 
 ## Decision log
 
-No upstream release comparison has been completed by this workflow yet. No baseline,
-review cursor, or upstream version was advanced when introducing these files.
+The 32.74 Beta comparison and port is complete at the source pins in the state file.
+The log records path decisions and the limits of static-only verification.
 
 Append rows for each update; retain unresolved deferrals. Add full source commit IDs
 and a date/channel in the target cell. For fixes spanning components, name each pin.
 
 | Target / component | Upstream fix / changed paths | Decision | Local evidence / reason | Verification / follow-up |
 | --- | --- | --- | --- | --- |
+| SmartTube 32.68 baseline | Original SmarterTube import `3b780e9a8ac62ba59c90d090fa46d87210c45525`; merge `73e6073c2ad070be6698170368fab865ad34e87d` has SmartTube parent `3d6aa1614241187f7c388d5f374e6f83b8579494`; `reports/BUILD_PROVENANCE.txt` records matching dependency pins | established | Direct source ancestry and import provenance, not an inference from the version string. | Git history and import record inspected. |
+| SmartTube 32.74 Beta review (2026-11-12; `3d6aa1614241187f7c388d5f374e6f83b8579494` → `ab04c75fa1ea19604cfb8a3dc6d5dfb719f0ec53`), shared playback/data/controllers/settings/SABR | `Video`, `VideoGroup`, playback controllers, `ScreensaverManager`, `ExoPlayerController`, SABR policy/parser/errors, settings presenters/preferences, `SplashPresenter`, `IntentExtractor`, `Utils` | ported / adapted | Applied upstream behavior through focused merges. Preserved embed screen-saver guards, local continuation behavior, phone queue/browse/player behavior, SABR integration, and preference migration. `EmbedPlayerView.getDurationMs` now follows upstream controller duration. | Static diff and caller review only; no runtime verification. |
+| SmartTube 32.74 Beta, DIAL remote control | New `DialServer`; `RemoteControlService`, `RemoteControlData`, service lifecycle and settings | ported / adapted | Integrated server lifecycle and settings while retaining the fork's service and phone lifecycle. | Static inspection only; no device discovery verification. |
+| SmartTube 32.74 Beta, Android compatibility and translations | Phoenix activity Android 8 theme; Malay strings and selector; existing locale resources | ported / adapted | Added the theme and Malay translation. Reconciled upstream string keys with local translations, preserving local values where they differed. | XML and diff inspection only; no resource compilation or translation review. |
+| SmartTube 32.74 Beta, TV-specific paths and release assets | XGIMI model dialog workaround, `MaxControlsVideoPlayerGlue`, TV `PlaybackFragment`, Leanback checkbox margins, `images/Promotion.mp4`, upstream README housekeeping | not-applicable | These changes target TV-only device handling, controls/layout, promotion, or upstream documentation; they do not change maintained `stmobile` behavior. | Paths inspected and classified; TV flavor parity was outside this mobile sync. |
+| SmartTube 32.74 Beta, wrapper mode | `gradlew` mode 100644 → 100755 | not-applicable | Wrapper contents are unchanged; maintained Windows workflow uses `gradlew.bat`. | Git mode/content comparison only. |
+| MediaServiceCore 32.74 Beta review (2026-11-12; inherited pin `05feeb7e7889ab0243e9d44cb06bc8a7d3f066b6` → target `b3d561f53cedca04d642b6e7f914f19b4536ce69`) | All 25 changed paths across interfaces, generated browse/watch-next models, Innertube, Lounge, video info and service code | ported / adapted | Merged shared API changes and callers. Adapted Shorts filtering to `WrapperMediaItem`, retained `removeMixes`, carried restricted-video state through service/format wrappers, and preserved local multi-client/auth fallback. | Static diff and call-site inspection only; API behavior not runtime-tested. |
+| SharedModules 32.74 Beta review (2026-11-12; inherited pin `799cfae8a2f5c609b99e87fc673fc62de1c0199a` → target `5b6b5d1d3ba670e3f89edef1d1394a7562251f2c`) | `sharedutils/.../RxHelper.java` | already-equivalent | The local fixed-size executor queues overflow work and has no `CallerRunsPolicy`, so saturation cannot run work on the submitting (possibly main) thread. Kept the local thread bound. | Static inspection only; scheduling not runtime-tested. |
+| SmartTube 32.74 release metadata | Upstream code 2464/name 32.74; local default upstream base and release workflow metadata | adapted | Updated app defaults and mobile `+st32.74` metadata. Preserved mobile versionCode 23744, package ID, signing identity, product version, and updater behavior. | Static inspection only; no build or release run. |
+| SmartTube 32.74 Beta, all compared paths | 97 SmartTube paths, 25 MediaServiceCore paths, and 1 SharedModules path | accounted for | Every changed path is covered by port/adaptation, existing equivalence, phone-scope exclusion, or the wrapper-mode decision above. | Review cursors advanced to exact target pins. Static review only; runtime confidence requires device checks. |
 
 Useful task prompt:
 

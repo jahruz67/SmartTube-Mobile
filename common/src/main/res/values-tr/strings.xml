@@ -760,4 +760,6 @@
         <item quantity="one">%s saniye</item>
         <item quantity="other">%s saniye</item>
     </plurals>
+    <string name="remote_control_dial">YouTube yayın listesinde göster (DIAL)</string>
+    <string name="live_edge">Canlı yayından geri kalmama</string>
 </resources>

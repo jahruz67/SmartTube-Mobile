@@ -760,4 +760,6 @@
         <item quantity="one">%s seconde</item>
         <item quantity="other">%s secondes</item>
     </plurals>
+  <string name="remote_control_dial">Afficher dans la liste de diffusion YouTube (DIAL)</string>
+  <string name="live_edge">Ne pas prendre de retard sur le direct</string>
 </resources>
