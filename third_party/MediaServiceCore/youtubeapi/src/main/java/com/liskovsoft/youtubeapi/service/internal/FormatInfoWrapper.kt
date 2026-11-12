@@ -56,6 +56,16 @@ internal object FormatInfoWrapper {
     }
 
     @JvmStatic
+    fun switchNextSubtitle() {
+        getVideoInfoService().switchNextSubtitle()
+    }
+
+    @JvmStatic
+    fun getActualClient(): AppClient? {
+        return (mCachedFormatInfo?.clientInfo as? AppClient) ?: getVideoInfoService().getClient()
+    }
+
+    @JvmStatic
     fun resetClient() {
         getVideoInfoService().resetClient()
     }
