@@ -477,6 +477,7 @@
 <string name="player_button_long_click">అదనపు ఎంపికల కోసం ఈ బటన్‌ను ఎక్కువసేపు నొక్కండి</string>
 <string name="sorting_default">డిఫాల్ట్ (వేగవంతం, యానిమేటెడ్ ప్రివ్యూలు)</string>
 <string name="live_edge">లైవ్ స్ట్రీమ్ కంటే వెనుకబడకుండా ఉండండి</string>
+<string name="player_quick_skip_chapters">పైకి బటన్‌తో తదుపరి ఎపిసోడ్</string>
 <string name="amlogic_fix">Amlogic 1080p\@60fps పరిష్కారం</string>
 <string name="proxy_test_start">పరీక్ష #%d: %s …</string>
 <string name="remember_position_of_live_videos">లైవ్ స్ట్రీమ్ స్థానాన్ని గుర్తుంచుకోండి</string>

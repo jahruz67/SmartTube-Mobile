@@ -36,6 +36,7 @@ public class WebProxyDialog {
     private final Handler mProxyTestHandler;
     private final ArrayList<Call> mUrlTests;
     private int mNumTests;
+    private int mProxyTestGeneration;
 
     public WebProxyDialog(Context context) {
         mContext = context;
@@ -111,11 +112,7 @@ public class WebProxyDialog {
 
     @RequiresApi(19)
     protected void testProxyConnections() {
-        RxHelper.runAsync(this::testProxyConnectionsInt);
-    }
-
-    @RequiresApi(19)
-    private void testProxyConnectionsInt() {
+        int generation = ++mProxyTestGeneration;
         Proxy proxy;
         try {
             proxy = validateProxyConfigFields();
@@ -131,8 +128,20 @@ public class WebProxyDialog {
         mProxyManager.saveProxyInfoToPrefs(proxy, true);
         mProxyManager.configureSystemProxy();
 
+        AlertDialog dialog = mProxyConfigDialog;
+        RxHelper.runAsync(() -> {
+            OkHttpClient okHttpClient = OkHttpManager.instance().getClient();
+            mProxyTestHandler.post(() -> {
+                if (mProxyConfigDialog == dialog && dialog.isShowing() && generation == mProxyTestGeneration) {
+                    testProxyConnectionsInt(okHttpClient);
+                }
+            });
+        });
+    }
+
+    @RequiresApi(19)
+    private void testProxyConnectionsInt(OkHttpClient okHttpClient) {
         String[] testUrls = mContext.getString(R.string.proxy_test_urls).split("\n");
-        OkHttpClient okHttpClient = OkHttpManager.instance().getClient();
 
         for (String urlString: testUrls) {
             int serialNo = ++ mNumTests;
@@ -235,6 +244,7 @@ public class WebProxyDialog {
         });
 
         mProxyConfigDialog.setOnDismissListener(dialog -> {
+            mProxyTestGeneration++;
             Proxy proxy = null;
             try {
                 proxy = validateProxyConfigFields();

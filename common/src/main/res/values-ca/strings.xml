@@ -575,6 +575,7 @@
   <string name="amazon_frame_drop_fix">Correcció de pèrdua de fotogrames n.º 2</string>
   <string name="sorting_default">Per defecte (ràpid, previsualitzacions animades)</string>
   <string name="live_edge">No quedar-se enrere de l\'emissió en directe</string>
+  <string name="player_quick_skip_chapters">Episodi següent amb el botó Amunt</string>
   <string name="remember_position_of_live_videos">Recorda la posició de les emissions en directe</string>
   <string name="player_global_focus_desc">Aquesta funció afecta quin botó del reproductor rep el focus en navegar entre les files de botons del reproductor</string>
   <string name="disable_channels_service">Desactiva el servei Channels</string>

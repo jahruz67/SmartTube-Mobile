@@ -565,6 +565,7 @@
     <string name="amazon_frame_drop_fix">Ispravak ispuštanja sličica #2</string>
     <string name="sorting_default">Zadano (brzo, animirani pregledi)</string>
     <string name="live_edge">Ne zaostajati za prijenosom uživo</string>
+    <string name="player_quick_skip_chapters">Sljedeća epizoda tipkom Gore</string>
     <string name="remember_position_of_live_videos">Zapamti položaj streama uživo</string>
     <string name="player_global_focus_desc">Ova značajka utječe na to koja će tipka playera dobiti fokus pri kretanju između redaka tipki playera</string>
     <string name="disable_channels_service">Onemogući uslugu Channels</string>

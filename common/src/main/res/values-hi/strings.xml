@@ -619,6 +619,7 @@
   <string name="hide_shorts_from_search">खोज परिणामों से शॉर्ट्स छिपाएं</string>
   <string name="amazon_frame_drop_fix">फ़्रेम ड्रॉप सुधार #2</string>
   <string name="live_edge">लाइव स्ट्रीम से पीछे न रहें</string>
+  <string name="player_quick_skip_chapters">ऊपर बटन से अगला एपिसोड</string>
   <string name="remember_position_of_live_videos">लाइव स्ट्रीम की स्थिति याद रखें</string>
   <string name="player_global_focus_desc">यह सुविधा प्रभावित करती है कि प्लेयर बटन पंक्तियों के बीच नेविगेट करते समय किस प्लेयर बटन पर फ़ोकस जाएगा</string>
   <string name="disable_channels_service">चैनल सेवा अक्षम करें</string>

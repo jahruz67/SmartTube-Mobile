@@ -762,4 +762,5 @@
     </plurals>
   <string name="remote_control_dial">Tonen in YouTube cast-lijst (DIAL)</string>
   <string name="live_edge">Niet achterlopen op de livestream</string>
+  <string name="player_quick_skip_chapters">Volgende aflevering met de knop Omhoog</string>
 </resources>

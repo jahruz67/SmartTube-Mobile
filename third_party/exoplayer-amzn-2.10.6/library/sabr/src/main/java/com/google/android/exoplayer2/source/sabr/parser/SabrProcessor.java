@@ -453,7 +453,12 @@ public class SabrProcessor {
         }
 
         // NOTE: PoToken attestation may fail a few times before passing, so a failure isn't proof it won't succeed.
-        this.fatalError = status != Status.OK ? new SabrPoTokenError("PoToken error: " + resultStatus) : null;
+        if (status == Status.OK) {
+            fatalError = null;
+        } else if (fatalError == null) {
+            // Keep the first failure's timestamp so repeated failures cannot postpone recovery.
+            fatalError = new SabrPoTokenError("PoToken error: " + resultStatus);
+        }
 
         return result;
     }

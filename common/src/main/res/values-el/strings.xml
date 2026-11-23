@@ -762,4 +762,5 @@
     </plurals>
   <string name="remote_control_dial">Εμφάνιση στη λίστα μετάδοσης του YouTube (DIAL)</string>
   <string name="live_edge">Να μη μένει πίσω από τη ζωντανή μετάδοση</string>
+  <string name="player_quick_skip_chapters">Επόμενο επεισόδιο με το κουμπί Πάνω</string>
 </resources>

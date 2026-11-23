@@ -760,4 +760,5 @@
     </plurals>
     <string name="remote_control_dial">YouTubeのキャストリストに表示 (DIAL)</string>
     <string name="live_edge">ライブ配信に遅れない</string>
+    <string name="player_quick_skip_chapters">上ボタンで次のエピソード</string>
 </resources>

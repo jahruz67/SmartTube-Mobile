@@ -761,5 +761,7 @@
         <item quantity="other">%s Sekunden</item>
     </plurals>
     <string name="remote_control_dial">In der YouTube-Cast-Liste anzeigen (DIAL)</string>
-    <string name="live_edge">Nicht hinter dem Livestream zurückfallen</string>
+    <string name="live_edge">Nicht hinter dem Livestream zurückfallen</string>
+    <string name="player_quick_skip_chapters">Nächste Folge mit der Hoch-Taste</string>
+
 </resources>

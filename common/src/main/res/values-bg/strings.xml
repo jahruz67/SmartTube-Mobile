@@ -637,6 +637,7 @@
   <string name="more_info">Повече информация</string>
   <string name="hide_shorts_from_search">Скриване на Shorts от резултатите от търсенето</string>
   <string name="live_edge">Без изоставане от предаването на живо</string>
+  <string name="player_quick_skip_chapters">Следващ епизод с бутона Нагоре</string>
   <string name="remember_position_of_live_videos">Запомняне на позицията в предаване на живо</string>
   <string name="player_global_focus_desc">Тази функция определя кой бутон на плейъра получава фокус при придвижване между редовете с бутони</string>
   <string name="disable_channels_service">Изключване на услугата за канали</string>

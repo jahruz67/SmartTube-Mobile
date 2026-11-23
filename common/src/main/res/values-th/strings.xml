@@ -429,6 +429,7 @@
     <string name="player_button_long_click">กดปุ่มนี้ค้างไว้เพื่อดูตัวเลือกเพิ่มเติม</string>
     <string name="sorting_default">ค่าเริ่มต้น (เร็ว ตัวอย่างแบบเคลื่อนไหว)</string>
     <string name="live_edge">ไม่ตามหลังสตรีมสด</string>
+    <string name="player_quick_skip_chapters">ตอนถัดไปด้วยปุ่มขึ้น</string>
     <string name="remember_position_of_live_videos">จำตำแหน่งสตรีมสด</string>
     <string name="proxy_test_start">การทดสอบ #%d: %s …</string>
     <string name="alt_presets_behavior">พฤติกรรมค่าที่ตั้งไว้ล่วงหน้าทางเลือก (จำกัดแบนด์วิดท์)</string>

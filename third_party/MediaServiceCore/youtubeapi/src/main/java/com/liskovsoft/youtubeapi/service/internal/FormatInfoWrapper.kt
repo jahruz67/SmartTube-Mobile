@@ -204,7 +204,7 @@ internal object FormatInfoWrapper {
 
     @JvmStatic
     fun getActualClient(): AppClient {
-        return (mNextClient ?: CLIENT_LIST[0]).first
+        return (mCachedFormatInfo?.clientInfo as? AppClient) ?: (mActualClient ?: getClient()).first
     }
 
     private fun switchNextClientInt() {

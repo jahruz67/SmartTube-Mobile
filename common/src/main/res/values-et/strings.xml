@@ -656,6 +656,7 @@
   <string name="more_info">Lisateave</string>
   <string name="hide_shorts_from_search">Peida Shortsid otsingutulemustest</string>
   <string name="live_edge">Ära jää otseülekandest maha</string>
+  <string name="player_quick_skip_chapters">Järgmine episood nupuga Üles</string>
   <string name="remember_position_of_live_videos">Jäta otseülekande asukoht meelde</string>
   <string name="player_global_focus_desc">See funktsioon mõjutab, milline mängija nupp saab fookuse mängija nupuridade vahel liikumisel</string>
   <string name="disable_channels_service">Keela Channels-teenus</string>

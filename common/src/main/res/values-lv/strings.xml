@@ -426,6 +426,7 @@
     <string name="player_button_long_click">Ilgi nospiediet šo pogu, lai skatītu papildu opcijas</string>
     <string name="sorting_default">Noklusējums (ātri, animēti priekšskatījumi)</string>
     <string name="live_edge">Neatpalikt no tiešraides</string>
+    <string name="player_quick_skip_chapters">Nākamā epizode ar pogu Uz augšu</string>
     <string name="amlogic_fix">Amlogic 1080p\@60fps labojums</string>
     <string name="proxy_test_start">Pārbaude #%d: %s …</string>
     <string name="remember_position_of_live_videos">Atcerēties tiešraides pozīciju</string>

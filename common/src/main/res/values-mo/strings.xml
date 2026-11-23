@@ -428,7 +428,9 @@
     <string name="hide_settings_section">Ascundeți secțiunea Setări (periculos!)</string>
     <string name="player_button_long_click">Apăsați lung acest buton pentru opțiuni suplimentare</string>
     <string name="sorting_default">Implicit (previzualizări rapide, animate)</string>
-    <string name="live_edge">Nu rămâne în urma transmisiunii live</string>
+    <string name="live_edge">Nu rămâne în urma transmisiunii live</string>
+    <string name="player_quick_skip_chapters">Episodul următor cu butonul Sus</string>
+
     <string name="amlogic_fix">Amlogic 1080p\@60fps reparare</string>
     <string name="proxy_test_start">Test #%d: %s ...</string>
     <string name="remember_position_of_live_videos">Amintiți vă poziția fluxului în direct</string>

@@ -764,4 +764,5 @@
     </plurals>
   <string name="remote_control_dial">Afișează în lista de proiectare YouTube (DIAL)</string>
   <string name="live_edge">Nu rămâne în urma transmisiunii live</string>
+  <string name="player_quick_skip_chapters">Episodul următor cu butonul Sus</string>
 </resources>

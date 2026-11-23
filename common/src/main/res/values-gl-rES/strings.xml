@@ -762,4 +762,5 @@
     </plurals>
   <string name="remote_control_dial">Mostrar na lista de emisión de YouTube (DIAL)</string>
   <string name="live_edge">Non quedar atrás da emisión en directo</string>
+  <string name="player_quick_skip_chapters">Seguinte episodio co botón Arriba</string>
 </resources>

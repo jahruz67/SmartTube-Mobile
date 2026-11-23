@@ -409,6 +409,7 @@
   <string name="player_button_long_click">Dolgo pritisnite ta gumb za dodatne možnosti</string>
   <string name="sorting_default">Privzeto (hitro, animirani predogledi)</string>
   <string name="live_edge">Ne zaostajaj za pretokom v živo</string>
+  <string name="player_quick_skip_chapters">Naslednja epizoda z gumbom Gor</string>
   <string name="remember_position_of_live_videos">Zapomni si položaj pretoka v živo</string>
   <string name="proxy_test_start">Preizkus #%d: %s …</string>
   <string name="alt_presets_behavior">Vedenje alternativnih prednastavitev (omejitev pasovne širine)</string>

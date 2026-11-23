@@ -438,6 +438,7 @@
     <string name="player_button_long_click">Լրացուցիչ տարբերակների համար երկար սեղմեք այս կոճակը</string>
     <string name="sorting_default">Լռելյայն (արագ, անիմացիոն նախադիտումներ)</string>
     <string name="live_edge">Չհետ մնալ ուղիղ եթերից</string>
+    <string name="player_quick_skip_chapters">Հաջորդ դրվագը Վերև կոճակով</string>
     <string name="amlogic_fix">Amlogic 1080p\@60fps ուղղում</string>
     <string name="proxy_test_start">Ստուգում #%d. %s …</string>
     <string name="remember_position_of_live_videos">Հիշել ուղիղ եթերի դիրքը</string>

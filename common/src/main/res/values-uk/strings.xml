@@ -769,4 +769,5 @@
     </plurals>
     <string name="remote_control_dial">Показувати в списку трансляції YouTube (DIAL)</string>
     <string name="live_edge">Не відставати від прямого ефіру</string>
+    <string name="player_quick_skip_chapters">Наступний епізод за кнопкою Вгору</string>
 </resources>

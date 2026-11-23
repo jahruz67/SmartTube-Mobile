@@ -97,6 +97,26 @@ public class VideoInfoService extends VideoInfoServiceBase {
         return result;
     }
 
+    @Nullable
+    public VideoInfo getVideoInfo(AppClient client, String videoId, String clickTrackingParams) {
+        if (videoId == null) {
+            return null;
+        }
+
+        mUseAuth = mIsRestrictedVideosAllowed;
+
+        VideoInfo result = getVideoInfoWithRentFix(client, videoId, clickTrackingParams);
+        if (result == null) {
+            Log.e(TAG, "Can't get video info. videoId: %s", videoId);
+            return null;
+        }
+
+        applyFixesIfNeeded(result, videoId, clickTrackingParams);
+        transformFormats(result);
+
+        return result;
+    }
+
     public VideoInfo getAuthVideoInfo(String videoId, String clickTrackingParams) {
         if (videoId == null) {
             return null;
@@ -105,7 +125,7 @@ public class VideoInfoService extends VideoInfoServiceBase {
         mUseAuth = true;
 
         // Only the TV client supports auth features
-        return getVideoInfo(TV_CLIENT, videoId, clickTrackingParams);
+        return getVideoInfoReal(TV_CLIENT, videoId, clickTrackingParams);
     }
 
     private VideoInfo firstPlayable(String videoId, String clickTrackingParams) {
@@ -168,17 +188,17 @@ public class VideoInfoService extends VideoInfoServiceBase {
     }
 
     private VideoInfo getVideoInfoWithRentFix(AppClient client, String videoId, String clickTrackingParams) {
-        VideoInfo result = getVideoInfo(client, videoId, clickTrackingParams);
+        VideoInfo result = getVideoInfoReal(client, videoId, clickTrackingParams);
 
         if (result != null && result.isRent()) {
             Log.e(TAG, "Found rent content. Show trailer instead...");
-            result = getVideoInfo(client, result.getTrailerVideoId(), clickTrackingParams);
+            result = getVideoInfoReal(client, result.getTrailerVideoId(), clickTrackingParams);
         }
 
         return result;
     }
 
-    public VideoInfo getVideoInfo(AppClient client, String videoId, String clickTrackingParams) {
+    private VideoInfo getVideoInfoReal(AppClient client, String videoId, String clickTrackingParams) {
         VideoInfo result;
 
         if (client == AppClient.INITIAL) {
@@ -277,7 +297,7 @@ public class VideoInfoService extends VideoInfoServiceBase {
                 mUseAuth = false;
                 VideoInfo webInfo = null;
                 try {
-                    webInfo = getVideoInfo(AppClient.WEB_DUMMY, videoId, clickTrackingParams);
+                    webInfo = getVideoInfoReal(AppClient.WEB_DUMMY, videoId, clickTrackingParams);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

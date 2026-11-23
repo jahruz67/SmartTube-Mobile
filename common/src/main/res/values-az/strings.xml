@@ -762,4 +762,5 @@
     </plurals>
     <string name="remote_control_dial">YouTube yayım siyahısında göstər (DIAL)</string>
     <string name="live_edge">Canlı yayımdan geri qalmamaq</string>
+    <string name="player_quick_skip_chapters">Növbəti epizod Yuxarı düyməsi ilə</string>
 </resources>

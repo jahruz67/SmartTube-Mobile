@@ -762,4 +762,5 @@
     </plurals>
   <string name="remote_control_dial">Afficher dans la liste de diffusion YouTube (DIAL)</string>
   <string name="live_edge">Ne pas prendre de retard sur le direct</string>
+  <string name="player_quick_skip_chapters">Épisode suivant avec le bouton Haut</string>
 </resources>

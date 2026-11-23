@@ -3,6 +3,7 @@ package com.liskovsoft.smartyoutubetv2.common.exoplayer.controller;
 import android.content.Context;
 import android.os.Build;
 import android.os.Build.VERSION;
+import android.text.TextUtils;
 
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.ExoPlaybackException;
@@ -61,6 +62,7 @@ public class ExoPlayerController implements Player.EventListener, LiveStateProvi
     /** Sabr live stream is waiting for the live start position (see {@link #seekToSabrLiveStart()}) */
     private boolean mSabrLiveStartPending;
     private PlayerView mPlayerView;
+    private String mLastQualityInfo;
     private VolumeBooster mVolumeBooster;
     private boolean mIsEnded;
     private Runnable mOnVideoLoaded;
@@ -269,8 +271,12 @@ public class ExoPlayerController implements Player.EventListener, LiveStateProvi
     
     public void release() {
         mTrackSelectorManager.release();
-        mMediaSourceFactory.release();
-        releasePlayer();
+        try {
+            releasePlayer();
+        } finally {
+            // Stop loaders before shutting down the executor used by their Cronet callbacks.
+            mMediaSourceFactory.release();
+        }
         mPlayerView = null;
         // Don't destroy it (needed inside the bridge)!
         //mEventListener = null;
@@ -288,6 +294,7 @@ public class ExoPlayerController implements Player.EventListener, LiveStateProvi
     
     public void setPlayerView(PlayerView playerView) {
         mPlayerView = playerView;
+        mLastQualityInfo = null;
     }
     
     public void setTrackSelector(DefaultTrackSelector trackSelector) {
@@ -526,8 +533,9 @@ public class ExoPlayerController implements Player.EventListener, LiveStateProvi
     }
 
     private void setQualityInfo(String qualityInfoStr) {
-        if (mPlayerView != null && qualityInfoStr != null) {
+        if (mPlayerView != null && qualityInfoStr != null && !TextUtils.equals(mLastQualityInfo, qualityInfoStr)) {
             mPlayerView.setQualityInfo(qualityInfoStr);
+            mLastQualityInfo = qualityInfoStr;
         }
     }
 

@@ -761,5 +761,7 @@
         <item quantity="other">%s másodperc</item>
     </plurals>
   <string name="remote_control_dial">Megjelenítés a YouTube-casting listában (DIAL)</string>
-  <string name="live_edge">Ne maradjon le az élő közvetítéstől</string>
+  <string name="live_edge">Ne maradjon le az élő közvetítéstől</string>
+  <string name="player_quick_skip_chapters">Következő epizód a Fel gombbal</string>
+
 </resources>

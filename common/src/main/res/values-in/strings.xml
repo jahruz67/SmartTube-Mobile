@@ -760,4 +760,5 @@
     </plurals>
   <string name="remote_control_dial">Tampilkan di daftar transmisi YouTube (DIAL)</string>
   <string name="live_edge">Jangan tertinggal dari siaran langsung</string>
+  <string name="player_quick_skip_chapters">Episode berikutnya dengan tombol Atas</string>
 </resources>

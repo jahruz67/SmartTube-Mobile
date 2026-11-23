@@ -498,7 +498,9 @@
     <string name="amazon_frame_drop_fix">Kadrų praradimo pataisa Nr. 2</string>
     <string name="player_button_long_click">Ilgai spauskite šį mygtuką papildomoms parinktims</string>
     <string name="sorting_default">Numatytasis (greitas, animuotos peržiūros)</string>
-    <string name="live_edge">Neatsilikti nuo tiesioginės transliacijos</string>
+    <string name="live_edge">Neatsilikti nuo tiesioginės transliacijos</string>
+    <string name="player_quick_skip_chapters">Kitas epizodas su mygtuku Aukštyn</string>
+
     <string name="remember_position_of_live_videos">Atsiminti tiesioginės transliacijos poziciją</string>
     <string name="player_global_focus_desc">Ši funkcija veikia, kuris grotuvo mygtukas gaus fokusą naršant tarp grotuvo mygtukų eilučių</string>
     <string name="disable_channels_service">Išjungti Channels paslaugą</string>

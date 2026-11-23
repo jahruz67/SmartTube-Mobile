@@ -766,4 +766,5 @@
     </plurals>
     <string name="remote_control_dial">Zobraziť v zozname zariadení na prenos YouTube (DIAL)</string>
     <string name="live_edge">Nezaostávať za živým vysielaním</string>
+    <string name="player_quick_skip_chapters">Ďalšia epizóda tlačidlom Hore</string>
 </resources>

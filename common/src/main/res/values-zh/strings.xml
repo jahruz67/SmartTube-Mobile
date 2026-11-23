@@ -761,4 +761,5 @@
     </plurals>
   <string name="remote_control_dial">在 YouTube 投射列表中显示 (DIAL)</string>
   <string name="live_edge">不落后于直播</string>
+  <string name="player_quick_skip_chapters">按向上键播放下一集</string>
 </resources>
