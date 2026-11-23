@@ -3,8 +3,13 @@ package com.liskovsoft.smartyoutubetv2.mobile.ui.browse;
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.ActivityNotFoundException;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Build;
+import android.provider.Settings;
+import android.widget.Toast;
 
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -65,6 +70,10 @@ final class MobileSettingsRows {
                     context.getString(R.string.mobile_notifications_title),
                     () -> showNotificationsToggle(context),
                     R.drawable.settings_notifications));
+            items.add(new SettingsItem(
+                    context.getString(R.string.mobile_youtube_links_title),
+                    () -> showYouTubeLinkSettings(context),
+                    R.drawable.ic_modern_share));
             if (StatsReporter.isConfigured(context)) {
                 items.add(new SettingsItem(
                         context.getString(R.string.mobile_stats_title),
@@ -86,6 +95,33 @@ final class MobileSettingsRows {
             }
         }
         return items;
+    }
+
+    private static void showYouTubeLinkSettings(Activity context) {
+        new AlertDialog.Builder(context)
+                .setTitle(R.string.mobile_youtube_links_title)
+                .setMessage(R.string.mobile_youtube_links_message)
+                .setPositiveButton(R.string.mobile_youtube_links_open_settings,
+                        (dialog, which) -> openYouTubeLinkSettings(context))
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
+    }
+
+    private static void openYouTubeLinkSettings(Activity context) {
+        Uri packageUri = Uri.parse("package:" + context.getPackageName());
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            try {
+                context.startActivity(new Intent(Settings.ACTION_APP_OPEN_BY_DEFAULT_SETTINGS, packageUri));
+                return;
+            } catch (ActivityNotFoundException e) {
+                // Some devices only expose the app details screen.
+            }
+        }
+        try {
+            context.startActivity(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, packageUri));
+        } catch (ActivityNotFoundException e) {
+            Toast.makeText(context, R.string.mobile_youtube_links_unavailable, Toast.LENGTH_LONG).show();
+        }
     }
 
     private static void showThemePicker(Activity context) {

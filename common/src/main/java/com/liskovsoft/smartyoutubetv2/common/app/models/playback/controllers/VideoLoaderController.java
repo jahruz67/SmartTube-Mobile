@@ -174,6 +174,12 @@ public class VideoLoaderController extends BasePlayerController {
             return;
         }
 
+        // A finished PiP video should dismiss the window instead of advancing or looping.
+        if (getPlayer().isInPIPMode()) {
+            getPlayer().finishReally();
+            return;
+        }
+
         // Stop the playback if the user is browsing options or reading comments
         int playbackMode = getPlaybackMode();
         if (getAppDialogPresenter().isDialogShown() && !getAppDialogPresenter().isOverlay() && playbackMode != PlayerConstants.PLAYBACK_MODE_ONE) {

@@ -150,8 +150,11 @@ public class MobilePlaybackActivity extends PlaybackActivity {
 
     @Override
     public void finishReally() {
-        if (MobileMiniPlayer.isMinimizedPlayback(this)) {
+        if (MobileMiniPlayer.isMinimizedPlayback(this) || isInPipMode()) {
             mFinishingMiniPlayer = true;
+        }
+        if (isInPipMode() && mMobileFragment != null) {
+            mMobileFragment.blockEngine(false);
         }
         MobileMiniPlayer.onPlaybackFinished(this);
         super.finishReally();
@@ -283,7 +286,7 @@ public class MobilePlaybackActivity extends PlaybackActivity {
             getViewManager().blockTop(this);
         }
 
-        if (!isInPictureInPictureMode
+        if (!isInPictureInPictureMode && !isFinishing()
                 && !getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED)) {
             if (mMobileFragment != null) {
                 mMobileFragment.blockEngine(false);

@@ -2,6 +2,7 @@ package com.liskovsoft.smartyoutubetv2.common.utils;
 
 import android.content.Intent;
 import android.net.Uri;
+import android.util.Patterns;
 
 import com.liskovsoft.sharedutils.helpers.GlobalConstants;
 import com.liskovsoft.sharedutils.helpers.Helpers;
@@ -37,6 +38,7 @@ public class IntentExtractor {
     private static final String RECOMMENDED_URL = "https://www.youtube.com/tv#/zylon-surface?c=default"; // last 'resume' param isn't parsed by intent and should be removed
     private static final String PLAYLIST_KEY = "list";
     private static final String VND_SCHEME = "vnd.youtube"; // vnd.youtube://8kKDjRmHp0g
+    private static final Pattern videoIdPattern = Pattern.compile("[A-Za-z0-9_-]{11}");
     private static final Pattern timePattern = Pattern.compile("(\\d+)([A-Za-z]{0,2})");
     private static final Pattern voiceQueryPattern = Pattern.compile(":\\{\"query\":\"([^\"]*)\"");
 
@@ -61,9 +63,10 @@ public class IntentExtractor {
 
             if (idList != null) {
                 // temp solution: use one video from the list
-                videoId = idList.split(",")[0];
+                videoId = idList.split(",", 2)[0];
             } else if (VND_SCHEME.equals(uri.getScheme())) {
-                videoId = uri.getHost();
+                // Browsers can send either vnd.youtube://VIDEO_ID or vnd.youtube:VIDEO_ID.
+                videoId = uri.isOpaque() ? uri.getSchemeSpecificPart().split("\\?", 2)[0] : uri.getHost();
             } else {
                 // Suppose that link type is https://youtu.be/lBeMDqcWTG8
                 videoId = uri.getLastPathSegment();
@@ -171,7 +174,7 @@ public class IntentExtractor {
     }
 
     private static boolean isValid(String videoId) {
-        return videoId != null && videoId.length() == 11;
+        return videoId != null && videoIdPattern.matcher(videoId).matches();
     }
 
     public static boolean hasData(Intent intent) {
@@ -287,9 +290,32 @@ public class IntentExtractor {
             return null;
         }
 
-        return intent.getData() != null ? intent.getData() :
-                intent.getStringExtra(Intent.EXTRA_TEXT) != null ?
-                        Uri.parse(intent.getStringExtra(Intent.EXTRA_TEXT)) : null;
+        if (intent.getData() != null) {
+            return intent.getData();
+        }
+
+        CharSequence sharedText = intent.getCharSequenceExtra(Intent.EXTRA_TEXT);
+        if (sharedText == null) {
+            return null;
+        }
+
+        String text = sharedText.toString().trim();
+        // Share sheets may include a video title or message before the actual URL.
+        Matcher matcher = Patterns.WEB_URL.matcher(text);
+        while (matcher.find()) {
+            String url = matcher.group();
+            Uri uri = Uri.parse(url);
+            if (uri.getScheme() == null) {
+                uri = Uri.parse("https://" + url);
+            }
+            String host = uri.getHost();
+            if ("youtube.com".equalsIgnoreCase(host) || "www.youtube.com".equalsIgnoreCase(host)
+                    || "m.youtube.com".equalsIgnoreCase(host) || "music.youtube.com".equalsIgnoreCase(host)
+                    || "youtu.be".equalsIgnoreCase(host)) {
+                return uri;
+            }
+        }
+        return Uri.parse(text);
     }
 
     private static long parseTimeStr(String time) {

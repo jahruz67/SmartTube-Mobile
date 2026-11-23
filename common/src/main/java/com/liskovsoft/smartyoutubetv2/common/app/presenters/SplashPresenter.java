@@ -245,7 +245,7 @@ public class SplashPresenter extends BasePresenter<SplashView> {
         mIntentChain.add(intent -> {
             String playlistId = IntentExtractor.extractPlaylistId(intent);
 
-            if (playlistId != null) {
+            if (playlistId != null && IntentExtractor.extractVideoId(intent) == null) {
                 Video video = new Video();
                 video.playlistId = playlistId;
                 ChannelUploadsPresenter.instance(getContext()).openChannel(video);
@@ -255,7 +255,7 @@ public class SplashPresenter extends BasePresenter<SplashView> {
             return false;
         });
 
-        // Should come after playlist
+        // Video links with a playlist parameter still open the selected video.
         mIntentChain.add(intent -> {
             String videoId = IntentExtractor.extractVideoId(intent);
 

@@ -54,6 +54,11 @@
     <string name="mobile_theme_option_light">Light</string>
     <string name="mobile_theme_option_dark">Dark</string>
 
+    <string name="mobile_youtube_links_title">Open YouTube links</string>
+    <string name="mobile_youtube_links_message">On the next screen, enable “Open supported links” and select the YouTube web addresses. On older Android versions, look under “Open by default”. You can also share a video from YouTube or your browser to SmartTube Mobile.</string>
+    <string name="mobile_youtube_links_open_settings">Open settings</string>
+    <string name="mobile_youtube_links_unavailable">Open Android Settings → Apps → SmartTube Mobile → Open by default to enable YouTube links.</string>
+
     <!-- Player style (#46) -->
     <string name="mobile_player_style_title">Player style</string>
     <string name="mobile_player_style_classic">Classic controls</string>
