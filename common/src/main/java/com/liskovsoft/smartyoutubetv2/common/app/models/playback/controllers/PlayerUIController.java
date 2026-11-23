@@ -816,20 +816,6 @@ public class PlayerUIController extends BasePlayerController {
             return false;
         }
 
-        private boolean handleUpSkip(int keyCode) {
-            if (getPlayer() == null || getPlayer().isOverlayShown() || getVideo() == null
-                    || getVideo().belongsToShortsGroup() || !getPlayerTweaksData().isQuickSkipChaptersEnabled()) {
-                return false;
-            }
-
-            if (keyCode == KeyEvent.KEYCODE_DPAD_UP) {
-                getController(SuggestionsController.class).onNextChapter();
-                return true;
-            }
-
-            return false;
-        }
-
         if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
             getMainController().onNextClicked();
             return true; // hide ui
@@ -838,6 +824,20 @@ public class PlayerUIController extends BasePlayerController {
         if (keyCode == KeyEvent.KEYCODE_DPAD_UP) {
             getMainController().onPreviousClicked();
             return true; // hide ui
+        }
+
+        return false;
+    }
+
+    private boolean handleUpSkip(int keyCode) {
+        if (getPlayer() == null || getPlayer().isOverlayShown() || getVideo() == null
+                || getVideo().belongsToShortsGroup() || !getPlayerTweaksData().isQuickSkipChaptersEnabled()) {
+            return false;
+        }
+
+        if (keyCode == KeyEvent.KEYCODE_DPAD_UP) {
+            getController(SuggestionsController.class).onNextChapter();
+            return true;
         }
 
         return false;
