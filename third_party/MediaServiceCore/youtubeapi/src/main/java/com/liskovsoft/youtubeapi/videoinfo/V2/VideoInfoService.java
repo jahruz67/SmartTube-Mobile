@@ -178,7 +178,7 @@ public class VideoInfoService extends VideoInfoServiceBase {
         return result;
     }
 
-    private VideoInfo getVideoInfo(AppClient client, String videoId, String clickTrackingParams) {
+    public VideoInfo getVideoInfo(AppClient client, String videoId, String clickTrackingParams) {
         VideoInfo result;
 
         if (client == AppClient.INITIAL) {
