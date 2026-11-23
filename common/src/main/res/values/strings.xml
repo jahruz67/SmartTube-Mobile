@@ -762,4 +762,5 @@
     </plurals>
     <string name="remote_control_dial">Show in YouTube cast list (DIAL)</string>
     <string name="live_edge">Keep up with live</string>
+    <string name="player_quick_skip_chapters">Skip to next chapter with up button</string>
 </resources>

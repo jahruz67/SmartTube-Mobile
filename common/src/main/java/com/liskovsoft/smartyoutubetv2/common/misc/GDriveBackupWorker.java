@@ -48,20 +48,23 @@ public class GDriveBackupWorker extends Worker {
     }
 
     public static void schedule(Context context) {
-        if (VERSION.SDK_INT >= 23 && GeneralData.instance(context).getGDriveBackupFreqDays() > 0) {
-            SafeWorkManager workManager = SafeWorkManager.getInstance(context);
-
-            // https://stackoverflow.com/questions/50943056/avoiding-duplicating-periodicworkrequest-from-workmanager
-            workManager.enqueueUniquePeriodicWork(
-                    WORK_NAME,
-                    ExistingPeriodicWorkPolicy.UPDATE, // fix duplicates (when old worker is running)
-                    new PeriodicWorkRequest.Builder(
-                            GDriveBackupWorker.class,
-                            GeneralData.instance(context).getGDriveBackupFreqDays(),
-                            TimeUnit.DAYS).addTag(WORK_NAME)
-                            .build()
-            );
+        if (GeneralData.instance(context).getGDriveBackupFreqDays() > 0) {
+            scheduleReal(context);
+        } else {
+            cancel(context);
         }
+    }
+
+    private static void scheduleReal(Context context) {
+        if (VERSION.SDK_INT < 23) return;
+        SafeWorkManager workManager = SafeWorkManager.getInstance(context);
+        workManager.enqueueUniquePeriodicWork(
+                WORK_NAME,
+                ExistingPeriodicWorkPolicy.UPDATE,
+                new PeriodicWorkRequest.Builder(
+                        GDriveBackupWorker.class,
+                        GeneralData.instance(context).getGDriveBackupFreqDays(),
+                        TimeUnit.DAYS).addTag(WORK_NAME).build());
     }
 
     public static void forceSchedule(Context context) {
@@ -83,14 +86,14 @@ public class GDriveBackupWorker extends Worker {
                     // NOP
                 }, () -> {
                     // then run schedule
-                    schedule(context);
+                    scheduleReal(context);
                 });
     }
 
     public static void cancel(Context context) {
         RxHelper.disposeActions(sAction);
 
-        if (VERSION.SDK_INT >= 23 && GeneralData.instance(context).getGDriveBackupFreqDays() > 0) {
+        if (VERSION.SDK_INT >= 23) {
             Log.d(TAG, "Unregistering worker job...");
 
             SafeWorkManager workManager = SafeWorkManager.getInstance(context);

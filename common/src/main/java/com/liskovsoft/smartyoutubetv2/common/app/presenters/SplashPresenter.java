@@ -116,7 +116,7 @@ public class SplashPresenter extends BasePresenter<SplashView> {
     }
 
     private void runBackgroundTasks() {
-        YouTubeServiceManager.instance().refreshCacheIfNeeded(); // warm up player engine
+        YouTubeServiceManager.instance().warmUpCacheIfNeeded();
         enableHistoryIfNeeded();
         Utils.updateChannels(getContext());
         GDriveBackupWorker.schedule(getContext());
@@ -150,7 +150,7 @@ public class SplashPresenter extends BasePresenter<SplashView> {
 
     private void initStreamReminderService() {
         if (getContext() != null) {
-            StreamReminderService.startIfNeeded(getContext());
+            StreamReminderService.instance(getContext()).startStop();
         }
     }
 

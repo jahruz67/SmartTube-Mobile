@@ -1,7 +1,6 @@
 package com.liskovsoft.smartyoutubetv2.common.exoplayer.controller;
 
 import android.content.Context;
-import android.text.TextUtils;
 import android.os.Build;
 import android.os.Build.VERSION;
 
@@ -62,7 +61,6 @@ public class ExoPlayerController implements Player.EventListener, LiveStateProvi
     /** Sabr live stream is waiting for the live start position (see {@link #seekToSabrLiveStart()}) */
     private boolean mSabrLiveStartPending;
     private PlayerView mPlayerView;
-    private String mLastQualityInfo;
     private VolumeBooster mVolumeBooster;
     private boolean mIsEnded;
     private Runnable mOnVideoLoaded;
@@ -160,7 +158,7 @@ public class ExoPlayerController implements Player.EventListener, LiveStateProvi
             return liveEdgeMs;
         }
         // NOTE: liveEdgeMs could be -1 during initial video loading. Use fallback duration.
-        return liveEdgeMs != -1 ? liveEdgeMs : getVideo().getLiveDurationMs();
+        return liveEdgeMs != -1 ? liveEdgeMs : getVideo() != null ? getVideo().getLiveDurationMs() : -1;
     }
 
     @Override
@@ -271,12 +269,8 @@ public class ExoPlayerController implements Player.EventListener, LiveStateProvi
     
     public void release() {
         mTrackSelectorManager.release();
-        try {
-            releasePlayer();
-        } finally {
-            // Stop loaders before shutting down the executor used by their Cronet callbacks.
-            mMediaSourceFactory.release();
-        }
+        mMediaSourceFactory.release();
+        releasePlayer();
         mPlayerView = null;
         // Don't destroy it (needed inside the bridge)!
         //mEventListener = null;
@@ -294,7 +288,6 @@ public class ExoPlayerController implements Player.EventListener, LiveStateProvi
     
     public void setPlayerView(PlayerView playerView) {
         mPlayerView = playerView;
-        mLastQualityInfo = null;
     }
     
     public void setTrackSelector(DefaultTrackSelector trackSelector) {
@@ -533,9 +526,8 @@ public class ExoPlayerController implements Player.EventListener, LiveStateProvi
     }
 
     private void setQualityInfo(String qualityInfoStr) {
-        if (mPlayerView != null && qualityInfoStr != null && !TextUtils.equals(mLastQualityInfo, qualityInfoStr)) {
+        if (mPlayerView != null && qualityInfoStr != null) {
             mPlayerView.setQualityInfo(qualityInfoStr);
-            mLastQualityInfo = qualityInfoStr;
         }
     }
 

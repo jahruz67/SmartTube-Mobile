@@ -135,7 +135,8 @@ public class PlayerUIController extends BasePlayerController {
 
         boolean isHandled = handleBackKey(keyCode) || handleMenuKey(keyCode) ||
                 handleConfirmKey(keyCode) || handleStopKey(keyCode) || handleNumKeys(keyCode) ||
-                handlePlayPauseKey(keyCode) || handleLeftRightSkip(keyCode) || handleUpDownSkip(keyCode);
+                handlePlayPauseKey(keyCode) || handleLeftRightSkip(keyCode) || handleUpDownSkip(keyCode) ||
+                handleUpSkip(keyCode);
 
         if (isHandled) {
             return true; // don't show UI
@@ -812,6 +813,20 @@ public class PlayerUIController extends BasePlayerController {
         if (getPlayer() == null || getPlayer().isOverlayShown() || getVideo() == null ||
                 (getVideo().belongsToShortsGroup() && !getPlayerTweaksData().isQuickSkipShortsAltEnabled() ||
                         (!getVideo().belongsToShortsGroup() && !getPlayerTweaksData().isQuickSkipVideosAltEnabled()))) {
+            return false;
+        }
+
+        private boolean handleUpSkip(int keyCode) {
+            if (getPlayer() == null || getPlayer().isOverlayShown() || getVideo() == null
+                    || getVideo().belongsToShortsGroup() || !getPlayerTweaksData().isQuickSkipChaptersEnabled()) {
+                return false;
+            }
+
+            if (keyCode == KeyEvent.KEYCODE_DPAD_UP) {
+                getController(SuggestionsController.class).onNextChapter();
+                return true;
+            }
+
             return false;
         }
 

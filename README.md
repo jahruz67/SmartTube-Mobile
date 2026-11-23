@@ -23,7 +23,7 @@ Follow [the upstream comparison workflow](docs/UPSTREAM_SYNC.md) to evaluate a
 SmartTube release against this fork's existing fixes. It includes source path
 mappings, independent dependency tracking, local safeguards, a decision log, and a
 read-only comparison helper. The source baseline is SmartTube `3d6aa161` (32.68),
-with release `32.74` reviewed through `ab04c75f`; see the decision log for the port
+with release `32.80` reviewed through `41fbc7c6`; see the decision log for the port
 scope and verification limits.
 
 ## Build prerequisites
@@ -52,20 +52,20 @@ bash ./gradlew --no-daemon --console=plain clean :app:assembleStmobileDebug
 APKs are written to `app/build/outputs/apk/stmobile/debug/`:
 
 ```text
-SmartTube-Mobile-v1.0.0-st32.74-universal.apk
-SmartTube-Mobile-v1.0.0-st32.74-arm64-v8a.apk
-SmartTube-Mobile-v1.0.0-st32.74-armeabi-v7a.apk
-SmartTube-Mobile-v1.0.0-st32.74-x86.apk
+SmartTube-Mobile-v1.0.0-st32.80-universal.apk
+SmartTube-Mobile-v1.0.0-st32.80-arm64-v8a.apk
+SmartTube-Mobile-v1.0.0-st32.80-armeabi-v7a.apk
+SmartTube-Mobile-v1.0.0-st32.80-x86.apk
 ```
 
-The universal APK includes ARM64 and ARMv7; x86 is a separate APK. The application ID is `dev.smarttubemobile.unofficial`, version code **23744**, version name **v1.0.0+st32.74**, minimum Android **8 / API 26**, target/compile SDK **36**. `-PmobileVersionCode` and `-PmobileVersionName` retain the existing version overrides.
+The universal APK includes ARM64 and ARMv7; x86 is a separate APK. The application ID is `dev.smarttubemobile.unofficial`, version code **23744**, version name **v1.0.0+st32.80**, minimum Android **8 / API 26**, target/compile SDK **36**. `-PmobileVersionCode` and `-PmobileVersionName` retain the existing version overrides.
 
 ## Tests and APK verification
 
 ```powershell
 .\gradlew.bat --no-daemon --console=plain :app:testStmobileDebugUnitTest :common:testStmobileDebugUnitTest :app:assembleStmobileDebugAndroidTest
 python -m unittest discover -s tools/tests -v
-python tools/inspect-apk.py app/build/outputs/apk/stmobile/debug/SmartTube-Mobile-v1.0.0-st32.74-universal.apk
+python tools/inspect-apk.py app/build/outputs/apk/stmobile/debug/SmartTube-Mobile-v1.0.0-st32.80-universal.apk
 ```
 
 For a clean build, JVM tests, test APK compilation, and signature/package checks together:

@@ -71,8 +71,8 @@ android {
         applicationId "app.smarttube"
         minSdkVersion project.properties.minSdkVersion
         targetSdkVersion project.properties.targetSdkVersion
-        versionCode 2464
-        versionName "32.74"
+        versionCode 2470
+        versionName "32.80"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField "long", "TIMESTAMP", System.currentTimeMillis() + "L"
 
@@ -219,7 +219,7 @@ android {
             // versionCode is independent of upstream's code and must exceed the last
             // shipped fork release for an in-place upgrade.
             versionCode = (project.findProperty('mobileVersionCode') ?: '23744').toInteger()
-            versionName = (project.findProperty('mobileVersionName') ?: 'v1.0.0+st32.74')
+            versionName = (project.findProperty('mobileVersionName') ?: 'v1.0.0+st32.80')
         }
     }
 }

@@ -131,6 +131,9 @@ public class AppVersionChecker {
             final int versionCode = versionInfo.getInt("versionCode");
             versionMap.put(versionCode, versionInfo);
         }
+        if (mVersionInfo == null) {
+            return;
+        }
         final int latestVersionNumber = versionMap.firstKey();
         final String latestVersionName = versionMap.get(latestVersionNumber).getString("versionName");
 
